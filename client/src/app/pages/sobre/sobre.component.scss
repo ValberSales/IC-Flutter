@@ -1,0 +1,69 @@
+.about-page {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 15px;
+  
+  .card {
+    border-radius: 10px !important;
+  }
+
+  .about-section {
+    margin-bottom: 2rem;
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    p {
+      text-align: justify;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    ul.info-list {
+      list-style: none;
+      padding-left: 0;
+
+      li {
+        margin-bottom: 0.5rem;
+        font-size: 15px;
+      }
+    }
+  }
+
+  .card {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .link-buttons {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+
+    @media (min-width: 600px) {
+      flex-direction: row;
+    }
+
+    a {
+      text-decoration: none;
+    }
+  }
+
+  .about-footer {
+    text-align: center;
+    color: #ffffff;
+    margin-top: 2rem;
+
+    small {
+      font-size: 0.875rem;
+    }
+  }
+}

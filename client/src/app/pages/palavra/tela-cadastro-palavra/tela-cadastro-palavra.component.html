@@ -1,0 +1,165 @@
+<div class="grupo-scroll">
+  <div class="p-fluid grid cadastro-card">
+    <div class="col-12">
+      <h2>Nova palavra</h2>
+    </div>
+    <div class="col-4">
+      <p-dropdown
+        [options]="tiposPalavra"
+        [(ngModel)]="palavra.tipo"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecione o tipo de jogo"
+      />
+    </div>
+    <div class="col-12"></div>
+    <div *ngIf="palavra.tipo == 'JOGO_ADIVINHACAO' && existsInputOtp" class="p-field col-12">
+      <label for="palavra">Palavra</label>
+      <p-inputOtp #inputOtp [(ngModel)]="palavra.descricao" [length]="12">
+        <ng-template pTemplate="input" let-token let-events="events">
+          <input
+            pInputText
+            class="custom-otp-input"
+            (input)="events.input($event)"
+            (keydown)="events.keydown($event)"
+            type="text"
+            [attr.value]="token"
+          />
+        </ng-template>
+      </p-inputOtp>
+    </div>
+    <div  *ngIf="palavra.tipo == 'JOGO_PALAVRAS'" class="col-12 md:col-6 lg:col-4">
+      <label for="palavra">Palavra</label>
+      <input
+        class="mt-2"
+        id="palavra"
+        type="text"
+        pInputText
+        [(ngModel)]="palavra.descricao"
+      />
+    </div>
+    <div *ngIf="palavra.tipo == 'JOGO_PALAVRAS'" class="col-12">
+      <p-divider>Opções de palavras</p-divider>
+    </div>
+    <div *ngIf="palavra.tipo == 'JOGO_PALAVRAS'" class="p-field col-12 grid p-fluid"> 
+      <div class="col-12 md:col-4 lg:col">
+        <label for="opcao1">Opção 1</label>
+        <input
+          class="mt-2"
+          id="opcao1"
+          type="text"
+          pInputText
+          [(ngModel)]="opcao1"
+        />
+      </div>
+      <div class="col-12 md:col-4 lg:col">
+        <label for="opcao2">Opção 2</label>
+        <input
+          class="mt-2"
+          id="opcao2"
+          type="text"
+          pInputText
+          [(ngModel)]="opcao2"
+        />
+      </div>
+      <div class="col-12 md:col-4 lg:col">
+        <label for="opcao3">Opção 3</label>
+        <input
+          class="mt-2"
+          id="opcao3"
+          type="text"
+          pInputText
+          [(ngModel)]="opcao3"
+        />
+      </div>
+      <div class="col-12 md:col-4 lg:col">
+        <label for="opcao4">Opção 4</label>
+        <input
+          class="mt-2"
+          id="opcao4"
+          type="text"
+          pInputText
+          [(ngModel)]="opcao4"
+        />
+      </div>
+      <div class="col-12 md:col-4 lg:col">
+        <label for="opcao5">Opção 5</label>
+        <input
+          class="mt-2"
+          id="opcao5"
+          type="text"
+          pInputText
+          [(ngModel)]="opcao5"
+        />
+      </div>
+    </div>
+    <!-- <div class="col-12 p-field pt-3">
+      <label for="palavra">Dificuldade</label>
+      <div class="flex flex-wrap gap-3 pt-3">
+        <div class="flex align-items-center">
+          <p-radioButton
+            name="dificuldade"
+            value="FACIL"
+            [(ngModel)]="palavra.dificuldade"
+            inputId="dificuldade1"
+          />
+          <label for="dificuldade1" class="ml-2"> Fácil </label>
+        </div>
+  
+        <div class="flex align-items-center">
+          <p-radioButton
+            name="dificuldade"
+            value="MEDIO"
+            [(ngModel)]="palavra.dificuldade"
+            inputId="dificuldade2"
+          />
+          <label for="dificuldade2" class="ml-2"> Médio </label>
+        </div>
+  
+        <div class="flex align-items-center">
+          <p-radioButton
+            name="dificuldade"
+            value="DIFICIL"
+            [(ngModel)]="palavra.dificuldade"
+            inputId="dificuldade3"
+          />
+          <label for="dificuldade3" class="ml-2"> Difícil </label>
+        </div>
+      </div>
+    </div> -->
+    <div class="col-12">
+      <p-divider>Imagem</p-divider>
+    </div>
+    <div class="col-12">
+      <p-fileUpload
+        #fileUpload
+        mode="basic"
+        chooseLabel="Escolher"
+        chooseIcon="pi pi-upload"
+        accept="image/*"
+        url=""
+        maxFileSize="1000000"
+        [customUpload]="true"
+        (onSelect)="onUpload($event)"
+      />
+      <div *ngIf="palavra.imagem">
+        <p>Pré-visualização da Imagem:</p>
+        <img [src]="palavra?.imagem" alt="Uploaded Image" width="200" />
+      </div>
+    </div>
+  </div>
+</div>
+<div class="rodape grid">
+  <div class="col-12 p-0">
+    <hr />
+  </div>
+  <div class="col"></div>
+  <div class="col-fixed">
+    <p-button
+      label="Cadastrar"
+      icon="pi pi-check"
+      iconPos="right"
+      (onClick)="save()"
+    ></p-button>
+  </div>
+</div>

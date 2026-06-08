@@ -1,0 +1,18 @@
+<p-tabView>
+  <p-tabPanel header="Jogo das Letras">
+    <app-tabela-pontuacao [pontuacao]="getPontuacao('JOGO_ALFABETO')">
+    </app-tabela-pontuacao>
+  </p-tabPanel>
+  <p-tabPanel header="Jogo da Memória">
+    <app-tabela-pontuacao [pontuacao]="getPontuacao('JOGO_MEMORIA')">
+    </app-tabela-pontuacao>
+  </p-tabPanel>
+  <p-tabPanel header="Jogo das Palavras">
+    <app-tabela-pontuacao [pontuacao]="getPontuacao('JOGO_PALAVRAS')">
+    </app-tabela-pontuacao>
+  </p-tabPanel>
+  <p-tabPanel header="Jogo da Adivinhação">
+    <app-tabela-pontuacao [pontuacao]="getPontuacao('JOGO_ADIVINHACAO')">
+    </app-tabela-pontuacao>
+  </p-tabPanel>
+</p-tabView>

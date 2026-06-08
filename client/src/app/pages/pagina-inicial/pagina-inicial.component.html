@@ -1,0 +1,182 @@
+<div class="container">
+  <img
+    [hidden]="isMoving"
+    src="assets/raccoon/raccoon.png"
+    alt="Avatar"
+    class="avatar"
+  />
+  <img
+    [hidden]="!isMoving"
+    src="assets/raccoon/gif/victory-dance.gif"
+    alt="Avatar"
+    class="avatar-moving"
+  />
+  <div *ngIf="etapa == 'PADRAO'" class="buttons">
+    <div>
+      <button class="button-game pulse-button" pButton pRipple (click)="play()">
+        <div class="col-fixed">
+          <strong>Jogar</strong>
+        </div>
+        <div class="col-fixed">
+          <img
+            src="assets/icons/controller.svg"
+            alt="Balcão"
+            style="width: 50px; height: 50px"
+          />
+        </div>
+      </button>
+    </div>
+    <div class="m-0">
+      <hr />
+    </div>
+    <div *ngIf="personagemAtivo">
+      <button (click)="editarPersonagem()" class="button-game" pButton pRipple>
+        <div class="col-fixed">
+          <strong>Meu avatar</strong>
+        </div>
+        <div class="col-fixed">
+          <img
+            src="assets/icons/account-circle.svg"
+            alt="Balcão"
+            style="width: 50px; height: 50px"
+          />
+        </div>
+      </button>
+    </div>
+    <div>
+      <button pButton pRipple class="button-game" (click)="novoPersonagem()">
+        <div class="col-fixed">
+          <strong>Novo avatar</strong>
+        </div>
+        <div class="col-fixed">
+          <img
+            src="assets/icons/person-add.svg"
+            alt="Balcão"
+            style="width: 50px; height: 50px"
+          />
+        </div>
+      </button>
+    </div>
+    <div>
+      <button
+        pButton
+        pRipple
+        class="button-game"
+        (click)="selecionarPersonagem()"
+      >
+        <div class="col-fixed">
+          <strong>Selecionar avatar</strong>
+        </div>
+        <div class="col-fixed">
+          <img
+            src="assets/icons/group-search.svg"
+            alt="Balcão"
+            style="width: 50px; height: 50px"
+          />
+        </div>
+      </button>
+    </div>
+  </div>
+  <div
+    *ngIf="etapa == 'NOVO_PERSONAGEM'"
+    class="grid p-fluid"
+    style="width: 300px"
+  >
+    <div class="col-12 content-avatar">
+      <div class="avatar-personagem">
+        <img [src]="avatar" alt="Avatar" (click)="mudarAvatar()" />
+      </div>
+    </div>
+    <div class="col-12">
+      <input
+        class="mt-2"
+        id="nome"
+        type="text"
+        placeholder="Escolha um nome..."
+        pInputText
+        [(ngModel)]="personagem.nome"
+      />
+    </div>
+    <div class="col-11 flex flex-wrap gap-3 dificuldade-card">
+      <div class="flex align-items-center">
+        <p-radioButton
+          name="dificuldade"
+          value="FACIL"
+          [(ngModel)]="personagem.dificuldade"
+          inputId="dificuldade1"
+        />
+        <label for="dificuldade1" class="ml-2"> Fácil </label>
+      </div>
+
+      <div class="flex align-items-center">
+        <p-radioButton
+          name="dificuldade"
+          value="MEDIO"
+          [(ngModel)]="personagem.dificuldade"
+          inputId="dificuldade2"
+        />
+        <label for="dificuldade2" class="ml-2"> Médio </label>
+      </div>
+
+      <div class="flex align-items-center">
+        <p-radioButton
+          name="dificuldade"
+          value="DIFICIL"
+          [(ngModel)]="personagem.dificuldade"
+          inputId="dificuldade3"
+        />
+        <label for="dificuldade3" class="ml-2"> Difícil </label>
+      </div>
+    </div>
+    <div class="col-12" *ngIf="personagem?.id">
+      <button
+        pButton
+        class="custom-transparent-button"
+        severity="secondary"
+        label="Consultar pontuação"
+        (click)="consultarPontuacao()"
+      ></button>
+    </div>
+    <div class="col-fixed">
+      <button
+        pButton
+        class="p-button-info"
+        label="Voltar"
+        (click)="etapa = 'PADRAO'"
+      ></button>
+    </div>
+    <div class="col"></div>
+    <div class="col-fixed">
+      <button
+        pButton
+        class="p-button-success"
+        label="Salvar"
+        (click)="savePersonagem()"
+      ></button>
+    </div>
+  </div>
+  <div *ngIf="etapa == 'SELECAO_PERSONAGEM'">
+    <div class="grid p-fluid container-selecao">
+      <div *ngFor="let p of personagens" class="div-selecao">
+        <button
+          class="button-selecao p-button-secondary"
+          pButton
+          (click)="selectPersonagem(p)"
+        >
+          <img [src]="p.avatar" alt="Avatar" class="avatar" />
+          <span>{{ p.nome }}</span>
+          <i class="pi pi-trash" (click)="excluir(p); $event.stopPropagation()" pTooltip="Excluir"></i>
+        </button>
+      </div>
+      <div *ngIf="!personagens.length"></div>
+    </div>
+    <div class="pt-3">
+      <button
+        pButton
+        class="p-button-info"
+        label="Voltar"
+        (click)="etapa = 'PADRAO'"
+      ></button>
+    </div>
+  </div>
+</div>

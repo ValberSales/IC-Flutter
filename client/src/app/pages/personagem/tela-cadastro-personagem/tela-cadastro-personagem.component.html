@@ -1,0 +1,81 @@
+<div class="grupo-scroll">
+  <div class="p-fluid grid">
+    <div class="col-12">
+      <h2>Novo personagem</h2>
+    </div>
+    <div class="grid p-fluid col-8">
+      <div class="col-12">
+        <label for="nome">Nome</label>
+        <input
+          class="mt-2"
+          id="nome"
+          type="text"
+          pInputText
+          [(ngModel)]="personagem.nome"
+        />
+      </div>
+      <div class="col-6">
+        <label for="dataNascimento">Data de nascimento</label>
+        <p-calendar
+          [(ngModel)]="personagem.dataNascimento"
+          [showIcon]="true"
+          [showOnFocus]="false"
+          inputId="buttondisplay"
+        />
+      </div>
+      <div class="col-12 p-field pt-3">
+        <label for="palavra">Dificuldade</label>
+        <div class="flex flex-wrap gap-3 pt-3">
+          <div class="flex align-items-center">
+            <p-radioButton
+              name="dificuldade"
+              value="FACIL"
+              [(ngModel)]="personagem.dificuldade"
+              inputId="dificuldade1"
+            />
+            <label for="dificuldade1" class="ml-2"> Fácil </label>
+          </div>
+    
+          <div class="flex align-items-center">
+            <p-radioButton
+              name="dificuldade"
+              value="MEDIO"
+              [(ngModel)]="personagem.dificuldade"
+              inputId="dificuldade2"
+            />
+            <label for="dificuldade2" class="ml-2"> Médio </label>
+          </div>
+    
+          <div class="flex align-items-center">
+            <p-radioButton
+              name="dificuldade"
+              value="DIFICIL"
+              [(ngModel)]="personagem.dificuldade"
+              inputId="dificuldade3"
+            />
+            <label for="dificuldade3" class="ml-2"> Difícil </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-4 content-avatar">
+      <div class="avatar">
+        <img [src]="personagem.avatar" alt="Avatar" (click)="mudarAvatar()" />
+      </div>
+    </div>
+  </div>
+</div>
+<div class="rodape grid">
+  <div class="col-12 p-0">
+    <hr />
+  </div>
+  <div class="col"></div>
+  <div class="col-fixed">
+    <p-button
+      label="Cadastrar"
+      icon="pi pi-check"
+      iconPos="right"
+      (onClick)="save()"
+    ></p-button>
+  </div>
+</div>

@@ -1,0 +1,34 @@
+<div class="login-container">
+  <p-card header="Login de Usuário">
+    <div class="p-fluid grid login-card">
+      <div class="p-field col-12">
+        <label for="username">Usuário</label>
+        <input
+          id="username"
+          type="text"
+          pInputText
+          placeholder="Digite seu usuário"
+          [(ngModel)]="username"
+        />
+      </div>
+      <div class="p-field col-12">
+        <label for="password">Senha</label>
+        <input
+          id="password"
+          type="password"
+          pInputText
+          placeholder="Digite sua senha"
+          [(ngModel)]="password"
+        />
+      </div>
+      <div class="col"></div>
+      <div class="col-3">
+        <p-button
+          label="Login"
+          (onClick)="onLogin()"
+          icon="pi pi-sign-in"
+        ></p-button>
+      </div>
+    </div>
+  </p-card>
+</div>

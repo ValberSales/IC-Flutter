@@ -1,0 +1,67 @@
+<div class="grupo-scroll">
+  <div class="grid p-fluid">
+    <div class="col-12 pl-4">
+      <h2>Bem-vindo, {{ usuario?.nome || "Usuário" }}</h2>
+    </div>
+    <div class="col-12">
+      <p-panel header="Dados do usuário">
+        <div class="grid p-fluid">
+          <div class="col">
+            <label for="nome">Nome</label>
+            <input
+              class="mt-2"
+              id="nome"
+              type="text"
+              pInputText
+              [(ngModel)]="usuario.nome"
+              [readOnly]="true"
+            />
+          </div>
+          <div class="col">
+            <label for="nome">Usuário</label>
+            <input
+              class="mt-2"
+              id="nome"
+              type="text"
+              pInputText
+              [(ngModel)]="usuario.username"
+              [readOnly]="true"
+            />
+          </div>
+          <div class="col">
+            <label for="email">Email</label>
+            <input
+              class="mt-2"
+              id="email"
+              type="text"
+              pInputText
+              [(ngModel)]="usuario.email"
+              [readOnly]="true"
+            />
+          </div>
+        </div>
+      </p-panel>
+    </div>
+    <div class="col-12">
+      <p-panel header="Estatísticas">
+          <p>{{usuario?.palavras?.length || 0}} palavras cadastradas</p>
+          <p>{{usuario?.personagens?.length || 0}} personagens cadastrados</p>
+          <p>{{usuario?.turmas?.length || 0}} turmas cadastradas</p>
+      </p-panel>
+    </div>
+  </div>
+</div>
+<!-- <div class="rodape grid">
+  <div class="col-12 p-0">
+    <hr />
+  </div>
+  <div class="col"></div>
+  <div class="col-fixed">
+    <p-button
+      label="Salvar"
+      icon="pi pi-check"
+      iconPos="right"
+      (onClick)="save()"
+    ></p-button>
+  </div>
+</div> -->

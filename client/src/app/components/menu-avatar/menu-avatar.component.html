@@ -1,0 +1,10 @@
+<div class="grid p-fluid content-dialog">
+  <div class="col" *ngFor="let a of avatares">
+    <img
+      class="avatar-personagem"
+      [src]="a"
+      alt="Avatar"
+      (click)="selectAvatar(a)"
+    />
+  </div>
+</div>

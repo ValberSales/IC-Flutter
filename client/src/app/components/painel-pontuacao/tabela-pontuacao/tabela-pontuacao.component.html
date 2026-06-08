@@ -1,0 +1,25 @@
+<div style="height: calc(100svh / var(--zoom) - 600px)">
+  <p-table
+    [value]="pontuacao"
+    styleClass="p-datatable-striped"
+    scrollable="true"
+    scrollHeight="calc(100svh / var(--zoom) - 600px)"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Data</th>
+        <th>Acertos</th>
+        <th>Erros</th>
+        <th>Dificuldade</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-atv>
+      <tr>
+        <td>{{ atv.createdAt | date: 'dd/MM/yyyy' }}</td>
+        <td>{{ atv.acertos }}</td>
+        <td>{{ atv.erros }}</td>
+        <td>{{ getFieldDificuldade(atv.dificuldade) }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

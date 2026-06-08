@@ -1,0 +1,55 @@
+<app-pontuacao
+  [acertos]="acertos"
+  [erros]="erros"
+  [atividade]="'JOGO_PALAVRAS'"
+></app-pontuacao>
+
+<app-personagem></app-personagem>
+
+<app-tutorial [atividade]="'JOGO_PALAVRAS'"></app-tutorial>
+
+<div
+  class="grid p-fluid align-content-center"
+  style="height: calc(calc(100svh / var(--zoom)) - 200px)"
+  *ngIf="selectedPalavra"
+>
+  <div class="feedback">
+    <app-feedback
+      [tipo]="feedback"
+      (clearFeedback)="clearFeedback()"
+    ></app-feedback>
+  </div>
+  <div class="col-12 container-image">
+    <div class="card-imagem">
+      <img [src]="selectedPalavra.imagem" alt="" class="image" />
+    </div>
+  </div>
+
+  <div class="col-12 pt-5">
+    <ul class="list-container">
+      <li
+        *ngFor="let opcao of palavrasJogo"
+        class="card-palavra"
+        [ngClass]="{ 'card-hover': opcao.pendente && !acerto }"
+        (click)="verificarResposta(opcao)"
+      >
+        <p>{{ opcao.palavra }}</p>
+        <div *ngIf="!opcao.pendente" class="erro-overlay">✖</div>
+        <div *ngIf="getAcerto(opcao.palavra)" class="acerto-overlay"></div>
+      </li>
+    </ul>
+  </div>
+</div>
+<div class="botao-novo-jogo" *ngIf="acerto">
+  <button
+    severity="warning"
+    size="large"
+    [rounded]="true"
+    pButton
+    label="Jogar"
+    icon="pi pi-replay"
+    iconPos="right"
+    (click)="novoJogo()"
+  ></button>
+</div>
+

@@ -1,0 +1,141 @@
+@import "../node_modules/primeng/resources/themes/lara-light-blue/theme.css";
+@import "../node_modules/primeng/resources/primeng.min.css";
+@import "../node_modules/primeflex/primeflex.scss";
+@import "../node_modules/primeicons/primeicons.css";
+
+@import "assets/layout/layout.scss";
+
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+  margin: 0;
+  padding: 0;
+}
+
+body.custom-background {
+  // background-image: url('/assets/planeta.jpg');
+
+  // background-image: url('/assets/battleback.png');
+
+  // background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+  //   url("/assets/planeta.jpg");
+
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+    url("/assets/planeta.jpg");
+
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  min-height: 100vh;
+}
+
+.content {
+  max-width: 100vw;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.content-center {
+  max-width: 1200px;
+}
+
+.borda-cinza {
+  border: solid $bordas 1px;
+  border-radius: 8px;
+}
+
+.grupo-scroll {
+  flex: 1;
+  overflow-y: auto;
+  // height: calc(100vh - 250px);
+  height: calc(calc(100svh / var(--zoom)) - 300px);
+  scrollbar-width: none;
+  padding: 0px 16px;
+  box-sizing: border-box;
+}
+
+.rodape {
+  position: sticky;
+  bottom: 0;
+  padding: 8px 16px;
+  display: flex;
+}
+
+.imagem-lista {
+  max-width: 100px;
+}
+
+.confirm-button-danger {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: #fff !important;
+}
+
+// ANIMACOES
+
+.botao-novo-jogo {
+  position: absolute;
+  justify-content: center;
+  align-items: center;
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: pulse 1.5s infinite; /* Aplica a animação de pulsação */
+}
+
+@keyframes pulse {
+  0% {
+    transform: translateX(-50%) scale(1); /* Tamanho inicial */
+  }
+  50% {
+    transform: translateX(-50%) scale(1.3); /* Aumenta 10% */
+  }
+  100% {
+    transform: translateX(-50%) scale(1); /* Volta ao tamanho original */
+  }
+}
+
+.pulse-button {
+  animation: pulse-infinite 1.5s infinite;
+}
+
+@keyframes pulse-infinite {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-once {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse-once {
+  animation: pulse-once 0.6s ease;
+}
+
+// .p-dialog-header {
+//   padding-bottom: 0px !important;
+// }

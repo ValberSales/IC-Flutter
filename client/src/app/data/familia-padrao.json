@@ -1,0 +1,107 @@
+[
+  {
+    "descricao": "Adolescente",
+    "imagem": "assets/familia/adolescente.png",
+    "opcoes": ["Adolescente", "Pai", "Jovem", "Tia", "Padrinho"]
+  },
+  {
+    "descricao": "Adulto",
+    "imagem": "assets/familia/adulto.png",
+    "opcoes": ["Adulto", "Adolescente", "Jovem", "Homem", "Mãe"]
+  },
+  {
+    "descricao": "Avó",
+    "imagem": "assets/familia/avo_.jpg",
+    "opcoes": ["Avó", "Avô", "Mãe", "Tia", "Idosa"]
+  },
+  {
+    "descricao": "Avô",
+    "imagem": "assets/familia/avo.jpg",
+    "opcoes": ["Avô", "Avó", "Pai", "Tio", "Idoso"]
+  },
+  {
+    "descricao": "Bebê",
+    "imagem": "assets/familia/bebe.png",
+    "opcoes": ["Bebê", "Criança", "Filho", "Filha", "Jovem"]
+  },
+  {
+    "descricao": "Criança",
+    "imagem": "assets/familia/crianca.jpg",
+    "opcoes": ["Criança", "Bebê", "Filha", "Filho", "Adolescente"]
+  },
+  {
+    "descricao": "Familía",
+    "imagem": "assets/familia/familia.png",
+    "opcoes": ["Familía", "Avó", "Avô", "Pai", "Mãe"]
+  },
+  {
+    "descricao": "Filha",
+    "imagem": "assets/familia/filha.jpg",
+    "opcoes": ["Filha", "Criança", "Prima", "Adolescente", "Mãe"]
+  },
+  {
+    "descricao": "Filho",
+    "imagem": "assets/familia/filho.jpg",
+    "opcoes": ["Filho", "Criança", "Primo", "Adolescente", "Pai"]
+  },
+  {
+    "descricao": "Homem",
+    "imagem": "assets/familia/homem.png",
+    "opcoes": ["Homem", "Adulto", "Jovem", "Pai", "Tio"]
+  },
+  {
+    "descricao": "Idoso",
+    "imagem": "assets/familia/idoso.png",
+    "opcoes": ["Idoso", "Avô", "Avó", "Homem", "Pai"]
+  },
+  {
+    "descricao": "Irmã",
+    "imagem": "assets/familia/irma.jpg",
+    "opcoes": ["Irmã", "Filha", "Prima", "Mãe", "Mulher"]
+  },
+  {
+    "descricao": "Irmão",
+    "imagem": "assets/familia/irmao.jpg",
+    "opcoes": ["Irmão", "Filho", "Primo", "Pai", "Homem"]
+  },
+  {
+    "descricao": "Jovem",
+    "imagem": "assets/familia/jovem.png",
+    "opcoes": ["Jovem", "Adolescente", "Adulto", "Homem", "Mulher"]
+  },
+  {
+    "descricao": "Mãe",
+    "imagem": "assets/familia/mae.jpg",
+    "opcoes": ["Mãe", "Tia", "Avó", "Mulher", "Irmã"]
+  },
+  {
+    "descricao": "Mulher",
+    "imagem": "assets/familia/mulher.png",
+    "opcoes": ["Mulher", "Adolescente", "Irmã", "Mãe", "Tia"]
+  },
+  {
+    "descricao": "Pai",
+    "imagem": "assets/familia/pai.jpg",
+    "opcoes": ["Pai", "Tio", "Avô", "Homem", "Adulto"]
+  },
+  {
+    "descricao": "Prima",
+    "imagem": "assets/familia/prima.jpg",
+    "opcoes": ["Prima", "Irmã", "Filha", "Mãe", "Mulher"]
+  },
+  {
+    "descricao": "Primo",
+    "imagem": "assets/familia/primo.jpg",
+    "opcoes": ["Primo", "Irmão", "Filho", "Pai", "Homem"]
+  },
+  {
+    "descricao": "Tia",
+    "imagem": "assets/familia/tia.jpg",
+    "opcoes": ["Tia", "Mãe", "Prima", "Avó", "Mulher"]
+  },
+  {
+    "descricao": "Tio",
+    "imagem": "assets/familia/tio.jpg",
+    "opcoes": ["Tio", "Pai", "Avô", "Primo", "Homem"]
+  }
+]

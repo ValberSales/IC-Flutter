@@ -1,0 +1,22 @@
+.layout-menuitem-root-text {
+    font-weight: bold;
+    padding: 1rem;
+  }
+  
+  .layout-menuitem-icon {
+    margin-right: 0.5rem;
+    text-decoration: none;
+}
+  
+  .layout-menuitem-text {
+    vertical-align: middle;
+    text-decoration: none;
+  }
+  
+  .active-menuitem {
+    background-color: #f4f4f4;
+  }
+  
+  .layout-submenu-toggler {
+    float: right;
+  }

@@ -1,0 +1,17 @@
+<div class="button-tutorial">
+  <p-button
+    label="Tutorial"
+    icon="pi pi-question-circle"
+    iconPos="right"
+    severity="info"
+    (onClick)="visible = true"
+  ></p-button>
+</div>
+
+<div class="tutorial-overlay" *ngIf="visible">
+  <img class="tutorial-gif" [src]="tutorial" alt="Tutorial" />
+  <p-button
+    label="Retornar"
+    (onClick)="visible = false"
+  ></p-button>
+</div>

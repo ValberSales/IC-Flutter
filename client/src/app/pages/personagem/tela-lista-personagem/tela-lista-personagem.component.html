@@ -1,0 +1,70 @@
+<div class="grupo-scroll">
+  <div class="p-fluid grid cadastro-card">
+    <div class="col-12">
+      <h2>Lista de personagens</h2>
+    </div>
+    <div class="col-12">
+      <p-table [value]="personagens" [tableStyle]="{ 'min-width': '60rem' }">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 60px;">Avatar</th>
+            <th>Descrição</th>
+            <th style="width: 40px"></th>
+            <th style="width: 40px"></th>
+            <th style="width: 40px"></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-personagem>
+          <tr>
+            <td>
+              <img [src]="personagem.avatar" alt="Avatar" class="avatar-lista" />
+            </td>
+            <td>{{ personagem.nome }}</td>
+            <td>
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                [raised]="true"
+                severity="help"
+                pTooltip="Pontuação"
+                (onClick)="consultarPontuacao(personagem)"
+              />
+            </td>
+            <td>
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                [raised]="true"
+                severity="help"
+                pTooltip="Editar"
+                (onClick)="editar(personagem)"
+              />
+            </td>
+            <td>
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                [raised]="true"
+                severity="danger"
+                pTooltip="Excluir"
+                (onClick)="excluir(personagem)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+<div class="rodape grid">
+  <div class="col-12 p-0">
+    <hr />
+  </div>
+  <div>
+    <h4>{{ personagens?.length || 0 }} personagens encontrados</h4>
+  </div>
+  <div class="col"></div>
+</div>

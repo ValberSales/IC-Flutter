@@ -10,8 +10,15 @@ import '../../widgets/pontuacao_header_widget.dart';
 import '../../widgets/mascote_feedback_widget.dart';
 import '../../widgets/tutorial_widget.dart';
 
+import '../../../data/models/atividade.dart';
+
 class JogoAdivinhacaoPage extends StatefulWidget {
-  const JogoAdivinhacaoPage({super.key});
+  final Atividade? atividadeTema;
+
+  const JogoAdivinhacaoPage({
+    super.key,
+    this.atividadeTema,
+  });
 
   @override
   State<JogoAdivinhacaoPage> createState() => _JogoAdivinhacaoPageState();
@@ -40,7 +47,15 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
   void _carregarPalavras() {
     final state = context.read<AppStateProvider>();
     
-    if (state.customPalavras.isNotEmpty) {
+    if (widget.atividadeTema != null && widget.atividadeTema!.itens.isNotEmpty) {
+      _palavras = widget.atividadeTema!.itens.map((item) {
+        return Palavra(
+          tipo: 'JOGO_ADIVINHACAO',
+          descricao: item.descricao,
+          imagem: item.imagem,
+        );
+      }).toList();
+    } else if (state.customPalavras.isNotEmpty) {
       _palavras = state.customPalavras.where((p) => p.tipo == 'JOGO_ADIVINHACAO').toList();
     }
     
@@ -56,6 +71,7 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
 
     _iniciarRodada();
   }
+
 
   void _iniciarRodada() {
     if (_palavras.isEmpty) return;

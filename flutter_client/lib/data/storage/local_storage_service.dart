@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/personagem.dart';
 import '../models/pontuacao.dart';
 import '../models/usuario.dart';
+import '../models/atividade.dart';
 
 class LocalStorageService {
   static late final SharedPreferences _prefs;
@@ -14,6 +15,9 @@ class LocalStorageService {
   static const String _keyLetrasAntigas = 'LETRAS_ANTIGAS';
   static const String _keyToken = 'auth_token';
   static const String _keyUser = 'logged_in_user';
+  static const String _keyAtividades = 'JOGO_LIBRAS_ATIVIDADES';
+  static const String _keyRascunhoAtividade = 'JOGO_LIBRAS_RASCUNHO_ATIVIDADE';
+
 
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -195,4 +199,69 @@ class LocalStorageService {
     final all = getPontuacoes();
     return all.where((score) => score.personagem?.id == personagemId).toList();
   }
+
+  // --- ATIVIDADES E RASCUNHOS ---
+
+  static List<Atividade> getAtividades() {
+    final raw = _prefs.getString(_keyAtividades);
+    if (raw == null) return [];
+    try {
+      final List<dynamic> decoded = jsonDecode(raw);
+      return decoded.map((item) => Atividade.fromJson(item)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<void> saveAtividade(Atividade atv) async {
+    final list = getAtividades();
+    if (atv.id == null) {
+      int minId = -1;
+      for (final existing in list) {
+        if (existing.id != null && existing.id! < minId) {
+          minId = existing.id!;
+        }
+      }
+      atv.id = minId - 1;
+      atv.createdAt = DateTime.now();
+    }
+
+    final index = list.indexWhere((item) => item.id == atv.id);
+    if (index != -1) {
+      list[index] = atv;
+    } else {
+      list.add(atv);
+    }
+
+    await _prefs.setString(_keyAtividades, jsonEncode(list.map((item) => item.toJson()).toList()));
+  }
+
+  static Future<void> deleteAtividade(int id) async {
+    final list = getAtividades();
+    list.removeWhere((item) => item.id == id);
+    await _prefs.setString(_keyAtividades, jsonEncode(list.map((item) => item.toJson()).toList()));
+  }
+
+  static Atividade? getRascunhoAtividade() {
+    final raw = _prefs.getString(_keyRascunhoAtividade);
+    if (raw == null) return null;
+    try {
+      return Atividade.fromJson(jsonDecode(raw));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> saveRascunhoAtividade(Atividade? draft) async {
+    if (draft == null) {
+      await _prefs.remove(_keyRascunhoAtividade);
+    } else {
+      await _prefs.setString(_keyRascunhoAtividade, jsonEncode(draft.toJson()));
+    }
+  }
+
+  static Future<void> clearRascunhoAtividade() async {
+    await _prefs.remove(_keyRascunhoAtividade);
+  }
 }
+

@@ -128,3 +128,13 @@ pdv-client/src/package-lock.json
 habil-sync/package-lock.json
 impressao-server/.node-persist
 main-server/package-lock.json
+
+# Angular client exclusion
+client/
+
+# Flutter build & dependencies
+flutter_client/.dart_tool/
+flutter_client/.pub/
+flutter_client/.pub-cache/
+flutter_client/build/
+

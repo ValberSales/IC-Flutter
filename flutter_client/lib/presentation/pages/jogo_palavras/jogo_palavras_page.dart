@@ -10,6 +10,8 @@ import '../../widgets/pontuacao_header_widget.dart';
 import '../../widgets/mascote_feedback_widget.dart';
 import '../../widgets/tutorial_widget.dart';
 
+import '../../../data/models/atividade.dart';
+
 class OpcaoPalavra {
   final String palavra;
   bool pendente;
@@ -18,7 +20,12 @@ class OpcaoPalavra {
 }
 
 class JogoPalavrasPage extends StatefulWidget {
-  const JogoPalavrasPage({super.key});
+  final Atividade? atividadeTema;
+
+  const JogoPalavrasPage({
+    super.key,
+    this.atividadeTema,
+  });
 
   @override
   State<JogoPalavrasPage> createState() => _JogoPalavrasPageState();
@@ -45,8 +52,16 @@ class _JogoPalavrasPageState extends State<JogoPalavrasPage> {
   void _carregarPalavras() {
     final state = context.read<AppStateProvider>();
     
-    // Se a sala estiver sincronizada, carrega as palavras da turma
-    if (state.customPalavras.isNotEmpty) {
+    if (widget.atividadeTema != null && widget.atividadeTema!.itens.isNotEmpty) {
+      _palavras = widget.atividadeTema!.itens.map((item) {
+        return Palavra(
+          tipo: 'JOGO_PALAVRAS',
+          descricao: item.descricao,
+          imagem: item.imagem,
+          opcoes: item.opcoes.isNotEmpty ? item.opcoes : [item.descricao, 'Opção 2', 'Opção 3'],
+        );
+      }).toList();
+    } else if (state.customPalavras.isNotEmpty) {
       _palavras = state.customPalavras.where((p) => p.tipo == 'JOGO_PALAVRAS').toList();
     }
     
@@ -64,6 +79,7 @@ class _JogoPalavrasPageState extends State<JogoPalavrasPage> {
 
     _iniciarRodada();
   }
+
 
   void _iniciarRodada() {
     if (_palavras.isEmpty) return;

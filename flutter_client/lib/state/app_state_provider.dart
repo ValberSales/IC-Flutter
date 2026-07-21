@@ -4,6 +4,7 @@ import '../data/models/pontuacao.dart';
 import '../data/models/turma.dart';
 import '../data/models/palavra.dart';
 import '../data/models/usuario.dart';
+import '../data/models/atividade.dart';
 import '../data/storage/local_storage_service.dart';
 import '../data/sources/local_data_source.dart';
 import '../services/api_service.dart';
@@ -13,6 +14,8 @@ class AppStateProvider extends ChangeNotifier {
   List<Personagem> _personagens = [];
   Turma? _activeTurma;
   List<Palavra> _customPalavras = [];
+  List<Atividade> _atividades = [];
+  Atividade? _rascunhoAtual;
   bool _useLegacyLetters = false;
   bool _isSyncing = false;
   Usuario? _currentUser;
@@ -23,6 +26,8 @@ class AppStateProvider extends ChangeNotifier {
   List<Personagem> get personagens => _personagens;
   Turma? get activeTurma => _activeTurma;
   List<Palavra> get customPalavras => _customPalavras;
+  List<Atividade> get atividades => _atividades;
+  Atividade? get rascunhoAtual => _rascunhoAtual;
   bool get useLegacyLetters => _useLegacyLetters;
   bool get isSyncing => _isSyncing;
   Usuario? get currentUser => _currentUser;
@@ -43,16 +48,17 @@ class AppStateProvider extends ChangeNotifier {
     _activePersonagem = LocalStorageService.getActivePersonagem();
     _token = LocalStorageService.getToken();
     _currentUser = LocalStorageService.getUser();
+    _atividades = LocalStorageService.getAtividades();
+    _rascunhoAtual = LocalStorageService.getRascunhoAtividade();
     
     // Tenta restabelecer turma se já estiver salva localmente
     final codigoTurma = LocalStorageService.getCodigoTurma();
     if (codigoTurma != null) {
-      // Em um app completo carregaríamos a turma cacheada.
-      // Para o protótipo, se houver um código de turma salvo, podemos buscar os dados de mock correspondentes.
       _loadMockTurmaForCode(codigoTurma);
     }
     notifyListeners();
   }
+
 
   // --- CARREGAMENTO DE TURMA LOCAL ---
   void _loadMockTurmaForCode(String code) {
@@ -281,4 +287,83 @@ class AppStateProvider extends ChangeNotifier {
     
     notifyListeners();
   }
+
+  // --- GESTÃO DE ATIVIDADES E RASCUNHOS (PROFESSOR) ---
+
+  Future<void> salvarRascunhoAtividade(Atividade atv) async {
+    atv.rascunho = true;
+    _rascunhoAtual = atv;
+    await LocalStorageService.saveRascunhoAtividade(atv);
+    notifyListeners();
+  }
+
+  Future<void> publicarAtividade(Atividade atv) async {
+    atv.rascunho = false;
+    if (_currentUser != null) {
+      atv.criadoPor = _currentUser!.nome;
+    }
+    await LocalStorageService.saveAtividade(atv);
+    await LocalStorageService.clearRascunhoAtividade();
+    _rascunhoAtual = null;
+    _atividades = LocalStorageService.getAtividades();
+    notifyListeners();
+  }
+
+  Future<void> toggleAtividadeStatus(int id, bool ativo) async {
+    final list = LocalStorageService.getAtividades();
+    final index = list.indexWhere((a) => a.id == id);
+    if (index != -1) {
+      list[index].ativo = ativo;
+      await LocalStorageService.saveAtividade(list[index]);
+      _atividades = LocalStorageService.getAtividades();
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteAtividade(int id) async {
+    await LocalStorageService.deleteAtividade(id);
+    _atividades = LocalStorageService.getAtividades();
+    notifyListeners();
+  }
+
+  Future<void> descartarRascunho() async {
+    await LocalStorageService.clearRascunhoAtividade();
+    _rascunhoAtual = null;
+    notifyListeners();
+  }
+
+  // --- MÉTRICAS DE DESEMPENHO POR TEMA / ATIVIDADE ---
+
+  double getCompletionPercentage(String atividadeTipo, String tema) {
+    final history = getPontuacaoHistoryForActivePersonagem();
+    final filtered = history.where((p) => p.atividade == atividadeTipo).toList();
+    if (filtered.isEmpty) return 0.0;
+    
+    int totalAcertos = 0;
+    for (final p in filtered) {
+      totalAcertos += p.acertos;
+    }
+    // Consideramos uma meta de 10 acertos por tema para 100% de conclusão no protótipo
+    final double pct = (totalAcertos / 10.0) * 100.0;
+    return pct > 100.0 ? 100.0 : pct;
+  }
+
+  double getAccuracyPercentage(String atividadeTipo, String tema) {
+    final history = getPontuacaoHistoryForActivePersonagem();
+    final filtered = history.where((p) => p.atividade == atividadeTipo).toList();
+    if (filtered.isEmpty) return 100.0; // Padrão se não jogou ainda
+
+    int totalAcertos = 0;
+    int totalErros = 0;
+    for (final p in filtered) {
+      totalAcertos += p.acertos;
+      totalErros += p.erros;
+    }
+
+    final int total = totalAcertos + totalErros;
+    if (total == 0) return 100.0;
+
+    return (totalAcertos / total) * 100.0;
+  }
 }
+

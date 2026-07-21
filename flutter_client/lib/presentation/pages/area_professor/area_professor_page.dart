@@ -5,6 +5,7 @@ import '../../../state/app_state_provider.dart';
 import '../../../data/storage/local_storage_service.dart';
 import '../../../services/api_service.dart';
 import '../../../data/models/usuario.dart';
+import '../../../data/models/atividade.dart';
 
 class AreaProfessorPage extends StatefulWidget {
   const AreaProfessorPage({super.key});
@@ -33,6 +34,18 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
   bool _obscureConfirmPassword = true;
   String? _authError;
 
+  // Activity Management Form State
+  bool _isCreatingActivity = false;
+  int? _editingActivityId;
+  final TextEditingController _tituloController = TextEditingController();
+  String _selectedTipoJogo = 'JOGO_ADIVINHACAO';
+  String _selectedDificuldade = 'FACIL';
+  List<ItemAtividade> _editingItens = [];
+  final TextEditingController _itemDescricaoController = TextEditingController();
+  final TextEditingController _itemImagemController = TextEditingController();
+  final TextEditingController _itemOpcoesController = TextEditingController();
+
+
   @override
   void initState() {
     super.initState();
@@ -50,8 +63,13 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
     _nameController.dispose();
     _emailController.dispose();
     _confirmPasswordController.dispose();
+    _tituloController.dispose();
+    _itemDescricaoController.dispose();
+    _itemImagemController.dispose();
+    _itemOpcoesController.dispose();
     super.dispose();
   }
+
 
   Future<void> _handleSync() async {
     if (!_formKey.currentState!.validate()) return;
@@ -183,7 +201,7 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
     }
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: AppColors.primary,
@@ -198,6 +216,7 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
             indicatorColor: AppColors.secondary,
             indicatorWeight: 4,
             tabs: [
+              Tab(icon: Icon(Icons.add_task_rounded), text: 'Gestão de Atividades'),
               Tab(icon: Icon(Icons.sync_rounded), text: 'Vincular Turma'),
               Tab(icon: Icon(Icons.settings_rounded), text: 'Configurações'),
               Tab(icon: Icon(Icons.analytics_rounded), text: 'Relatórios'),
@@ -208,13 +227,16 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
           color: AppColors.bgSoft,
           child: TabBarView(
             children: [
-              // ABA 1: VINCULAR TURMA
+              // ABA 1: GESTÃO DE ATIVIDADES
+              _buildActivityTab(state, isCompact),
+
+              // ABA 2: VINCULAR TURMA
               _buildSyncTab(state, isCompact),
               
-              // ABA 2: CONFIGURAÇÕES
+              // ABA 3: CONFIGURAÇÕES
               _buildConfigTab(state),
               
-              // ABA 3: RELATÓRIOS
+              // ABA 4: RELATÓRIOS
               _buildReportTab(state),
             ],
           ),
@@ -222,6 +244,703 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
       ),
     );
   }
+
+  void _initCreationForm({Atividade? existingAtividade}) {
+    if (existingAtividade != null) {
+      _editingActivityId = existingAtividade.id;
+      _tituloController.text = existingAtividade.titulo;
+      _selectedTipoJogo = existingAtividade.tipoJogo;
+      _selectedDificuldade = existingAtividade.dificuldade;
+      _editingItens = List.from(existingAtividade.itens);
+    } else {
+      _editingActivityId = null;
+      _tituloController.clear();
+      _selectedTipoJogo = 'JOGO_ADIVINHACAO';
+      _selectedDificuldade = 'FACIL';
+      _editingItens = [];
+    }
+    _itemDescricaoController.clear();
+    _itemImagemController.clear();
+    _itemOpcoesController.clear();
+    setState(() {
+      _isCreatingActivity = true;
+    });
+  }
+
+  Future<void> _saveProgressDraft(AppStateProvider state) async {
+    if (_tituloController.text.trim().isEmpty && _editingItens.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Insira ao menos o tema ou um item para salvar rascunho.'),
+          backgroundColor: AppColors.info,
+        ),
+      );
+      return;
+    }
+
+    final atv = Atividade(
+      id: _editingActivityId,
+      titulo: _tituloController.text.trim().isEmpty ? 'Sem Título (Rascunho)' : _tituloController.text.trim(),
+      tipoJogo: _selectedTipoJogo,
+      dificuldade: _selectedDificuldade,
+      rascunho: true,
+      ativo: true,
+      itens: _editingItens,
+    );
+
+    await state.salvarRascunhoAtividade(atv);
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('💾 Progresso salvo como rascunho! Você pode continuar mais tarde.'),
+          backgroundColor: AppColors.secondary,
+        ),
+      );
+      setState(() {
+        _isCreatingActivity = false;
+      });
+    }
+  }
+
+  Future<void> _publishActivity(AppStateProvider state) async {
+    if (_tituloController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, informe o tema/título da atividade.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (_editingItens.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Adicione ao menos 1 item/palavra à atividade.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final atv = Atividade(
+      id: _editingActivityId,
+      titulo: _tituloController.text.trim(),
+      tipoJogo: _selectedTipoJogo,
+      dificuldade: _selectedDificuldade,
+      rascunho: false,
+      ativo: true,
+      itens: _editingItens,
+    );
+
+    await state.publicarAtividade(atv);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🎉 Atividade publicada com sucesso! Ela já está disponível no aplicativo.'),
+          backgroundColor: AppColors.accent,
+        ),
+      );
+      setState(() {
+        _isCreatingActivity = false;
+      });
+    }
+  }
+
+  Widget _buildActivityTab(AppStateProvider state, bool isCompact) {
+    if (isCompact) {
+      return _buildMobileRestrictionWidget();
+    }
+
+    if (_isCreatingActivity) {
+      return _buildActivityWizard(state);
+    }
+
+    return _buildActivityListDashboard(state);
+  }
+
+  Widget _buildMobileRestrictionWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.laptop_mac_rounded,
+                    size: 64,
+                    color: AppColors.info,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Criação de Atividades Exclusiva para Web e Tablet',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Para garantir a melhor experiência na criação de novas atividades, temas, palavras e imagens, acesse esta funcionalidade em um computador ou tablet.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: AppColors.textDark.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivityListDashboard(AppStateProvider state) {
+    final rascunho = state.rascunhoAtual;
+    final atividades = state.atividades;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Gestão de Jogos e Atividades',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textDark),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Crie novos temas para os jogos de Adivinhação e Palavras',
+                    style: TextStyle(fontSize: 14, color: AppColors.textDark),
+                  ),
+                ],
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                onPressed: () => _initCreationForm(),
+                icon: const Icon(Icons.add_rounded, color: Colors.white),
+                label: const Text(
+                  'Criar Nova Atividade',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Card de Rascunho se houver progresso salvo
+          if (rascunho != null)
+            Card(
+              color: AppColors.secondaryLight.withOpacity(0.3),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: AppColors.secondary, width: 2),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: AppColors.secondary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.history_rounded, color: Colors.white, size: 28),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Você possui um cadastro em andamento! 💾',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                          ),
+                          Text(
+                            'Tema: ${rascunho.titulo.isEmpty ? "Sem Título" : rascunho.titulo} • ${rascunho.itens.length} itens cadastrados',
+                            style: TextStyle(fontSize: 14, color: AppColors.textDark.withOpacity(0.8)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                        side: const BorderSide(color: AppColors.error),
+                      ),
+                      onPressed: () async {
+                        await state.descartarRascunho();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Rascunho descartado.')),
+                          );
+                        }
+                      },
+                      child: const Text('Descartar'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary),
+                      onPressed: () => _initCreationForm(existingAtividade: rascunho),
+                      icon: const Icon(Icons.edit_rounded, color: Colors.white),
+                      label: const Text('Continuar Cadastro', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          if (rascunho != null) const SizedBox(height: 20),
+
+          // Lista de Atividades Cadastradas
+          if (atividades.isEmpty)
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: Padding(
+                padding: const EdgeInsets.all(40.0),
+                child: Column(
+                  children: [
+                    const Icon(Icons.gamepad_rounded, size: 64, color: AppColors.primaryLight),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Nenhuma atividade criada ainda',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Clique no botão "Criar Nova Atividade" acima para cadastrar temas e palavras personalizadas.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textDark),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: atividades.length,
+              itemBuilder: (context, index) {
+                final atv = atividades[index];
+                final isAdivinhacao = atv.tipoJogo == 'JOGO_ADIVINHACAO';
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    leading: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: (isAdivinhacao ? AppColors.accent : AppColors.info).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        isAdivinhacao ? Icons.drag_indicator_rounded : Icons.collections_rounded,
+                        color: isAdivinhacao ? AppColors.accent : AppColors.info,
+                        size: 32,
+                      ),
+                    ),
+                    title: Row(
+                      children: [
+                        Text(
+                          atv.titulo,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: atv.ativo ? AppColors.accentLight : AppColors.errorLight,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            atv.ativo ? 'Ativo' : 'Inativo',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: atv.ativo ? AppColors.accent : AppColors.error,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 6.0),
+                      child: Text(
+                        'Tipo: ${isAdivinhacao ? 'Adivinhação' : 'Jogo de Palavras'}  •  ${atv.itens.length} palavras  •  Dificuldade: ${atv.dificuldade}',
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Switch(
+                          value: atv.ativo,
+                          activeColor: AppColors.accent,
+                          onChanged: (val) {
+                            state.toggleAtividadeStatus(atv.id!, val);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit_rounded, color: AppColors.primary),
+                          onPressed: () => _initCreationForm(existingAtividade: atv),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Excluir Atividade?'),
+                                content: Text('Tem certeza que deseja excluir "${atv.titulo}"?'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      state.deleteAtividade(atv.id!);
+                                    },
+                                    child: const Text('Excluir', style: TextStyle(color: Colors.white)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityWizard(AppStateProvider state) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            child: Padding(
+              padding: const EdgeInsets.all(28.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _editingActivityId == null ? 'Nova Atividade / Tema' : 'Editar Atividade',
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textDark),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () {
+                          setState(() {
+                            _isCreatingActivity = false;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 32),
+
+                  // Passo 1: Informações Básicas
+                  const Text(
+                    '1. Informações da Atividade',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: _tituloController,
+                    decoration: const InputDecoration(
+                      labelText: 'Tema / Título (ex: Frutas, Escola, Objetos)',
+                      prefixIcon: Icon(Icons.label_rounded),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedTipoJogo,
+                          decoration: const InputDecoration(
+                            labelText: 'Tipo de Jogo',
+                            prefixIcon: Icon(Icons.gamepad_rounded),
+                            border: OutlineInputBorder(),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'JOGO_ADIVINHACAO', child: Text('Adivinhação (Libras)')),
+                            DropdownMenuItem(value: 'JOGO_PALAVRAS', child: Text('Jogo de Palavras (Associação)')),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedTipoJogo = val);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedDificuldade,
+                          decoration: const InputDecoration(
+                            labelText: 'Dificuldade',
+                            prefixIcon: Icon(Icons.star_rounded),
+                            border: OutlineInputBorder(),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'FACIL', child: Text('Fácil 🌟')),
+                            DropdownMenuItem(value: 'MEDIO', child: Text('Médio ✨')),
+                            DropdownMenuItem(value: 'DIFICIL', child: Text('Difícil 🔥')),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedDificuldade = val);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+
+                  // Passo 2: Palavras & Imagens
+                  const Text(
+                    '2. Cadastrar Palavras e Imagens',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.bgSoft,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _itemDescricaoController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Palavra / Descrição (ex: Gato, Maçã)',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _itemImagemController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Caminho/URL da Imagem',
+                                  hintText: 'assets/animais/gato.png',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_selectedTipoJogo == 'JOGO_PALAVRAS') ...[
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _itemOpcoesController,
+                            decoration: const InputDecoration(
+                              labelText: 'Opções de resposta (separadas por vírgula)',
+                              hintText: 'Maçã, Banana, Uva, Laranja',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
+                            onPressed: () {
+                              final desc = _itemDescricaoController.text.trim();
+                              if (desc.isEmpty) return;
+
+                              String img = _itemImagemController.text.trim();
+                              if (img.isEmpty) {
+                                img = 'assets/animais/gato.png'; // Padrão
+                              }
+
+                              List<String> opcs = [];
+                              if (_selectedTipoJogo == 'JOGO_PALAVRAS') {
+                                final rawOpcs = _itemOpcoesController.text.trim();
+                                if (rawOpcs.isNotEmpty) {
+                                  opcs = rawOpcs.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+                                }
+                                if (!opcs.contains(desc)) {
+                                  opcs.insert(0, desc);
+                                }
+                              }
+
+                              setState(() {
+                                _editingItens.add(ItemAtividade(
+                                  descricao: desc,
+                                  imagem: img,
+                                  opcoes: opcs,
+                                ));
+                                _itemDescricaoController.clear();
+                                _itemImagemController.clear();
+                                _itemOpcoesController.clear();
+                              });
+                            },
+                            icon: const Icon(Icons.add_rounded, color: Colors.white),
+                            label: const Text('Adicionar Palavra', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Lista dos Itens já adicionados
+                  if (_editingItens.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'Nenhuma palavra adicionada a este tema ainda.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.error),
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _editingItens.length,
+                      itemBuilder: (context, index) {
+                        final item = _editingItens[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: ListTile(
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryLight.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.asset(
+                                  item.imagem,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
+                                ),
+                              ),
+                            ),
+                            title: Text(item.descricao, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: item.opcoes.isNotEmpty
+                                ? Text('Opções: ${item.opcoes.join(", ")}')
+                                : Text('Imagem: ${item.imagem}'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_rounded, color: AppColors.error),
+                              onPressed: () {
+                                setState(() {
+                                  _editingItens.removeAt(index);
+                                });
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                  const Divider(height: 36),
+
+                  // Rodapé de Ações com "Salvar Progresso (Rascunho)" e "Publicar"
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _isCreatingActivity = false;
+                          });
+                        },
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        label: const Text('Voltar'),
+                      ),
+                      Row(
+                        children: [
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.secondary,
+                              side: const BorderSide(color: AppColors.secondary, width: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            ),
+                            onPressed: () => _saveProgressDraft(state),
+                            icon: const Icon(Icons.save_rounded),
+                            label: const Text('Salvar Progresso (Rascunho)', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.accent,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                            ),
+                            onPressed: () => _publishActivity(state),
+                            icon: const Icon(Icons.publish_rounded, color: Colors.white),
+                            label: const Text('Publicar Atividade', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildAuthScreen(AppStateProvider state, bool isCompact) {
     return Scaffold(

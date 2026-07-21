@@ -7,9 +7,11 @@ import '../jogo_alfabeto/jogo_alfabeto_page.dart';
 import '../jogo_memoria/jogo_memoria_page.dart';
 import '../jogo_adivinhacao/jogo_adivinhacao_page.dart';
 import '../jogo_palavras/jogo_palavras_page.dart';
+import '../selecao_tema/selecao_tema_page.dart';
 
 class JogoHubPage extends StatelessWidget {
   const JogoHubPage({super.key});
+
 
   @override
   Widget build(BuildContext context) {
@@ -137,10 +139,10 @@ class JogoHubPage extends StatelessWidget {
                       _buildGameCard(
                         context: context,
                         title: 'Adivinhação',
-                        description: 'Forme os nomes dos bichinhos arrastando os sinais corretos!',
+                        description: 'Escolha o tema e forme as palavras selecionando os sinais corretos!',
                         color: AppColors.accent,
                         icon: Icons.drag_indicator_rounded,
-                        page: const JogoAdivinhacaoPage(),
+                        page: const SelecaoTemaPage(tipoJogo: 'JOGO_ADIVINHACAO'),
                         isCompact: isCompact,
                       ),
                       
@@ -148,12 +150,13 @@ class JogoHubPage extends StatelessWidget {
                       _buildGameCard(
                         context: context,
                         title: 'Jogo de Palavras',
-                        description: 'Veja a foto e escolha a palavra escrita que combina com ela!',
+                        description: 'Escolha o tema, veja a foto e selecione a palavra correta!',
                         color: AppColors.info,
                         icon: Icons.collections_rounded,
-                        page: const JogoPalavrasPage(),
+                        page: const SelecaoTemaPage(tipoJogo: 'JOGO_PALAVRAS'),
                         isCompact: isCompact,
                       ),
+
                     ],
                   ),
                 ],

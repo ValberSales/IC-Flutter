@@ -9,6 +9,7 @@ import '../../../state/app_state_provider.dart';
 import '../../widgets/pontuacao_header_widget.dart';
 import '../../widgets/mascote_feedback_widget.dart';
 import '../../widgets/tutorial_widget.dart';
+import '../../widgets/jogo_breadcrumb_widget.dart';
 
 import '../../../data/models/atividade.dart';
 
@@ -148,10 +149,17 @@ class _JogoPalavrasPageState extends State<JogoPalavrasPage> {
   }
 
   Widget _buildHeader() {
+    final state = context.watch<AppStateProvider>();
+    final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Header de Pontuação
+        JogoBreadcrumbWidget(
+          nomeJogo: 'Jogo de Palavras',
+          tema: widget.atividadeTema?.titulo ?? 'Membros da Família',
+          dificuldade: diff,
+        ),
         PontuacaoHeaderWidget(
           acertos: _acertosCount,
           erros: _errosCount,

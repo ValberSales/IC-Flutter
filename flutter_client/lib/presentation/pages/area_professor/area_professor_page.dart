@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+import 'dart:html' as html;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
@@ -44,7 +47,82 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
   final TextEditingController _itemDescricaoController = TextEditingController();
   final TextEditingController _itemImagemController = TextEditingController();
   final TextEditingController _itemOpcoesController = TextEditingController();
+  bool _isUploadingImage = false;
 
+  void _pickAndUploadImage() {
+    if (kIsWeb) {
+      final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
+      uploadInput.click();
+
+      uploadInput.onChange.listen((e) {
+        final files = uploadInput.files;
+        if (files != null && files.isNotEmpty) {
+          final file = files[0];
+          final reader = html.FileReader();
+          reader.readAsArrayBuffer(file);
+          reader.onLoadEnd.listen((e) async {
+            final bytes = reader.result as Uint8List;
+            setState(() {
+              _isUploadingImage = true;
+            });
+
+            final url = await ApiService.uploadImagem(bytes, file.name);
+
+            if (mounted) {
+              setState(() {
+                _isUploadingImage = false;
+                if (url != null) {
+                  _itemImagemController.text = url;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('📷 Imagem enviada com sucesso para o MinIO: $url'),
+                      backgroundColor: AppColors.accent,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Erro ao enviar imagem para o MinIO.'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              });
+            }
+          });
+        }
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('O upload nativo via navegador está disponível no Flutter Web.'),
+        ),
+      );
+    }
+  }
+
+  Widget _buildImageWidget(String path, {double? width, double? height, BoxFit fit = BoxFit.contain}) {
+    if (path.isEmpty) {
+      return const Icon(Icons.image_not_supported, color: AppColors.border);
+    }
+    if (path.startsWith('http') || path.startsWith('/api/files/')) {
+      final fullUrl = path.startsWith('/api/files/') ? 'http://localhost:8081$path' : path;
+      return Image.network(
+        fullUrl,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, color: AppColors.error),
+      );
+    }
+    return Image.asset(
+      path,
+      width: width,
+      height: height,
+      fit: fit,
+      errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, color: AppColors.primaryLight),
+    );
+  }
 
   @override
   void initState() {
@@ -53,6 +131,9 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
     if (state.activeTurma != null) {
       _codeController.text = state.activeTurma!.codigo;
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      state.loadInitialState();
+    });
   }
 
   @override
@@ -756,8 +837,10 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                     child: Column(
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
+                              flex: 2,
                               child: TextFormField(
                                 controller: _itemDescricaoController,
                                 decoration: const InputDecoration(
@@ -769,14 +852,40 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: TextFormField(
-                                controller: _itemImagemController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Caminho/URL da Imagem',
-                                  hintText: 'assets/animais/gato.png',
-                                  border: OutlineInputBorder(),
-                                  isDense: true,
-                                ),
+                              flex: 3,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  TextFormField(
+                                    controller: _itemImagemController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Caminho ou URL da Imagem',
+                                      hintText: 'assets/animais/gato.png ou /api/files/gato.png',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.secondary,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                    ),
+                                    onPressed: _isUploadingImage ? null : _pickAndUploadImage,
+                                    icon: _isUploadingImage
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                          )
+                                        : const Icon(Icons.upload_file_rounded, size: 18),
+                                    label: Text(
+                                      _isUploadingImage ? 'Enviando ao MinIO...' : '📷 Selecionar e Enviar Imagem (MinIO)',
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -859,19 +968,15 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                           margin: const EdgeInsets.only(bottom: 8),
                           child: ListTile(
                             leading: Container(
-                              width: 40,
-                              height: 40,
+                              width: 44,
+                              height: 44,
                               decoration: BoxDecoration(
                                 color: AppColors.primaryLight.withOpacity(0.3),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.asset(
-                                  item.imagem,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
-                                ),
+                                child: _buildImageWidget(item.imagem),
                               ),
                             ),
                             title: Text(item.descricao, style: const TextStyle(fontWeight: FontWeight.bold)),

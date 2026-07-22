@@ -9,6 +9,7 @@ import '../../../state/app_state_provider.dart';
 import '../../widgets/pontuacao_header_widget.dart';
 import '../../widgets/mascote_feedback_widget.dart';
 import '../../widgets/tutorial_widget.dart';
+import '../../widgets/jogo_breadcrumb_widget.dart';
 
 import '../../../data/models/atividade.dart';
 
@@ -161,6 +162,11 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
                     child: Column(
                       children: [
+                        JogoBreadcrumbWidget(
+                          nomeJogo: 'Jogo de Adivinhação',
+                          tema: widget.atividadeTema?.titulo ?? 'Animais da Natureza',
+                          dificuldade: dificuldade,
+                        ),
                         PontuacaoHeaderWidget(
                           acertos: _acertosCount,
                           erros: _errosCount,
@@ -244,135 +250,159 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: Column(
                   children: [
-                    // Coluna da Esquerda (Desafio)
+                    // Top Breadcrumb Header in Web
+                    JogoBreadcrumbWidget(
+                      nomeJogo: 'Jogo de Adivinhação',
+                      tema: widget.atividadeTema?.titulo ?? 'Animais da Natureza',
+                      dificuldade: dificuldade,
+                    ),
+                    PontuacaoHeaderWidget(
+                      acertos: _acertosCount,
+                      erros: _errosCount,
+                      atividade: 'JOGO_ADIVINHACAO',
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Side-by-side content
                     Expanded(
-                      flex: 2,
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
-                          side: const BorderSide(color: AppColors.border, width: 2),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              PontuacaoHeaderWidget(
-                                acertos: _acertosCount,
-                                erros: _errosCount,
-                                atividade: 'JOGO_ADIVINHACAO',
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Coluna da Esquerda (Desafio)
+                          Expanded(
+                            flex: 2,
+                            child: Card(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                                side: const BorderSide(color: AppColors.border, width: 2),
                               ),
-                              const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const TutorialWidget(atividade: 'JOGO_ADIVINHACAO'),
-                                  MascoteFeedbackWidget(
-                                    feedbackType: _feedback,
-                                    clearFeedback: () {
-                                      setState(() {
-                                        _feedback = 'VAZIO';
-                                      });
-                                    },
-                                    scale: 0.70,
-                                  ),
-                                ],
-                              ),
-                              const Spacer(),
-                              Center(
-                                child: Container(
-                                  constraints: const BoxConstraints(maxWidth: 320, maxHeight: 220),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.bgSoft,
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(color: AppColors.secondary, width: 3.5),
-                                  ),
-                                  padding: const EdgeInsets.all(12),
-                                  child: Image.asset(
-                                    _selectedPalavra!.imagem,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) => const Icon(
-                                      Icons.image,
-                                      size: 100,
-                                      color: AppColors.primaryLight,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              if (dicaPalavra)
-                                Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.secondaryLight.withOpacity(0.4),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Text(
-                                      _selectedPalavra!.descricao.toUpperCase(),
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w900,
-                                        color: AppColors.secondary,
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return SingleChildScrollView(
+                                    padding: const EdgeInsets.all(24.0),
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
+                                      child: IntrinsicHeight(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                                          children: [
+                                            const Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: TutorialWidget(atividade: 'JOGO_ADIVINHACAO'),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Center(
+                                              child: Container(
+                                                constraints: const BoxConstraints(maxWidth: 320, maxHeight: 200),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.bgSoft,
+                                                  borderRadius: BorderRadius.circular(24),
+                                                  border: Border.all(color: AppColors.secondary, width: 3.5),
+                                                ),
+                                                padding: const EdgeInsets.all(12),
+                                                child: Image.asset(
+                                                  _selectedPalavra!.imagem,
+                                                  fit: BoxFit.contain,
+                                                  errorBuilder: (context, error, stackTrace) => const Icon(
+                                                    Icons.image,
+                                                    size: 100,
+                                                    color: AppColors.primaryLight,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            if (dicaPalavra)
+                                              Center(
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.secondaryLight.withOpacity(0.4),
+                                                    borderRadius: BorderRadius.circular(16),
+                                                  ),
+                                                  child: Text(
+                                                    _selectedPalavra!.descricao.toUpperCase(),
+                                                    style: const TextStyle(
+                                                      fontSize: 22,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: AppColors.secondary,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            const SizedBox(height: 16),
+                                            Center(
+                                              child: _buildWebSlots(),
+                                            ),
+                                            const Spacer(),
+                                            const SizedBox(height: 16),
+                                            Center(
+                                              child: MascoteFeedbackWidget(
+                                                feedbackType: _feedback,
+                                                clearFeedback: () {
+                                                  setState(() {
+                                                    _feedback = 'VAZIO';
+                                                  });
+                                                },
+                                                scale: 0.70,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              const SizedBox(height: 20),
-                              Center(
-                                child: _buildWebSlots(),
+                                  );
+                                },
                               ),
-                              const Spacer(),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 24),
-                    // Coluna da Direita (Grid de Letras)
-                    Expanded(
-                      flex: 3,
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
-                          side: const BorderSide(color: AppColors.border, width: 2),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const Text(
-                                'Selecione o sinal correto:',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.textDark,
-                                ),
-                                textAlign: TextAlign.center,
+                          const SizedBox(width: 24),
+                          // Coluna da Direita (Grid de Letras)
+                          Expanded(
+                            flex: 3,
+                            child: Card(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                                side: const BorderSide(color: AppColors.border, width: 2),
                               ),
-                              const SizedBox(height: 20),
-                              Expanded(
-                                child: GridView.builder(
-                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 6,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 12,
-                                    childAspectRatio: 0.85,
-                                  ),
-                                  itemCount: state.currentAlfabeto.length,
-                                  itemBuilder: (context, index) {
-                                    final item = state.currentAlfabeto[index];
-                                    return _buildSignCard(item, dicaLetra);
-                                  },
+                              child: Padding(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    const Text(
+                                      'Selecione o sinal correto:',
+                                      style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.textDark,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Expanded(
+                                      child: GridView.builder(
+                                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 6,
+                                          crossAxisSpacing: 12,
+                                          mainAxisSpacing: 12,
+                                          childAspectRatio: 0.85,
+                                        ),
+                                        itemCount: state.currentAlfabeto.length,
+                                        itemBuilder: (context, index) {
+                                          final item = state.currentAlfabeto[index];
+                                          return _buildSignCard(item, dicaLetra);
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ],

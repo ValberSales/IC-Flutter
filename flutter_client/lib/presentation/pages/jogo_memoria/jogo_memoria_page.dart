@@ -8,6 +8,7 @@ import '../../../state/app_state_provider.dart';
 import '../../widgets/pontuacao_header_widget.dart';
 import '../../widgets/mascote_feedback_widget.dart';
 import '../../widgets/tutorial_widget.dart';
+import '../../widgets/jogo_breadcrumb_widget.dart';
 
 class CartaMemoria {
   final String letra;
@@ -227,6 +228,10 @@ class _JogoMemoriaPageState extends State<JogoMemoriaPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Header de Pontuação
+                  JogoBreadcrumbWidget(
+                    nomeJogo: 'Jogo da Memória',
+                    dificuldade: context.watch<AppStateProvider>().activePersonagem?.dificuldade ?? 'FACIL',
+                  ),
                   PontuacaoHeaderWidget(
                     acertos: _acertosCount,
                     erros: _errosCount,

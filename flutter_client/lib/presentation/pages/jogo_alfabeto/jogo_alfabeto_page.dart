@@ -7,6 +7,7 @@ import '../../../state/app_state_provider.dart';
 import '../../widgets/pontuacao_header_widget.dart';
 import '../../widgets/mascote_feedback_widget.dart';
 import '../../widgets/tutorial_widget.dart';
+import '../../widgets/jogo_breadcrumb_widget.dart';
 
 class LetraJogo {
   final Map<String, String> letraData;
@@ -119,6 +120,10 @@ class _JogoAlfabetoPageState extends State<JogoAlfabetoPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Header com pontuação
+                  JogoBreadcrumbWidget(
+                    nomeJogo: 'Alfabeto Manual',
+                    dificuldade: context.watch<AppStateProvider>().activePersonagem?.dificuldade ?? 'FACIL',
+                  ),
                   PontuacaoHeaderWidget(
                     acertos: _acertosCount,
                     erros: _errosCount,

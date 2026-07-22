@@ -424,51 +424,6 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 20),
 
-              // Dificuldade RadioButtons
-              const Text(
-                'Dificuldade das Atividades:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textDark),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                alignment: WrapAlignment.spaceAround,
-                spacing: 8,
-                runSpacing: 8,
-                children: ['FACIL', 'MEDIO', 'DIFICIL'].map((diff) {
-                  String label = 'Fácil';
-                  if (diff == 'MEDIO') label = 'Médio';
-                  if (diff == 'DIFICIL') label = 'Difícil';
-                  
-                  final isSelected = _personagemEdicao.dificuldade == diff;
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _personagemEdicao.dificuldade = diff;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primaryLight.withOpacity(0.4) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected ? AppColors.primary : AppColors.border,
-                          width: 2,
-                        ),
-                      ),
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: isSelected ? AppColors.primary : AppColors.textDark.withOpacity(0.7),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
-
               // Score button if editing
               if (_personagemEdicao.id != null) ...[
                 OutlinedButton.icon(
@@ -577,7 +532,6 @@ class _HomePageState extends State<HomePage> {
                             p.nome,
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
-                          subtitle: Text('Dificuldade: ${p.dificuldade}'),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete_forever_rounded, color: AppColors.error),
                             onPressed: () => _excluirPersonagem(state, p),

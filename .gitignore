@@ -138,3 +138,6 @@ flutter_client/.pub/
 flutter_client/.pub-cache/
 flutter_client/build/
 
+# Harness Log
+HARNESS_LOG.md
+

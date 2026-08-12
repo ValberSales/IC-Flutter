@@ -10,6 +10,8 @@ import '../../widgets/pontuacao_header_widget.dart';
 import '../../widgets/mascote_feedback_widget.dart';
 import '../../widgets/tutorial_widget.dart';
 import '../../widgets/jogo_breadcrumb_widget.dart';
+import '../../widgets/dynamic_image_widget.dart';
+import '../../widgets/celebracao_conclusao_dialog.dart';
 
 import '../../../data/models/atividade.dart';
 
@@ -34,6 +36,9 @@ class JogoPalavrasPage extends StatefulWidget {
 
 class _JogoPalavrasPageState extends State<JogoPalavrasPage> {
   List<Palavra> _palavras = [];
+  List<Palavra> _palavrasFila = [];
+  int _currentWordIndex = 0;
+
   Palavra? _selectedPalavra;
   List<OpcaoPalavra> _opcoes = [];
   
@@ -59,7 +64,7 @@ class _JogoPalavrasPageState extends State<JogoPalavrasPage> {
           tipo: 'JOGO_PALAVRAS',
           descricao: item.descricao,
           imagem: item.imagem,
-          opcoes: item.opcoes.isNotEmpty ? item.opcoes : [item.descricao, 'Opção 2', 'Opção 3'],
+          opcoes: item.opcoes,
         );
       }).toList();
     } else if (state.customPalavras.isNotEmpty) {
@@ -78,45 +83,105 @@ class _JogoPalavrasPageState extends State<JogoPalavrasPage> {
       }).toList();
     }
 
+    final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
+    final String temaNome = widget.atividadeTema?.titulo ?? 'Membros da Família';
+    final completedWords = state.getCompletedWordsForTema(
+      jogo: 'JOGO_PALAVRAS',
+      tema: widget.atividadeTema,
+      temaNomePadrao: temaNome,
+      dificuldade: diff,
+    );
+
+    final uncompleted = _palavras.where((p) => !completedWords.contains(p.descricao)).toList();
+    if (uncompleted.isNotEmpty) {
+      _palavrasFila = List<Palavra>.from(uncompleted)..shuffle(Random());
+    } else {
+      _palavrasFila = List<Palavra>.from(_palavras)..shuffle(Random());
+    }
+
+    _currentWordIndex = 0;
+
     _iniciarRodada();
   }
 
+  void _exibirCelebracaoConclusao() {
+    final state = context.read<AppStateProvider>();
+    final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
+    final String temaNome = widget.atividadeTema?.titulo ?? 'Membros da Família';
+
+    Future.microtask(() {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => CelebracaoConclusaoDialog(
+            nomeTema: temaNome,
+            jogoNome: 'Jogo de Palavras',
+            dificuldade: diff,
+            totalAcertos: _acertosCount,
+            totalErros: _errosCount,
+            onVoltarTema: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        );
+      }
+    });
+  }
 
   void _iniciarRodada() {
-    if (_palavras.isEmpty) return;
+    if (_palavrasFila.isEmpty) return;
+
+    if (_currentWordIndex >= _palavrasFila.length) {
+      _exibirCelebracaoConclusao();
+      return;
+    }
+
+    final palavraSorteada = _palavrasFila[_currentWordIndex];
+    _currentWordIndex++;
 
     final random = Random();
-    final palavraSorteada = _palavras[random.nextInt(_palavras.length)];
     final state = context.read<AppStateProvider>();
     final dificuldade = state.activePersonagem?.dificuldade ?? 'FACIL';
 
-    // Monta opções baseadas na palavra sorteada e na dificuldade
-    final List<String> listOpcoesTemp = [...palavraSorteada.opcoes];
-    
-    // Garante que a palavra correta está nas opções
-    if (!listOpcoesTemp.contains(palavraSorteada.descricao)) {
-      listOpcoesTemp.add(palavraSorteada.descricao);
+    // Determina número total de opções com base na dificuldade do perfil do aluno
+    int totalOpcoes = 3;
+    if (dificuldade == 'MEDIO') {
+      totalOpcoes = 4;
+    } else if (dificuldade == 'DIFICIL') {
+      totalOpcoes = 5;
     }
 
-    // Embaralha as opções
-    listOpcoesTemp.shuffle();
-
-    // Limita as opções de acordo com a dificuldade
-    int limite = listOpcoesTemp.length;
-    if (dificuldade == 'FACIL') {
-      limite = 3;
-    } else if (dificuldade == 'MEDIO') {
-      limite = 4;
+    // Coleta banco global de palavras/descrições para usar como distratores reais
+    final Set<String> distractorPool = {};
+    for (final p in _palavras) {
+      if (p.descricao.trim().isNotEmpty) {
+        distractorPool.add(p.descricao.trim());
+      }
+    }
+    for (final at in state.atividades) {
+      for (final item in at.itens) {
+        if (item.descricao.trim().isNotEmpty) {
+          distractorPool.add(item.descricao.trim());
+        }
+      }
+    }
+    for (final item in LocalDataSource.familiaPadrao) {
+      distractorPool.add(item['descricao']!);
+    }
+    for (final item in LocalDataSource.animaisPadrao) {
+      distractorPool.add(item['descricao']!);
     }
 
-    var listOpcoesFinal = listOpcoesTemp.take(limite).toList();
+    // Remove a resposta correta da lista de distratores
+    final String correta = palavraSorteada.descricao.trim();
+    distractorPool.remove(correta);
 
-    // Garante denovo que a correta foi mantida na lista truncada
-    if (!listOpcoesFinal.contains(palavraSorteada.descricao)) {
-      listOpcoesFinal.removeLast();
-      listOpcoesFinal.add(palavraSorteada.descricao);
-      listOpcoesFinal.shuffle();
-    }
+    final List<String> distractors = distractorPool.toList()..shuffle(random);
+    final int qtdDistratores = totalOpcoes - 1;
+    final List<String> distratoresSelecionados = distractors.take(qtdDistratores).toList();
+
+    final List<String> listOpcoesFinal = [correta, ...distratoresSelecionados]..shuffle(random);
 
     setState(() {
       _selectedPalavra = palavraSorteada;
@@ -137,14 +202,44 @@ class _JogoPalavrasPageState extends State<JogoPalavrasPage> {
         _acertosCount++;
         _feedback = 'ACERTO';
       });
-      state.salvaPontuacao(_acertosCount, _errosCount, 'JOGO_PALAVRAS');
+
+      final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
+      final String temaNome = widget.atividadeTema?.titulo ?? 'Membros da Família';
+      state.registrarPalavraConcluida(
+        jogo: 'JOGO_PALAVRAS',
+        tema: widget.atividadeTema,
+        temaNomePadrao: temaNome,
+        palavra: _selectedPalavra!.descricao,
+        dificuldade: diff,
+      );
+
+      final bool isMatchComplete = _currentWordIndex >= _palavrasFila.length;
+
+      state.salvaPontuacao(
+        _acertosCount,
+        _errosCount,
+        'JOGO_PALAVRAS',
+        tema: temaNome,
+        concluido: isMatchComplete,
+      );
+
+      if (isMatchComplete) {
+        _exibirCelebracaoConclusao();
+      }
     } else {
+      final String temaNome = widget.atividadeTema?.titulo ?? 'Membros da Família';
       setState(() {
         opcaoSelected.pendente = false;
         _errosCount++;
         _feedback = 'ERRO';
       });
-      state.salvaPontuacao(_acertosCount, _errosCount, 'JOGO_PALAVRAS');
+      state.salvaPontuacao(
+        _acertosCount,
+        _errosCount,
+        'JOGO_PALAVRAS',
+        tema: temaNome,
+        concluido: false,
+      );
     }
   }
 
@@ -209,16 +304,9 @@ class _JogoPalavrasPageState extends State<JogoPalavrasPage> {
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Image.asset(
-              _selectedPalavra!.imagem,
+            child: DynamicImageWidget(
+              imagePath: _selectedPalavra!.imagem,
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.image_not_supported_rounded,
-                  size: 80,
-                  color: AppColors.primaryLight,
-                );
-              },
             ),
           ),
         ),

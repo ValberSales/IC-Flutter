@@ -117,21 +117,29 @@ class ApiService {
 
   // --- ATIVIDADES (PROFESSOR) ---
 
-  static Future<List<Atividade>> getAtividades() async {
+  static Future<List<Atividade>> getAtividades({bool apenasAtivas = false}) async {
     if (!useBackend) {
       return LocalStorageService.getAtividades();
     }
 
     try {
-      final url = Uri.parse('$baseUrl/atividades');
-      final response = await http.get(url, headers: _getHeaders(includeContentType: false));
+      final queryParam = apenasAtivas ? '?apenasAtivas=true' : '';
+      final url = Uri.parse('$baseUrl/atividades$queryParam');
+      final response = await http
+          .get(url, headers: _getHeaders(includeContentType: false))
+          .timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200) {
         final List<dynamic> list = jsonDecode(response.body);
-        return list.map((e) => Atividade.fromJson(e)).toList();
+        final atividades = list.map((e) => Atividade.fromJson(e)).toList();
+        if (atividades.isNotEmpty) {
+          // Atualiza cache local
+          await LocalStorageService.saveAtividadesList(atividades);
+        }
+        return atividades;
       }
     } catch (e) {
-      print('Erro ao buscar atividades no backend Java: $e');
+      print('Servidor indisponível ou erro ao buscar atividades, usando cache local: $e');
     }
     return LocalStorageService.getAtividades();
   }

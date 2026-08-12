@@ -431,10 +431,6 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
   }
 
   Widget _buildActivityTab(AppStateProvider state, bool isCompact) {
-    if (isCompact) {
-      return _buildMobileRestrictionWidget();
-    }
-
     if (_isCreatingActivity) {
       return _buildActivityWizard(state);
     }
@@ -678,7 +674,7 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                     subtitle: Padding(
                       padding: const EdgeInsets.only(top: 6.0),
                       child: Text(
-                        'Tipo: ${isAdivinhacao ? 'Adivinhação' : 'Jogo de Palavras'}  •  ${atv.itens.length} palavras  •  Dificuldade: ${atv.dificuldade}',
+                        'Tipo: ${isAdivinhacao ? 'Adivinhação (Libras)' : 'Jogo de Palavras (Associação)'}  •  ${atv.itens.length} palavra(s) cadastrada(s)',
                       ),
                     ),
                     trailing: Row(
@@ -778,45 +774,20 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedTipoJogo,
-                          decoration: const InputDecoration(
-                            labelText: 'Tipo de Jogo',
-                            prefixIcon: Icon(Icons.gamepad_rounded),
-                            border: OutlineInputBorder(),
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 'JOGO_ADIVINHACAO', child: Text('Adivinhação (Libras)')),
-                            DropdownMenuItem(value: 'JOGO_PALAVRAS', child: Text('Jogo de Palavras (Associação)')),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) setState(() => _selectedTipoJogo = val);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedDificuldade,
-                          decoration: const InputDecoration(
-                            labelText: 'Dificuldade',
-                            prefixIcon: Icon(Icons.star_rounded),
-                            border: OutlineInputBorder(),
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 'FACIL', child: Text('Fácil 🌟')),
-                            DropdownMenuItem(value: 'MEDIO', child: Text('Médio ✨')),
-                            DropdownMenuItem(value: 'DIFICIL', child: Text('Difícil 🔥')),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) setState(() => _selectedDificuldade = val);
-                          },
-                        ),
-                      ),
+                  DropdownButtonFormField<String>(
+                    value: _selectedTipoJogo,
+                    decoration: const InputDecoration(
+                      labelText: 'Tipo de Jogo',
+                      prefixIcon: Icon(Icons.gamepad_rounded),
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'JOGO_ADIVINHACAO', child: Text('Adivinhação (Libras)')),
+                      DropdownMenuItem(value: 'JOGO_PALAVRAS', child: Text('Jogo de Palavras (Associação)')),
                     ],
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedTipoJogo = val);
+                    },
                   ),
                   const SizedBox(height: 28),
 

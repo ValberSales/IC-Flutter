@@ -36,192 +36,213 @@ class _JogoHubPageState extends State<JogoHubPage> {
       body: Container(
         color: AppColors.bgSoft,
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Header amigável com perfil do aluno
-                      if (state.activePersonagem != null)
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundImage: AssetImage(state.activePersonagem!.avatar),
-                                radius: 28,
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Olá, ${state.activePersonagem!.nome}!',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w900,
-                                        fontFamily: 'Fredoka',
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Escolha o nível de cada jogo no card correspondente abaixo:',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.textDark.withOpacity(0.7),
-                                      ),
-                                    ),
-                                  ],
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await state.fetchAtividadesOnline();
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Header amigável com perfil do aluno
+                        if (state.activePersonagem != null)
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundImage: AssetImage(state.activePersonagem!.avatar),
+                                  radius: 28,
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Olá, ${state.activePersonagem!.nome}!',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w900,
+                                          fontFamily: 'Fredoka',
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Escolha o nível de cada jogo no card correspondente abaixo:',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textDark.withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        const SizedBox(height: 24),
+                        
+                        const Text(
+                          'Escolha um jogo divertido:',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            fontFamily: 'Fredoka',
+                            color: AppColors.textDark,
                           ),
                         ),
-                      const SizedBox(height: 24),
-                      
-                      const Text(
-                        'Escolha um jogo divertido:',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          fontFamily: 'Fredoka',
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                      // Grid de Jogos com Colunas Dinâmicas e Max Width nos Cards
-                      GridView(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 480,
-                          mainAxisSpacing: 20,
-                          crossAxisSpacing: 20,
-                          mainAxisExtent: 295,
+                        // Grid de Jogos com Colunas Dinâmicas e Max Width nos Cards
+                        Builder(
+                          builder: (context) {
+                            final totalAdivinhacao = state.atividades
+                                .where((a) => a.ativo && a.tipoJogo == 'JOGO_ADIVINHACAO')
+                                .length;
+                            final totalPalavras = state.atividades
+                                .where((a) => a.ativo && a.tipoJogo == 'JOGO_PALAVRAS')
+                                .length;
+
+                            return GridView(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 480,
+                                mainAxisSpacing: 20,
+                                crossAxisSpacing: 20,
+                                mainAxisExtent: 295,
+                              ),
+                              children: [
+                                // 1. ALFABETO MANUAL
+                                _buildGameCategoryCard(
+                                  context: context,
+                                  title: 'Alfabeto Manual',
+                                  description: 'Aprenda os sinais de Libras para cada letra do alfabeto!',
+                                  color: AppColors.primary,
+                                  icon: Icons.abc_rounded,
+                                  badgeText: 'Módulo Fixo',
+                                  currentDiff: _diffAlfabeto,
+                                  onDiffChanged: (newDiff) {
+                                    setState(() {
+                                      _diffAlfabeto = newDiff;
+                                    });
+                                  },
+                                  pctConclusao: state.getOverallGameProgress('JOGO_ALFABETO'),
+                                  pctAcertos: state.getOverallGameAccuracy('JOGO_ALFABETO'),
+                                  onPlay: () {
+                                    if (state.activePersonagem != null) {
+                                      state.activePersonagem!.dificuldade = _diffAlfabeto;
+                                    }
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const JogoAlfabetoPage()),
+                                    );
+                                  },
+                                ),
+                                
+                                // 2. JOGO DA MEMÓRIA
+                                _buildGameCategoryCard(
+                                  context: context,
+                                  title: 'Jogo da Memória',
+                                  description: 'Encontre os pares combinando a letra e o sinal em Libras!',
+                                  color: AppColors.secondary,
+                                  icon: Icons.grid_view_rounded,
+                                  badgeText: 'Módulo Fixo',
+                                  currentDiff: _diffMemoria,
+                                  onDiffChanged: (newDiff) {
+                                    setState(() {
+                                      _diffMemoria = newDiff;
+                                    });
+                                  },
+                                  pctConclusao: state.getOverallGameProgress('JOGO_MEMORIA'),
+                                  pctAcertos: state.getOverallGameAccuracy('JOGO_MEMORIA'),
+                                  onPlay: () {
+                                    if (state.activePersonagem != null) {
+                                      state.activePersonagem!.dificuldade = _diffMemoria;
+                                    }
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const JogoMemoriaPage()),
+                                    );
+                                  },
+                                ),
+                                
+                                // 3. JOGO DE ADIVINHAÇÃO
+                                _buildGameCategoryCard(
+                                  context: context,
+                                  title: 'Adivinhação',
+                                  description: 'Escolha o tema e forme as palavras selecionando os sinais corretos!',
+                                  color: AppColors.accent,
+                                  icon: Icons.search_rounded,
+                                  badgeText: totalAdivinhacao > 0 ? '$totalAdivinhacao tema(s) ativo(s)' : '1 tema padrão',
+                                  currentDiff: _diffAdivinhacao,
+                                  onDiffChanged: (newDiff) {
+                                    setState(() {
+                                      _diffAdivinhacao = newDiff;
+                                    });
+                                  },
+                                  pctConclusao: state.getOverallGameProgress('JOGO_ADIVINHACAO'),
+                                  pctAcertos: state.getOverallGameAccuracy('JOGO_ADIVINHACAO'),
+                                  onPlay: () {
+                                    if (state.activePersonagem != null) {
+                                      state.activePersonagem!.dificuldade = _diffAdivinhacao;
+                                    }
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const SelecaoTemaPage(tipoJogo: 'JOGO_ADIVINHACAO')),
+                                    );
+                                  },
+                                ),
+                                
+                                // 4. JOGO DE PALAVRAS
+                                _buildGameCategoryCard(
+                                  context: context,
+                                  title: 'Jogo de Palavras',
+                                  description: 'Escolha o tema, veja a foto e selecione a palavra correta!',
+                                  color: AppColors.info,
+                                  icon: Icons.collections_rounded,
+                                  badgeText: totalPalavras > 0 ? '$totalPalavras tema(s) ativo(s)' : '1 tema padrão',
+                                  currentDiff: _diffPalavras,
+                                  onDiffChanged: (newDiff) {
+                                    setState(() {
+                                      _diffPalavras = newDiff;
+                                    });
+                                  },
+                                  pctConclusao: state.getOverallGameProgress('JOGO_PALAVRAS'),
+                                  pctAcertos: state.getOverallGameAccuracy('JOGO_PALAVRAS'),
+                                  onPlay: () {
+                                    if (state.activePersonagem != null) {
+                                      state.activePersonagem!.dificuldade = _diffPalavras;
+                                    }
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const SelecaoTemaPage(tipoJogo: 'JOGO_PALAVRAS')),
+                                    );
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        children: [
-                          // 1. ALFABETO MANUAL
-                          _buildGameCategoryCard(
-                            context: context,
-                            title: 'Alfabeto Manual',
-                            description: 'Aprenda os sinais de Libras para cada letra do alfabeto!',
-                            color: AppColors.primary,
-                            icon: Icons.abc_rounded,
-                            currentDiff: _diffAlfabeto,
-                            onDiffChanged: (newDiff) {
-                              setState(() {
-                                _diffAlfabeto = newDiff;
-                              });
-                            },
-                            pctConclusao: state.getCompletionPercentage('JOGO_ALFABETO', 'Alfabeto'),
-                            pctAcertos: state.getAccuracyPercentage('JOGO_ALFABETO', 'Alfabeto'),
-                            onPlay: () {
-                              if (state.activePersonagem != null) {
-                                state.activePersonagem!.dificuldade = _diffAlfabeto;
-                              }
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const JogoAlfabetoPage()),
-                              );
-                            },
-                          ),
-                          
-                          // 2. JOGO DA MEMÓRIA
-                          _buildGameCategoryCard(
-                            context: context,
-                            title: 'Jogo da Memória',
-                            description: 'Encontre os pares combinando a letra e o sinal em Libras!',
-                            color: AppColors.secondary,
-                            icon: Icons.grid_view_rounded,
-                            currentDiff: _diffMemoria,
-                            onDiffChanged: (newDiff) {
-                              setState(() {
-                                _diffMemoria = newDiff;
-                              });
-                            },
-                            pctConclusao: state.getCompletionPercentage('JOGO_MEMORIA', 'Memoria'),
-                            pctAcertos: state.getAccuracyPercentage('JOGO_MEMORIA', 'Memoria'),
-                            onPlay: () {
-                              if (state.activePersonagem != null) {
-                                state.activePersonagem!.dificuldade = _diffMemoria;
-                              }
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const JogoMemoriaPage()),
-                              );
-                            },
-                          ),
-                          
-                          // 3. JOGO DE ADIVINHAÇÃO
-                          _buildGameCategoryCard(
-                            context: context,
-                            title: 'Adivinhação',
-                            description: 'Escolha o tema e forme as palavras selecionando os sinais corretos!',
-                            color: AppColors.accent,
-                            icon: Icons.search_rounded,
-                            currentDiff: _diffAdivinhacao,
-                            onDiffChanged: (newDiff) {
-                              setState(() {
-                                _diffAdivinhacao = newDiff;
-                              });
-                            },
-                            pctConclusao: state.getCompletionPercentage('JOGO_ADIVINHACAO', 'Adivinhacao'),
-                            pctAcertos: state.getAccuracyPercentage('JOGO_ADIVINHACAO', 'Adivinhacao'),
-                            onPlay: () {
-                              if (state.activePersonagem != null) {
-                                state.activePersonagem!.dificuldade = _diffAdivinhacao;
-                              }
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const SelecaoTemaPage(tipoJogo: 'JOGO_ADIVINHACAO')),
-                              );
-                            },
-                          ),
-                          
-                          // 4. JOGO DE PALAVRAS
-                          _buildGameCategoryCard(
-                            context: context,
-                            title: 'Jogo de Palavras',
-                            description: 'Escolha o tema, veja a foto e selecione a palavra correta!',
-                            color: AppColors.info,
-                            icon: Icons.collections_rounded,
-                            currentDiff: _diffPalavras,
-                            onDiffChanged: (newDiff) {
-                              setState(() {
-                                _diffPalavras = newDiff;
-                              });
-                            },
-                            pctConclusao: state.getCompletionPercentage('JOGO_PALAVRAS', 'Palavras'),
-                            pctAcertos: state.getAccuracyPercentage('JOGO_PALAVRAS', 'Palavras'),
-                            onPlay: () {
-                              if (state.activePersonagem != null) {
-                                state.activePersonagem!.dificuldade = _diffPalavras;
-                              }
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const SelecaoTemaPage(tipoJogo: 'JOGO_PALAVRAS')),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -238,10 +259,11 @@ class _JogoHubPageState extends State<JogoHubPage> {
     required String description,
     required Color color,
     required IconData icon,
+    String? badgeText,
     required String currentDiff,
     required ValueChanged<String> onDiffChanged,
     required double pctConclusao,
-    required double pctAcertos,
+    required double? pctAcertos,
     required VoidCallback onPlay,
   }) {
     return Card(
@@ -254,10 +276,10 @@ class _JogoHubPageState extends State<JogoHubPage> {
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Top Header (Icon + Title + Description)
+            // Top Header (Icon + Title + Description + Badge)
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -274,14 +296,39 @@ class _JogoHubPageState extends State<JogoHubPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w900,
-                          fontFamily: 'Fredoka',
-                          color: AppColors.textDark,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w900,
+                                fontFamily: 'Fredoka',
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                          ),
+                          if (badgeText != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                badgeText,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: color,
+                                  fontFamily: 'Fredoka',
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -329,7 +376,7 @@ class _JogoHubPageState extends State<JogoHubPage> {
               ],
             ),
 
-            // Indicadores de Desempenho
+            // Indicadores de Desempenho (Conclusão e Acertos)
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -346,7 +393,7 @@ class _JogoHubPageState extends State<JogoHubPage> {
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
                       ),
                       Text(
-                        'Acertos: ${pctAcertos.toStringAsFixed(0)}%',
+                        'Acertos: ${pctAcertos != null ? "${pctAcertos.toStringAsFixed(0)}%" : "-"}',
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
                       ),
                     ],
@@ -366,19 +413,22 @@ class _JogoHubPageState extends State<JogoHubPage> {
             ),
 
             // Botão Jogar
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: color,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
                 ),
-              ),
-              onPressed: onPlay,
-              child: const Text(
-                'Jogar Agora 🚀',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Fredoka'),
+                onPressed: onPlay,
+                child: const Text(
+                  'Jogar Agora 🚀',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Fredoka'),
+                ),
               ),
             ),
           ],

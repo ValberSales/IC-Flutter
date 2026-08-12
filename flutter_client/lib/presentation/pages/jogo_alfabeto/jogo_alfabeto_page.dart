@@ -9,6 +9,8 @@ import '../../widgets/mascote_feedback_widget.dart';
 import '../../widgets/tutorial_widget.dart';
 import '../../widgets/jogo_breadcrumb_widget.dart';
 
+import '../../widgets/celebracao_conclusao_dialog.dart';
+
 class LetraJogo {
   final Map<String, String> letraData;
   bool pendente;
@@ -24,6 +26,9 @@ class JogoAlfabetoPage extends StatefulWidget {
 }
 
 class _JogoAlfabetoPageState extends State<JogoAlfabetoPage> {
+  List<Map<String, String>> _letrasFila = [];
+  int _currentLetterIndex = 0;
+
   Map<String, String>? _letraSorteada;
   List<LetraJogo> _opcoes = [];
   bool _acerto = false;
@@ -35,21 +40,73 @@ class _JogoAlfabetoPageState extends State<JogoAlfabetoPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _iniciarNovoJogo();
+      _carregarPartida();
+    });
+  }
+
+  void _carregarPartida() {
+    final state = context.read<AppStateProvider>();
+    final alfabeto = state.currentAlfabeto;
+    if (alfabeto.isEmpty) return;
+
+    final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
+    final completedLetters = state.getCompletedWordsForTema(
+      jogo: 'JOGO_ALFABETO',
+      tema: null,
+      temaNomePadrao: 'Alfabeto',
+      dificuldade: diff,
+    );
+
+    // Se houver letras não concluídas ainda no alfabeto, prioriza elas na fila
+    final uncompleted = alfabeto.where((item) => !completedLetters.contains(item['letra'])).toList();
+    if (uncompleted.isNotEmpty) {
+      _letrasFila = List<Map<String, String>>.from(uncompleted)..shuffle(Random());
+    } else {
+      _letrasFila = List<Map<String, String>>.from(alfabeto)..shuffle(Random());
+    }
+
+    _currentLetterIndex = 0;
+    _iniciarNovoJogo();
+  }
+
+  void _exibirCelebracaoConclusao() {
+    final state = context.read<AppStateProvider>();
+    final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
+
+    Future.microtask(() {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => CelebracaoConclusaoDialog(
+            nomeTema: 'Alfabeto Manual',
+            jogoNome: 'Alfabeto Manual',
+            dificuldade: diff,
+            totalAcertos: _acertosCount,
+            totalErros: _errosCount,
+            onVoltarTema: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        );
+      }
     });
   }
 
   void _iniciarNovoJogo() {
     final state = context.read<AppStateProvider>();
     final alfabeto = state.currentAlfabeto;
-    if (alfabeto.isEmpty) return;
+    if (alfabeto.isEmpty || _letrasFila.isEmpty) return;
+
+    if (_currentLetterIndex >= _letrasFila.length) {
+      _exibirCelebracaoConclusao();
+      return;
+    }
 
     final random = Random();
-    
-    // 1. Sortear Letra
-    final sorteada = alfabeto[random.nextInt(alfabeto.length)];
-    
-    // 2. Gerar opções com base na dificuldade
+    final sorteada = _letrasFila[_currentLetterIndex];
+    _currentLetterIndex++;
+
     final dificuldade = state.activePersonagem?.dificuldade ?? 'FACIL';
     int quantidadeOpcoes = 3;
     if (dificuldade == 'MEDIO') {
@@ -58,19 +115,15 @@ class _JogoAlfabetoPageState extends State<JogoAlfabetoPage> {
       quantidadeOpcoes = 7;
     }
 
-    // Filtra alfabeto removendo a correta para obter as erradas
     final restantes = alfabeto.where((item) => item['letra'] != sorteada['letra']).toList();
-    restantes.shuffle();
+    restantes.shuffle(random);
 
-    // Monta lista de opções final (letra correta + n letras incorretas)
     final listOpcoes = [sorteada];
     final numAdicionais = min(quantidadeOpcoes - 1, restantes.length);
     for (int i = 0; i < numAdicionais; i++) {
       listOpcoes.add(restantes[i]);
     }
-
-    // Embaralha as opções
-    listOpcoes.shuffle();
+    listOpcoes.shuffle(random);
 
     setState(() {
       _letraSorteada = sorteada;
@@ -91,16 +144,41 @@ class _JogoAlfabetoPageState extends State<JogoAlfabetoPage> {
         _acertosCount++;
         _feedback = 'ACERTO';
       });
-      
-      // Salva progresso no estado (e consequentemente no LocalStorage/Backend)
-      state.salvaPontuacao(_acertosCount, _errosCount, 'JOGO_ALFABETO');
+
+      final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
+      state.registrarPalavraConcluida(
+        jogo: 'JOGO_ALFABETO',
+        tema: null,
+        temaNomePadrao: 'Alfabeto',
+        palavra: _letraSorteada!['letra']!,
+        dificuldade: diff,
+      );
+
+      final bool isMatchComplete = _currentLetterIndex >= _letrasFila.length;
+      state.salvaPontuacao(
+        _acertosCount,
+        _errosCount,
+        'JOGO_ALFABETO',
+        tema: 'Alfabeto',
+        concluido: isMatchComplete,
+      );
+
+      if (isMatchComplete) {
+        _exibirCelebracaoConclusao();
+      }
     } else {
       setState(() {
         opcaoSelected.pendente = false;
         _errosCount++;
         _feedback = 'ERRO';
       });
-      state.salvaPontuacao(_acertosCount, _errosCount, 'JOGO_ALFABETO');
+      state.salvaPontuacao(
+        _acertosCount,
+        _errosCount,
+        'JOGO_ALFABETO',
+        tema: 'Alfabeto',
+        concluido: false,
+      );
     }
   }
 

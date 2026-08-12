@@ -19,6 +19,17 @@ class SelecaoTemaPage extends StatefulWidget {
 }
 
 class _SelecaoTemaPageState extends State<SelecaoTemaPage> {
+  String _currentDifficulty = 'FACIL';
+
+  @override
+  void initState() {
+    super.initState();
+    final p = context.read<AppStateProvider>().activePersonagem;
+    if (p != null) {
+      _currentDifficulty = p.dificuldade;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppStateProvider>();
@@ -57,142 +68,223 @@ class _SelecaoTemaPageState extends State<SelecaoTemaPage> {
           'Escolha o Tema: $tituloJogo',
           style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Fredoka'),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.4)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _currentDifficulty,
+                    dropdownColor: AppColors.primary,
+                    icon: const Icon(Icons.arrow_drop_down_rounded, color: Colors.white),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    items: const [
+                      DropdownMenuItem(value: 'FACIL', child: Text('Fácil 🌟', style: TextStyle(color: Colors.white))),
+                      DropdownMenuItem(value: 'MEDIO', child: Text('Médio ✨', style: TextStyle(color: Colors.white))),
+                      DropdownMenuItem(value: 'DIFICIL', child: Text('Difícil 🔥', style: TextStyle(color: Colors.white))),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _currentDifficulty = val;
+                          if (state.activePersonagem != null) {
+                            state.activePersonagem!.dificuldade = val;
+                          }
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Container(
         color: AppColors.bgSoft,
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Banner Informativo de Escolha de Tema
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await state.fetchAtividadesOnline();
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Banner Informativo de Escolha de Tema
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: isAdivinhacao ? AppColors.accent : AppColors.info,
+                            width: 2,
                           ),
-                        ],
-                        border: Border.all(
-                          color: isAdivinhacao ? AppColors.accent : AppColors.info,
-                          width: 2,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isAdivinhacao ? Icons.search_rounded : Icons.collections_bookmark_rounded,
+                              size: 36,
+                              color: isAdivinhacao ? AppColors.accent : AppColors.info,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Selecione o Tema Desejado:',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Fredoka',
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Escolha um tema para jogar no Nível selecionado!',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textDark.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isAdivinhacao ? Icons.search_rounded : Icons.collections_bookmark_rounded,
-                            size: 36,
-                            color: isAdivinhacao ? AppColors.accent : AppColors.info,
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Selecione o Tema Desejado:',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Fredoka',
-                                    color: AppColors.textDark,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Escolha um dos temas abaixo para iniciar a atividade!',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.textDark.withOpacity(0.7),
-                                  ),
-                                ),
-                              ],
+                      const SizedBox(height: 24),
+
+                      const Text(
+                        'Temas Cadastrados:',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, fontFamily: 'Fredoka', color: AppColors.textDark),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Listagem unificada e dinâmica de temas
+                      Builder(
+                        builder: (context) {
+                          // Se houver atividades vindo do backend/cache para o jogo atual
+                          final atividadesFiltradas = state.atividades
+                              .where((a) => a.ativo && a.tipoJogo == widget.tipoJogo)
+                              .toList();
+
+                          if (atividadesFiltradas.isNotEmpty) {
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 480,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                mainAxisExtent: 190,
+                              ),
+                              itemCount: atividadesFiltradas.length,
+                              itemBuilder: (context, index) {
+                                final Atividade atv = atividadesFiltradas[index];
+                                final int count = atv.itens.length > 0 ? atv.itens.length : 5;
+                                final double pctConclusao = state.getTemaCompletionPercentage(
+                                  jogo: widget.tipoJogo,
+                                  tema: atv,
+                                  temaNomePadrao: atv.titulo,
+                                  totalItens: count,
+                                  dificuldade: _currentDifficulty,
+                                );
+                                final double? pctAcertos = state.getAccuracyPercentage(widget.tipoJogo, atv.titulo, dificuldade: _currentDifficulty);
+
+                                final bool isDefault = atv.criadoPor == "Sistema InteraLibras" || atv.criadoPor == null;
+
+                                return _buildThemeCard(
+                                  context: context,
+                                  titulo: atv.titulo,
+                                  descricao: '${atv.itens.length} palavras  •  ${isDefault ? "Tema Padrão" : "Criado por ${atv.criadoPor}"}',
+                                  icone: isAdivinhacao ? Icons.pets_rounded : Icons.diversity_3_rounded,
+                                  cor: isAdivinhacao ? AppColors.accent : AppColors.info,
+                                  isTeacherCreated: !isDefault,
+                                  pctConclusao: pctConclusao,
+                                  pctAcertos: pctAcertos,
+                                  onTap: () {
+                                    if (isAdivinhacao) {
+                                      Navigator.push(context, MaterialPageRoute(builder: (_) => JogoAdivinhacaoPage(atividadeTema: atv)));
+                                    } else {
+                                      Navigator.push(context, MaterialPageRoute(builder: (_) => JogoPalavrasPage(atividadeTema: atv)));
+                                    }
+                                  },
+                                );
+                              },
+                            );
+                          }
+
+                          // Fallback se nenhuma atividade online/cache for encontrada
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 480,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              mainAxisExtent: 190,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                            itemCount: temasPadrao.length,
+                            itemBuilder: (context, index) {
+                              final item = temasPadrao[index];
+                              final String temaNome = item['titulo'];
+                              final int defaultCount = isAdivinhacao ? 5 : 4;
+                              final double pctConclusao = state.getTemaCompletionPercentage(
+                                jogo: widget.tipoJogo,
+                                tema: null,
+                                temaNomePadrao: temaNome,
+                                totalItens: defaultCount,
+                                dificuldade: _currentDifficulty,
+                              );
+                              final double? pctAcertos = state.getAccuracyPercentage(widget.tipoJogo, temaNome, dificuldade: _currentDifficulty);
 
-                    const Text(
-                      'Temas Cadastrados:',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, fontFamily: 'Fredoka', color: AppColors.textDark),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Grid de Cartões de Tema com Colunas Dinâmicas e Max Width
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 480,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        mainAxisExtent: 190,
-                      ),
-                      itemCount: temasPadrao.length + atividadesCustom.length,
-                      itemBuilder: (context, index) {
-                        if (index < temasPadrao.length) {
-                          // Cartão Padrão
-                          final item = temasPadrao[index];
-                          final String temaNome = item['titulo'];
-                          final double pctConclusao = state.getCompletionPercentage(widget.tipoJogo, temaNome);
-                          final double pctAcertos = state.getAccuracyPercentage(widget.tipoJogo, temaNome);
-
-                          return _buildThemeCard(
-                            context: context,
-                            titulo: temaNome,
-                            descricao: item['descricao'],
-                            icone: item['icone'],
-                            cor: item['cor'],
-                            isTeacherCreated: false,
-                            pctConclusao: pctConclusao,
-                            pctAcertos: pctAcertos,
-                            onTap: () {
-                              if (isAdivinhacao) {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const JogoAdivinhacaoPage()));
-                              } else {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const JogoPalavrasPage()));
-                              }
+                              return _buildThemeCard(
+                                context: context,
+                                titulo: temaNome,
+                                descricao: item['descricao'],
+                                icone: item['icone'],
+                                cor: item['cor'],
+                                isTeacherCreated: false,
+                                pctConclusao: pctConclusao,
+                                pctAcertos: pctAcertos,
+                                onTap: () {
+                                  if (isAdivinhacao) {
+                                    Navigator.push(context, MaterialPageRoute(builder: (_) => const JogoAdivinhacaoPage()));
+                                  } else {
+                                    Navigator.push(context, MaterialPageRoute(builder: (_) => const JogoPalavrasPage()));
+                                  }
+                                },
+                              );
                             },
                           );
-                        } else {
-                          // Cartão Criado pelo Professor
-                          final Atividade atv = atividadesCustom[index - temasPadrao.length];
-                          final double pctConclusao = state.getCompletionPercentage(widget.tipoJogo, atv.titulo);
-                          final double pctAcertos = state.getAccuracyPercentage(widget.tipoJogo, atv.titulo);
-
-                          return _buildThemeCard(
-                            context: context,
-                            titulo: atv.titulo,
-                            descricao: '${atv.itens.length} palavras  •  Criado por ${atv.criadoPor ?? "Professor"}',
-                            icone: Icons.school_rounded,
-                            cor: AppColors.primary,
-                            isTeacherCreated: true,
-                            pctConclusao: pctConclusao,
-                            pctAcertos: pctAcertos,
-                            onTap: () {
-                              if (isAdivinhacao) {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => JogoAdivinhacaoPage(atividadeTema: atv)));
-                              } else {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => JogoPalavrasPage(atividadeTema: atv)));
-                              }
-                            },
-                          );
-                        }
-                      },
-                    ),
-                  ],
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -210,7 +302,7 @@ class _SelecaoTemaPageState extends State<SelecaoTemaPage> {
     required Color cor,
     required bool isTeacherCreated,
     required double pctConclusao,
-    required double pctAcertos,
+    required double? pctAcertos,
     required VoidCallback onTap,
   }) {
     return Card(
@@ -249,8 +341,8 @@ class _SelecaoTemaPageState extends State<SelecaoTemaPage> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w900,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
                                   fontFamily: 'Fredoka',
                                   color: AppColors.textDark,
                                 ),
@@ -264,8 +356,12 @@ class _SelecaoTemaPageState extends State<SelecaoTemaPage> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Text(
-                                  'Professor',
-                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                  'Turma',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
                                 ),
                               ),
                           ],
@@ -285,8 +381,7 @@ class _SelecaoTemaPageState extends State<SelecaoTemaPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-
+              const SizedBox(height: 12),
               // Indicadores de Desempenho (Conclusão e Acertos)
               Container(
                 padding: const EdgeInsets.all(10),
@@ -314,7 +409,7 @@ class _SelecaoTemaPageState extends State<SelecaoTemaPage> {
                             const Icon(Icons.star_rounded, size: 16, color: AppColors.secondary),
                             const SizedBox(width: 4),
                             Text(
-                              'Acertos: ${pctAcertos.toStringAsFixed(0)}%',
+                              'Acertos: ${pctAcertos != null ? "${pctAcertos.toStringAsFixed(0)}%" : "-"}',
                               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
                             ),
                           ],
@@ -328,7 +423,7 @@ class _SelecaoTemaPageState extends State<SelecaoTemaPage> {
                         value: (pctConclusao / 100.0).clamp(0.0, 1.0),
                         backgroundColor: AppColors.border,
                         valueColor: AlwaysStoppedAnimation<Color>(cor),
-                        minHeight: 7,
+                        minHeight: 6,
                       ),
                     ),
                   ],

@@ -10,6 +10,8 @@ import '../../widgets/pontuacao_header_widget.dart';
 import '../../widgets/mascote_feedback_widget.dart';
 import '../../widgets/tutorial_widget.dart';
 import '../../widgets/jogo_breadcrumb_widget.dart';
+import '../../widgets/dynamic_image_widget.dart';
+import '../../widgets/celebracao_conclusao_dialog.dart';
 
 import '../../../data/models/atividade.dart';
 
@@ -27,9 +29,14 @@ class JogoAdivinhacaoPage extends StatefulWidget {
 
 class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
   List<Palavra> _palavras = [];
+  List<Palavra> _palavrasFila = [];
+  int _currentWordIndex = 0;
+
   Palavra? _selectedPalavra;
   List<String> _letrasPalavra = []; // Ex: ['G', 'A', 'T', 'O']
   List<Map<String, String>?> _letrasPreenchidas = []; // Ex: [null, null, null, null]
+  List<bool?> _slotValidation = []; // null: não validado, true: correto, false: incorreto
+  List<Map<String, String>> _displayedAlfabeto = [];
   int _activeSlotIndex = 0; // Slot ativo que receberá a letra selecionada
   
   bool _endGame = false;
@@ -70,21 +77,79 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
       }).toList();
     }
 
+    final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
+    final String temaNome = widget.atividadeTema?.titulo ?? 'Animais da Natureza';
+    final completedWords = state.getCompletedWordsForTema(
+      jogo: 'JOGO_ADIVINHACAO',
+      tema: widget.atividadeTema,
+      temaNomePadrao: temaNome,
+      dificuldade: diff,
+    );
+
+    final uncompleted = _palavras.where((p) => !completedWords.contains(p.descricao)).toList();
+    if (uncompleted.isNotEmpty) {
+      _palavrasFila = List<Palavra>.from(uncompleted)..shuffle(Random());
+    } else {
+      _palavrasFila = List<Palavra>.from(_palavras)..shuffle(Random());
+    }
+
+    _currentWordIndex = 0;
+
     _iniciarRodada();
   }
 
+  void _exibirCelebracaoConclusao() {
+    final state = context.read<AppStateProvider>();
+    final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
+    final String temaNome = widget.atividadeTema?.titulo ?? 'Animais da Natureza';
+
+    Future.microtask(() {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => CelebracaoConclusaoDialog(
+            nomeTema: temaNome,
+            jogoNome: 'Jogo de Adivinhação',
+            dificuldade: diff,
+            totalAcertos: _acertosCount,
+            totalErros: _errosCount,
+            onVoltarTema: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        );
+      }
+    });
+  }
 
   void _iniciarRodada() {
-    if (_palavras.isEmpty) return;
+    if (_palavrasFila.isEmpty) return;
 
+    if (_currentWordIndex >= _palavrasFila.length) {
+      _exibirCelebracaoConclusao();
+      return;
+    }
+
+    final palavraSorteada = _palavrasFila[_currentWordIndex];
+    _currentWordIndex++;
+
+    final state = context.read<AppStateProvider>();
+    final dificuldade = state.activePersonagem?.dificuldade ?? 'FACIL';
     final random = Random();
-    final palavraSorteada = _palavras[random.nextInt(_palavras.length)];
     final palavraTexto = palavraSorteada.descricao.toUpperCase();
+
+    List<Map<String, String>> alfabeto = List<Map<String, String>>.from(state.currentAlfabeto);
+    if (dificuldade == 'DIFICIL') {
+      alfabeto.shuffle(random);
+    }
     
     setState(() {
       _selectedPalavra = palavraSorteada;
       _letrasPalavra = palavraTexto.split('');
       _letrasPreenchidas = List.generate(palavraTexto.length, (_) => null);
+      _slotValidation = List.generate(palavraTexto.length, (_) => null);
+      _displayedAlfabeto = alfabeto;
       _activeSlotIndex = 0;
       _endGame = false;
       _feedback = 'VAZIO';
@@ -93,10 +158,12 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
 
   void _setActiveSlot(int index) {
     setState(() {
-      if (_letrasPreenchidas[index] != null) {
-        _letrasPreenchidas[index] = null;
+      if (_endGame) {
         _endGame = false;
+        _slotValidation = List.generate(_letrasPalavra.length, (_) => null);
+        _feedback = 'VAZIO';
       }
+      _letrasPreenchidas[index] = null;
       _activeSlotIndex = index;
     });
   }
@@ -105,33 +172,65 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
     if (_endGame) return;
     if (_activeSlotIndex < 0 || _activeSlotIndex >= _letrasPalavra.length) return;
 
-    final letraCorreta = _letrasPalavra[_activeSlotIndex];
-    final letraClicada = letraData['letra']!;
-    
     final state = context.read<AppStateProvider>();
 
-    if (letraClicada == letraCorreta) {
-      setState(() {
-        _letrasPreenchidas[_activeSlotIndex] = letraData;
-        _acertosCount++;
-        _feedback = 'ACERTO';
-        
-        // Encontra o próximo slot vazio
-        _activeSlotIndex = _letrasPreenchidas.indexOf(null);
-        
-        // Verifica se completou a palavra
-        if (_activeSlotIndex == -1) {
-          _endGame = true;
+    setState(() {
+      _letrasPreenchidas[_activeSlotIndex] = letraData;
+      _feedback = 'VAZIO';
+      
+      // Procura o próximo slot vazio
+      _activeSlotIndex = _letrasPreenchidas.indexOf(null);
+      
+      // Quando preencher a última letra da palavra
+      if (_activeSlotIndex == -1) {
+        _endGame = true;
+        bool temErro = false;
+
+        for (int i = 0; i < _letrasPalavra.length; i++) {
+          final String digitado = _letrasPreenchidas[i]?['letra'] ?? '';
+          final String correto = _letrasPalavra[i];
+          if (digitado == correto) {
+            _slotValidation[i] = true;
+          } else {
+            _slotValidation[i] = false;
+            temErro = true;
+          }
         }
-      });
-      state.salvaPontuacao(_acertosCount, _errosCount, 'JOGO_ADIVINHACAO');
-    } else {
-      setState(() {
-        _errosCount++;
-        _feedback = 'ERRO';
-      });
-      state.salvaPontuacao(_acertosCount, _errosCount, 'JOGO_ADIVINHACAO');
-    }
+
+        if (temErro) {
+          _errosCount++;
+          _feedback = 'ERRO';
+        } else {
+          _acertosCount++;
+          _feedback = 'ACERTO';
+          
+          final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
+          final String temaNome = widget.atividadeTema?.titulo ?? 'Animais da Natureza';
+          state.registrarPalavraConcluida(
+            jogo: 'JOGO_ADIVINHACAO',
+            tema: widget.atividadeTema,
+            temaNomePadrao: temaNome,
+            palavra: _selectedPalavra!.descricao,
+            dificuldade: diff,
+          );
+        }
+
+        final String temaNome = widget.atividadeTema?.titulo ?? 'Animais da Natureza';
+        final bool isMatchComplete = _currentWordIndex >= _palavrasFila.length;
+
+        state.salvaPontuacao(
+          _acertosCount,
+          _errosCount,
+          'JOGO_ADIVINHACAO',
+          tema: temaNome,
+          concluido: isMatchComplete,
+        );
+
+        if (isMatchComplete) {
+          _exibirCelebracaoConclusao();
+        }
+      }
+    });
   }
 
   @override
@@ -140,7 +239,10 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
     final isCompact = ResponsiveLayout.isMobile(context);
     final dificuldade = state.activePersonagem?.dificuldade ?? 'FACIL';
     
+    // Nível Fácil: mostra legenda | Nível Médio e Difícil: esconde legenda
     final bool dicaLetra = dificuldade == 'FACIL';
+    final List<Map<String, String>> alfabetoGrid =
+        _displayedAlfabeto.isNotEmpty ? _displayedAlfabeto : state.currentAlfabeto;
 
     if (_selectedPalavra == null) {
       return const Scaffold(
@@ -202,6 +304,7 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
                             palavra: _selectedPalavra!,
                             letrasPalavra: _letrasPalavra,
                             letrasPreenchidas: _letrasPreenchidas,
+                            slotValidation: _slotValidation,
                             activeIndex: _activeSlotIndex,
                             onSlotTapped: _setActiveSlot,
                             isCompact: true,
@@ -219,10 +322,10 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
                             ),
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
-                                final item = state.currentAlfabeto[index];
+                                final item = alfabetoGrid[index];
                                 return _buildSignCard(item, dicaLetra);
                               },
-                              childCount: state.currentAlfabeto.length,
+                              childCount: alfabetoGrid.length,
                             ),
                           ),
                         ),
@@ -302,14 +405,9 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
                                                   border: Border.all(color: AppColors.secondary, width: 3.5),
                                                 ),
                                                 padding: const EdgeInsets.all(12),
-                                                child: Image.asset(
-                                                  _selectedPalavra!.imagem,
+                                                child: DynamicImageWidget(
+                                                  imagePath: _selectedPalavra!.imagem,
                                                   fit: BoxFit.contain,
-                                                  errorBuilder: (context, error, stackTrace) => const Icon(
-                                                    Icons.image,
-                                                    size: 100,
-                                                    color: AppColors.primaryLight,
-                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -390,9 +488,9 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
                                           mainAxisSpacing: 12,
                                           childAspectRatio: 0.85,
                                         ),
-                                        itemCount: state.currentAlfabeto.length,
+                                        itemCount: alfabetoGrid.length,
                                         itemBuilder: (context, index) {
-                                          final item = state.currentAlfabeto[index];
+                                          final item = alfabetoGrid[index];
                                           return _buildSignCard(item, dicaLetra);
                                         },
                                       ),
@@ -480,6 +578,29 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
       children: List.generate(_letrasPalavra.length, (index) {
         final preenchida = _letrasPreenchidas[index];
         final isActive = index == _activeSlotIndex;
+        final val = index < _slotValidation.length ? _slotValidation[index] : null;
+
+        Color borderColor = AppColors.border;
+        Color bgColor = AppColors.border.withOpacity(0.3);
+        double borderWidth = 1.5;
+
+        if (val == true) {
+          borderColor = Colors.green;
+          bgColor = Colors.green.withOpacity(0.15);
+          borderWidth = 3.5;
+        } else if (val == false) {
+          borderColor = Colors.red;
+          bgColor = Colors.red.withOpacity(0.15);
+          borderWidth = 3.5;
+        } else if (isActive) {
+          borderColor = AppColors.secondary;
+          bgColor = AppColors.secondaryLight.withOpacity(0.3);
+          borderWidth = 3.0;
+        } else if (preenchida != null) {
+          borderColor = AppColors.primary;
+          bgColor = Colors.white;
+          borderWidth = 3.0;
+        }
 
         return GestureDetector(
           onTap: () => _setActiveSlot(index),
@@ -487,16 +608,9 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
             width: 65,
             height: 78,
             decoration: BoxDecoration(
-              color: preenchida != null
-                  ? Colors.white
-                  : (isActive ? AppColors.secondaryLight.withOpacity(0.3) : AppColors.border.withOpacity(0.3)),
+              color: bgColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isActive
-                    ? AppColors.secondary
-                    : (preenchida != null ? AppColors.primary : AppColors.border),
-                width: isActive || preenchida != null ? 3.0 : 1.5,
-              ),
+              border: Border.all(color: borderColor, width: borderWidth),
             ),
             alignment: Alignment.center,
             child: preenchida != null
@@ -570,6 +684,7 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Palavra palavra;
   final List<String> letrasPalavra;
   final List<Map<String, String>?> letrasPreenchidas;
+  final List<bool?> slotValidation;
   final int activeIndex;
   final ValueChanged<int> onSlotTapped;
   final bool isCompact;
@@ -579,6 +694,7 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.palavra,
     required this.letrasPalavra,
     required this.letrasPreenchidas,
+    required this.slotValidation,
     required this.activeIndex,
     required this.onSlotTapped,
     required this.isCompact,
@@ -602,7 +718,6 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // Calcula a porcentagem de colapso baseada no scroll real do sliver
     final double percent = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
 
     final double imageSize = _lerp(120.0, 52.0, percent);
@@ -626,17 +741,11 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Modo Expandido: Imagem + dica opcional + slots embaixo
                     Expanded(
                       child: Center(
-                        child: Image.asset(
-                          palavra.imagem,
+                        child: DynamicImageWidget(
+                          imagePath: palavra.imagem,
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
-                            Icons.image,
-                            size: 60,
-                            color: AppColors.primaryLight,
-                          ),
                         ),
                       ),
                     ),
@@ -657,7 +766,6 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Modo Colapsado: Slots na esquerda (com scroll se palavra for grande), Imagem pequena na direita
                     Expanded(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -673,13 +781,9 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.all(4),
-                      child: Image.asset(
-                        palavra.imagem,
+                      child: DynamicImageWidget(
+                        imagePath: palavra.imagem,
                         fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.image,
-                          color: AppColors.primaryLight,
-                        ),
                       ),
                     ),
                   ],
@@ -697,6 +801,29 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
       children: List.generate(letrasPalavra.length, (index) {
         final preenchida = letrasPreenchidas[index];
         final isActive = index == activeIndex;
+        final val = index < slotValidation.length ? slotValidation[index] : null;
+
+        Color borderColor = AppColors.border;
+        Color bgColor = AppColors.border.withOpacity(0.3);
+        double borderWidth = 1.5;
+
+        if (val == true) {
+          borderColor = Colors.green;
+          bgColor = Colors.green.withOpacity(0.15);
+          borderWidth = 3.0;
+        } else if (val == false) {
+          borderColor = Colors.red;
+          bgColor = Colors.red.withOpacity(0.15);
+          borderWidth = 3.0;
+        } else if (isActive) {
+          borderColor = AppColors.secondary;
+          bgColor = AppColors.secondaryLight.withOpacity(0.3);
+          borderWidth = 3.0;
+        } else if (preenchida != null) {
+          borderColor = AppColors.primary;
+          bgColor = Colors.white;
+          borderWidth = 3.0;
+        }
 
         return GestureDetector(
           onTap: () => onSlotTapped(index),
@@ -704,16 +831,9 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
             width: slotSize,
             height: slotSize * 1.2,
             decoration: BoxDecoration(
-              color: preenchida != null
-                  ? Colors.white
-                  : (isActive ? AppColors.secondaryLight.withOpacity(0.3) : AppColors.border.withOpacity(0.3)),
+              color: bgColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isActive
-                    ? AppColors.secondary
-                    : (preenchida != null ? AppColors.primary : AppColors.border),
-                width: isActive || preenchida != null ? 3.0 : 1.5,
-              ),
+              border: Border.all(color: borderColor, width: borderWidth),
             ),
             alignment: Alignment.center,
             child: preenchida != null

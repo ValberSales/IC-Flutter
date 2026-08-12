@@ -41,7 +41,7 @@ class AppStateProvider extends ChangeNotifier {
         : LocalDataSource.alfabetoManualProf;
   }
 
-  // Inicializa o estado lendo do LocalStorage
+  // Inicializa o estado lendo do LocalStorage e tentando sincronizar com o servidor
   void loadInitialState() {
     _useLegacyLetters = LocalStorageService.getUseLegacyLetters();
     _personagens = LocalStorageService.getPersonagens();
@@ -57,6 +57,22 @@ class AppStateProvider extends ChangeNotifier {
       _loadMockTurmaForCode(codigoTurma);
     }
     notifyListeners();
+
+    // Sincroniza atividades do servidor em segundo plano
+    fetchAtividadesOnline();
+  }
+
+  Future<void> fetchAtividadesOnline() async {
+    try {
+      final onlineList = await ApiService.getAtividades(apenasAtivas: true);
+      if (onlineList.isNotEmpty) {
+        _atividades = onlineList;
+        notifyListeners();
+      }
+      await syncPontuacoesPendentes();
+    } catch (e) {
+      print('Sincronização offline mantida: $e');
+    }
   }
 
 
@@ -184,12 +200,14 @@ class AppStateProvider extends ChangeNotifier {
     return LocalStorageService.getPontuacaoForPersonagem(_activePersonagem!.id!);
   }
 
-  Future<void> salvaPontuacao(int acertos, int erros, String atividade) async {
+  Future<void> salvaPontuacao(
+    int acertos,
+    int erros,
+    String atividade, {
+    String? tema,
+    bool concluido = false,
+  }) async {
     if (_activePersonagem == null) return;
-    
-    // Regra do Angular: Só salva se houver progresso mínimo (ou para testes, salvamos sempre)
-    // No Angular original: if (pontuacao.acertos < 5 && pontuacao.erros < 5) return;
-    // Vamos salvar sempre no protótipo para facilitar a demonstração visual das stakeholders.
 
     final pontuacao = Pontuacao(
       atividade: atividade,
@@ -197,21 +215,41 @@ class AppStateProvider extends ChangeNotifier {
       erros: erros,
       dificuldade: _activePersonagem!.dificuldade,
       personagem: _activePersonagem,
+      sincronizado: false,
+      concluido: concluido,
+      tema: tema,
     );
 
     // Salva localmente primeiro
     await LocalStorageService.savePontuacao(pontuacao);
     
-    // Se a turma estiver ativa e o ID do personagem for válido (positivo / sincronizado com o servidor),
-    // tenta enviar para o backend
-    if (_activeTurma != null && _activePersonagem!.id! > 0) {
-      final savedOnline = await ApiService.salvaPontuacao(pontuacao);
-      if (savedOnline != null) {
-        print('Pontuação sincronizada com sucesso no backend!');
-      }
-    }
+    // Tenta sincronizar imediatamente se possível
+    await syncPontuacoesPendentes();
     
     notifyListeners();
+  }
+
+  Future<void> syncPontuacoesPendentes() async {
+    try {
+      final allScores = LocalStorageService.getPontuacoes();
+      final unsynced = allScores.where((s) => !s.sincronizado).toList();
+      if (unsynced.isEmpty) return;
+
+      for (final score in unsynced) {
+        if (score.personagem != null && score.personagem!.id != null && score.personagem!.id! > 0) {
+          final onlineScore = await ApiService.salvaPontuacao(score);
+          if (onlineScore != null) {
+            score.sincronizado = true;
+            if (onlineScore.id != null) {
+              score.id = onlineScore.id;
+            }
+            await LocalStorageService.savePontuacao(score);
+          }
+        }
+      }
+    } catch (e) {
+      print('Erro ao sincronizar pontuções pendentes: $e');
+    }
   }
 
   // --- SINCRONIZAÇÃO DE SALA (CÓDIGO DA TURMA) ---
@@ -334,36 +372,153 @@ class AppStateProvider extends ChangeNotifier {
 
   // --- MÉTRICAS DE DESEMPENHO POR TEMA / ATIVIDADE ---
 
-  double getCompletionPercentage(String atividadeTipo, String tema) {
-    final history = getPontuacaoHistoryForActivePersonagem();
-    final filtered = history.where((p) => p.atividade == atividadeTipo).toList();
-    if (filtered.isEmpty) return 0.0;
-    
-    int totalAcertos = 0;
-    for (final p in filtered) {
-      totalAcertos += p.acertos;
-    }
-    // Consideramos uma meta de 10 acertos por tema para 100% de conclusão no protótipo
-    final double pct = (totalAcertos / 10.0) * 100.0;
+  // --- MÉTRICAS DE DESEMPENHO POR TEMA / DIFICULDADE / JOGO ---
+
+  Future<void> registrarPalavraConcluida({
+    required String jogo,
+    Atividade? tema,
+    required String temaNomePadrao,
+    required String palavra,
+    required String dificuldade,
+  }) async {
+    if (_activePersonagem == null) return;
+    final String temaKey = tema?.id != null ? tema!.id.toString() : temaNomePadrao;
+    await LocalStorageService.saveCompletedWord(_activePersonagem!.id ?? -1, jogo, temaKey, dificuldade, palavra);
+    notifyListeners();
+  }
+
+  Set<String> getCompletedWordsForTema({
+    required String jogo,
+    Atividade? tema,
+    required String temaNomePadrao,
+    required String dificuldade,
+  }) {
+    if (_activePersonagem == null) return {};
+    final String temaKey = tema?.id != null ? tema!.id.toString() : temaNomePadrao;
+    return LocalStorageService.getCompletedWords(_activePersonagem!.id ?? -1, jogo, temaKey, dificuldade);
+  }
+
+  double getTemaCompletionPercentage({
+    required String jogo,
+    Atividade? tema,
+    required String temaNomePadrao,
+    required int totalItens,
+    required String dificuldade,
+  }) {
+    final completed = getCompletedWordsForTema(
+      jogo: jogo,
+      tema: tema,
+      temaNomePadrao: temaNomePadrao,
+      dificuldade: dificuldade,
+    );
+    if (totalItens <= 0) return 0.0;
+    final double pct = (completed.length / totalItens) * 100.0;
     return pct > 100.0 ? 100.0 : pct;
   }
 
-  double getAccuracyPercentage(String atividadeTipo, String tema) {
-    final history = getPontuacaoHistoryForActivePersonagem();
-    final filtered = history.where((p) => p.atividade == atividadeTipo).toList();
-    if (filtered.isEmpty) return 100.0; // Padrão se não jogou ainda
+  double getOverallGameProgress(String jogo) {
+    if (_activePersonagem == null) return 0.0;
 
-    int totalAcertos = 0;
-    int totalErros = 0;
-    for (final p in filtered) {
-      totalAcertos += p.acertos;
-      totalErros += p.erros;
+    int totalPossivel = 0;
+    int totalConcluido = 0;
+    final diffs = ['FACIL', 'MEDIO', 'DIFICIL'];
+
+    if (jogo == 'JOGO_ADIVINHACAO' || jogo == 'JOGO_PALAVRAS') {
+      final temasAtivos = _atividades.where((a) => a.ativo && a.tipoJogo == jogo).toList();
+      
+      if (temasAtivos.isNotEmpty) {
+        for (final atv in temasAtivos) {
+          final int count = atv.itens.length > 0 ? atv.itens.length : 5;
+          final String key = atv.id != null ? atv.id.toString() : atv.titulo;
+          for (final diff in diffs) {
+            totalPossivel += count;
+            totalConcluido += LocalStorageService.getCompletedWords(_activePersonagem!.id ?? -1, jogo, key, diff).length;
+          }
+        }
+      } else {
+        final int defaultCount = jogo == 'JOGO_ADIVINHACAO' ? 5 : 4;
+        final String defaultKey = jogo == 'JOGO_ADIVINHACAO' ? 'Animais da Natureza' : 'Membros da Família';
+        for (final diff in diffs) {
+          totalPossivel += defaultCount;
+          totalConcluido += LocalStorageService.getCompletedWords(_activePersonagem!.id ?? -1, jogo, defaultKey, diff).length;
+        }
+      }
+    } else if (jogo == 'JOGO_ALFABETO') {
+      for (final diff in diffs) {
+        totalPossivel += 26;
+        totalConcluido += LocalStorageService.getCompletedWords(_activePersonagem!.id ?? -1, jogo, 'Alfabeto', diff).length;
+      }
+    } else if (jogo == 'JOGO_MEMORIA') {
+      for (final diff in diffs) {
+        totalPossivel += 10;
+        totalConcluido += LocalStorageService.getCompletedWords(_activePersonagem!.id ?? -1, jogo, 'Memoria', diff).length;
+      }
     }
 
-    final int total = totalAcertos + totalErros;
-    if (total == 0) return 100.0;
+    if (totalPossivel <= 0) return 0.0;
+    final double pct = (totalConcluido / totalPossivel) * 100.0;
+    return pct > 100.0 ? 100.0 : pct;
+  }
 
-    return (totalAcertos / total) * 100.0;
+  double getCompletionPercentage(String atividadeTipo, String tema) {
+    final diff = _activePersonagem?.dificuldade ?? 'FACIL';
+    return getTemaCompletionPercentage(
+      jogo: atividadeTipo,
+      tema: null,
+      temaNomePadrao: tema,
+      totalItens: 5,
+      dificuldade: diff,
+    );
+  }
+
+  double? getAccuracyPercentage(String atividadeTipo, String tema, {String? dificuldade}) {
+    final history = getPontuacaoHistoryForActivePersonagem();
+    final diff = dificuldade ?? _activePersonagem?.dificuldade ?? 'FACIL';
+
+    // Considera apenas partidas 100% concluídas daquele tema e daquela dificuldade específica
+    final filtered = history.where((p) {
+      return p.atividade == atividadeTipo &&
+             p.dificuldade == diff &&
+             p.concluido == true &&
+             (tema.isEmpty || p.tema == null || p.tema == tema);
+    }).toList();
+
+    if (filtered.isEmpty) return null;
+
+    double somaPorcentagens = 0.0;
+    for (final p in filtered) {
+      final int total = p.acertos + p.erros;
+      if (total > 0) {
+        somaPorcentagens += (p.acertos / total) * 100.0;
+      } else {
+        somaPorcentagens += 100.0;
+      }
+    }
+
+    return somaPorcentagens / filtered.length;
+  }
+
+  double? getOverallGameAccuracy(String jogo) {
+    final history = getPontuacaoHistoryForActivePersonagem();
+
+    // Considera apenas partidas 100% concluídas do jogo em qualquer tema ou nível
+    final filtered = history.where((p) {
+      return p.atividade == jogo && p.concluido == true;
+    }).toList();
+
+    if (filtered.isEmpty) return null;
+
+    double somaPorcentagens = 0.0;
+    for (final p in filtered) {
+      final int total = p.acertos + p.erros;
+      if (total > 0) {
+        somaPorcentagens += (p.acertos / total) * 100.0;
+      } else {
+        somaPorcentagens += 100.0;
+      }
+    }
+
+    return somaPorcentagens / filtered.length;
   }
 }
 

@@ -7,6 +7,9 @@ class Pontuacao extends AbstractModel {
   int erros;
   String dificuldade; // 'FACIL' | 'MEDIO' | 'DIFICIL'
   Personagem? personagem;
+  bool sincronizado;
+  bool concluido;
+  String? tema;
 
   Pontuacao({
     super.id,
@@ -16,6 +19,9 @@ class Pontuacao extends AbstractModel {
     this.erros = 0,
     this.dificuldade = 'FACIL',
     this.personagem,
+    this.sincronizado = false,
+    this.concluido = false,
+    this.tema,
   });
 
   factory Pontuacao.fromJson(Map<String, dynamic> json) {
@@ -27,6 +33,9 @@ class Pontuacao extends AbstractModel {
       erros: json['erros'] as int? ?? 0,
       dificuldade: json['dificuldade'] as String? ?? 'FACIL',
       personagem: json['personagem'] != null ? Personagem.fromJson(json['personagem']) : null,
+      sincronizado: json['sincronizado'] as bool? ?? (json['id'] != null && (json['id'] as int) > 0),
+      concluido: json['concluido'] as bool? ?? false,
+      tema: json['tema'] as String?,
     );
   }
 
@@ -40,6 +49,9 @@ class Pontuacao extends AbstractModel {
       'erros': erros,
       'dificuldade': dificuldade,
       'personagem': personagem?.toJson(),
+      'sincronizado': sincronizado,
+      'concluido': concluido,
+      'tema': tema,
     };
   }
 }

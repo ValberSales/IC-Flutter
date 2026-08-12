@@ -191,13 +191,55 @@ class LocalStorageService {
       score.createdAt = DateTime.now();
     }
 
-    list.add(score);
+    final index = list.indexWhere((item) => item.id == score.id);
+    if (index != -1) {
+      list[index] = score;
+    } else {
+      list.add(score);
+    }
+    await savePontuacoesList(list);
+  }
+
+  static Future<void> savePontuacoesList(List<Pontuacao> list) async {
     await _prefs.setString(_keyPontuacoes, jsonEncode(list.map((item) => item.toJson()).toList()));
   }
 
   static List<Pontuacao> getPontuacaoForPersonagem(int personagemId) {
     final all = getPontuacoes();
     return all.where((score) => score.personagem?.id == personagemId).toList();
+  }
+
+  // --- PROGRESSO E CONCLUSÃO DE PALAVRAS ---
+  static const String _keyCompletedWords = 'ic_completed_words';
+
+  static Set<String> getCompletedWords(int personagemId, String jogo, String temaKey, String dificuldade) {
+    final raw = _prefs.getString(_keyCompletedWords);
+    if (raw == null) return {};
+    try {
+      final Map<String, dynamic> map = jsonDecode(raw);
+      final key = '${personagemId}_${jogo}_${temaKey}_$dificuldade';
+      final List<dynamic>? list = map[key];
+      return list != null ? list.map((e) => e.toString()).toSet() : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  static Future<void> saveCompletedWord(int personagemId, String jogo, String temaKey, String dificuldade, String palavra) async {
+    final raw = _prefs.getString(_keyCompletedWords);
+    Map<String, dynamic> map = {};
+    if (raw != null) {
+      try {
+        map = Map<String, dynamic>.from(jsonDecode(raw));
+      } catch (_) {}
+    }
+    final key = '${personagemId}_${jogo}_${temaKey}_$dificuldade';
+    final List<String> current = (map[key] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+    if (!current.contains(palavra)) {
+      current.add(palavra);
+      map[key] = current;
+      await _prefs.setString(_keyCompletedWords, jsonEncode(map));
+    }
   }
 
   // --- ATIVIDADES E RASCUNHOS ---
@@ -211,6 +253,10 @@ class LocalStorageService {
     } catch (e) {
       return [];
     }
+  }
+
+  static Future<void> saveAtividadesList(List<Atividade> list) async {
+    await _prefs.setString(_keyAtividades, jsonEncode(list.map((item) => item.toJson()).toList()));
   }
 
   static Future<void> saveAtividade(Atividade atv) async {

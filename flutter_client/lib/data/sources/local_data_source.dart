@@ -58,7 +58,7 @@ class LocalDataSource {
     {"letra": "X", "path": "assets/alfabeto-manual-professoras/X.png"},
     {"letra": "Y", "path": "assets/alfabeto-manual-professoras/Y.png"},
     {"letra": "Z", "path": "assets/alfabeto-manual-professoras/Z.png"},
-    {"letra": "Ç", "path": "assets/alfabeto-manual-professoras/Ç.png"}
+    {"letra": "Ç", "path": "assets/alfabeto-manual-professoras/cedilha.png"}
   ];
 
   // Animais Padrão (Jogo de Adivinhação)

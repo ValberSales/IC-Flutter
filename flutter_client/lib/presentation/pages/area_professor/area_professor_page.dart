@@ -9,6 +9,8 @@ import '../../../data/storage/local_storage_service.dart';
 import '../../../services/api_service.dart';
 import '../../../data/models/usuario.dart';
 import '../../../data/models/atividade.dart';
+import '../../widgets/icon_picker_dialog.dart';
+import '../../widgets/item_atividade_modal.dart';
 
 class AreaProfessorPage extends StatefulWidget {
   const AreaProfessorPage({super.key});
@@ -43,6 +45,8 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
   final TextEditingController _tituloController = TextEditingController();
   String _selectedTipoJogo = 'JOGO_ADIVINHACAO';
   String _selectedDificuldade = 'FACIL';
+  String _selectedIconKey = 'pets';
+  String _categoriaFiltroAreaProfessor = 'TODOS';
   List<ItemAtividade> _editingItens = [];
   final TextEditingController _itemDescricaoController = TextEditingController();
   final TextEditingController _itemImagemController = TextEditingController();
@@ -332,12 +336,14 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
       _tituloController.text = existingAtividade.titulo;
       _selectedTipoJogo = existingAtividade.tipoJogo;
       _selectedDificuldade = existingAtividade.dificuldade;
+      _selectedIconKey = existingAtividade.icone ?? 'pets';
       _editingItens = List.from(existingAtividade.itens);
     } else {
       _editingActivityId = null;
       _tituloController.clear();
       _selectedTipoJogo = 'JOGO_ADIVINHACAO';
       _selectedDificuldade = 'FACIL';
+      _selectedIconKey = 'pets';
       _editingItens = [];
     }
     _itemDescricaoController.clear();
@@ -364,6 +370,7 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
       titulo: _tituloController.text.trim().isEmpty ? 'Sem Título (Rascunho)' : _tituloController.text.trim(),
       tipoJogo: _selectedTipoJogo,
       dificuldade: _selectedDificuldade,
+      icone: _selectedIconKey,
       rascunho: true,
       ativo: true,
       itens: _editingItens,
@@ -410,6 +417,7 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
       titulo: _tituloController.text.trim(),
       tipoJogo: _selectedTipoJogo,
       dificuldade: _selectedDificuldade,
+      icone: _selectedIconKey,
       rascunho: false,
       ativo: true,
       itens: _editingItens,
@@ -489,9 +497,75 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
     );
   }
 
+  Widget _buildCategoriaFilterChip(String key, String label, IconData icon) {
+    final isSelected = _categoriaFiltroAreaProfessor == key;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _categoriaFiltroAreaProfessor = key;
+          });
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? Colors.white : AppColors.textDark.withOpacity(0.7),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    color: isSelected ? Colors.white : AppColors.textDark.withOpacity(0.8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildActivityListDashboard(AppStateProvider state) {
     final rascunho = state.rascunhoAtual;
     final atividades = state.atividades;
+
+    final countTodos = atividades.length;
+    final countAdivinhacao = atividades.where((a) => a.tipoJogo == 'JOGO_ADIVINHACAO').length;
+    final countPalavras = atividades.where((a) => a.tipoJogo == 'JOGO_PALAVRAS').length;
+
+    final atividadesExibidas = atividades.where((a) {
+      if (_categoriaFiltroAreaProfessor == 'JOGO_ADIVINHACAO') {
+        return a.tipoJogo == 'JOGO_ADIVINHACAO';
+      } else if (_categoriaFiltroAreaProfessor == 'JOGO_PALAVRAS') {
+        return a.tipoJogo == 'JOGO_PALAVRAS';
+      }
+      return true;
+    }).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
@@ -597,8 +671,28 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
 
           if (rascunho != null) const SizedBox(height: 20),
 
+          // Seletor de Categorias por Tipo de Jogo
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.bgSoft,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                _buildCategoriaFilterChip('TODOS', 'Todos os Jogos ($countTodos)', Icons.apps_rounded),
+                const SizedBox(width: 6),
+                _buildCategoriaFilterChip('JOGO_ADIVINHACAO', 'Adivinhação ($countAdivinhacao)', Icons.pets_rounded),
+                const SizedBox(width: 6),
+                _buildCategoriaFilterChip('JOGO_PALAVRAS', 'Jogo de Palavras ($countPalavras)', Icons.diversity_3_rounded),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
           // Lista de Atividades Cadastradas
-          if (atividades.isEmpty)
+          if (atividadesExibidas.isEmpty)
             Card(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               child: Padding(
@@ -608,12 +702,12 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                     const Icon(Icons.gamepad_rounded, size: 64, color: AppColors.primaryLight),
                     const SizedBox(height: 16),
                     const Text(
-                      'Nenhuma atividade criada ainda',
+                      'Nenhuma atividade encontrada nesta categoria',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Clique no botão "Criar Nova Atividade" acima para cadastrar temas e palavras personalizadas.',
+                      'Selecione outra categoria ou clique no botão "Criar Nova Atividade" acima.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: AppColors.textDark),
                     ),
@@ -625,9 +719,9 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: atividades.length,
+              itemCount: atividadesExibidas.length,
               itemBuilder: (context, index) {
-                final atv = atividades[index];
+                final atv = atividadesExibidas[index];
                 final isAdivinhacao = atv.tipoJogo == 'JOGO_ADIVINHACAO';
 
                 return Card(
@@ -642,7 +736,9 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(
-                        isAdivinhacao ? Icons.drag_indicator_rounded : Icons.collections_rounded,
+                        atv.icone != null && atv.icone!.isNotEmpty
+                            ? IconPickerDialogWidget.getIconData(atv.icone)
+                            : (isAdivinhacao ? Icons.drag_indicator_rounded : Icons.collections_rounded),
                         color: isAdivinhacao ? AppColors.accent : AppColors.info,
                         size: 32,
                       ),
@@ -789,15 +885,9 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                       if (val != null) setState(() => _selectedTipoJogo = val);
                     },
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 16),
 
-                  // Passo 2: Palavras & Imagens
-                  const Text(
-                    '2. Cadastrar Palavras e Imagens',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
-                  ),
-                  const SizedBox(height: 12),
-
+                  // Seletor de Ícone Visual do Tema
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -805,127 +895,127 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppColors.border),
                     ),
-                    child: Column(
+                    child: Row(
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: TextFormField(
-                                controller: _itemDescricaoController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Palavra / Descrição (ex: Gato, Maçã)',
-                                  border: OutlineInputBorder(),
-                                  isDense: true,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              flex: 3,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  TextFormField(
-                                    controller: _itemImagemController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Caminho ou URL da Imagem',
-                                      hintText: 'assets/animais/gato.png ou /api/files/gato.png',
-                                      border: OutlineInputBorder(),
-                                      isDense: true,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.secondary,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
-                                    ),
-                                    onPressed: _isUploadingImage ? null : _pickAndUploadImage,
-                                    icon: _isUploadingImage
-                                        ? const SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                          )
-                                        : const Icon(Icons.upload_file_rounded, size: 18),
-                                    label: Text(
-                                      _isUploadingImage ? 'Enviando ao MinIO...' : '📷 Selecionar e Enviar Imagem (MinIO)',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (_selectedTipoJogo == 'JOGO_PALAVRAS') ...[
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _itemOpcoesController,
-                            decoration: const InputDecoration(
-                              labelText: 'Opções de resposta (separadas por vírgula)',
-                              hintText: 'Maçã, Banana, Uva, Laranja',
-                              border: OutlineInputBorder(),
-                              isDense: true,
-                            ),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.15),
+                            shape: BoxShape.circle,
                           ),
-                        ],
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
-                            onPressed: () {
-                              final desc = _itemDescricaoController.text.trim();
-                              if (desc.isEmpty) return;
-
-                              String img = _itemImagemController.text.trim();
-                              if (img.isEmpty) {
-                                img = 'assets/animais/gato.png'; // Padrão
-                              }
-
-                              List<String> opcs = [];
-                              if (_selectedTipoJogo == 'JOGO_PALAVRAS') {
-                                final rawOpcs = _itemOpcoesController.text.trim();
-                                if (rawOpcs.isNotEmpty) {
-                                  opcs = rawOpcs.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-                                }
-                                if (!opcs.contains(desc)) {
-                                  opcs.insert(0, desc);
-                                }
-                              }
-
+                          child: Icon(
+                            IconPickerDialogWidget.getIconData(_selectedIconKey),
+                            size: 30,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Ícone Representativo do Tema',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Ícone atual: $_selectedIconKey',
+                                style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          onPressed: () async {
+                            final selected = await showDialog<String>(
+                              context: context,
+                              builder: (ctx) => IconPickerDialogWidget(initialIconKey: _selectedIconKey),
+                            );
+                            if (selected != null) {
                               setState(() {
-                                _editingItens.add(ItemAtividade(
-                                  descricao: desc,
-                                  imagem: img,
-                                  opcoes: opcs,
-                                ));
-                                _itemDescricaoController.clear();
-                                _itemImagemController.clear();
-                                _itemOpcoesController.clear();
+                                _selectedIconKey = selected;
                               });
-                            },
-                            icon: const Icon(Icons.add_rounded, color: Colors.white),
-                            label: const Text('Adicionar Palavra', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            }
+                          },
+                          icon: const Icon(Icons.palette_rounded, size: 18),
+                          label: const Text(
+                            'Escolher Ícone',
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 28),
+
+                  // Passo 2: Palavras & Imagens
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        '2. Palavras e Sinais do Tema',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
+                      ),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        onPressed: () async {
+                          final newItem = await showDialog<ItemAtividade>(
+                            context: context,
+                            builder: (ctx) => ItemAtividadeModalWidget(tipoJogo: _selectedTipoJogo),
+                          );
+                          if (newItem != null) {
+                            setState(() {
+                              _editingItens.add(newItem);
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
+                        label: const Text(
+                          'Adicionar',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
 
-                  // Lista dos Itens já adicionados
+                  // Lista dos Itens já adicionados com opção de Edição e Exclusão
                   if (_editingItens.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'Nenhuma palavra adicionada a este tema ainda.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppColors.error),
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: AppColors.bgSoft,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.primaryLight),
+                          SizedBox(height: 12),
+                          Text(
+                            'Nenhuma palavra adicionada a este tema ainda.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Clique no botão "+ Adicionar Palavra / Item" acima para cadastrar as entradas.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12, color: AppColors.textDark),
+                          ),
+                        ],
                       ),
                     )
                   else
@@ -936,31 +1026,64 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                       itemBuilder: (context, index) {
                         final item = _editingItens[index];
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             leading: Container(
-                              width: 44,
-                              height: 44,
+                              width: 52,
+                              height: 52,
                               decoration: BoxDecoration(
-                                color: AppColors.primaryLight.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(8),
+                                color: AppColors.bgSoft,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.border),
                               ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(12),
                                 child: _buildImageWidget(item.imagem),
                               ),
                             ),
-                            title: Text(item.descricao, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: item.opcoes.isNotEmpty
-                                ? Text('Opções: ${item.opcoes.join(", ")}')
-                                : Text('Imagem: ${item.imagem}'),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_rounded, color: AppColors.error),
-                              onPressed: () {
-                                setState(() {
-                                  _editingItens.removeAt(index);
-                                });
-                              },
+                            title: Text(
+                              item.descricao,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textDark),
+                            ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: item.opcoes.isNotEmpty
+                                  ? Text('Opções: ${item.opcoes.join(", ")}')
+                                  : Text('Imagem: ${item.imagem}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit_rounded, color: AppColors.primary),
+                                  tooltip: 'Editar Item',
+                                  onPressed: () async {
+                                    final updatedItem = await showDialog<ItemAtividade>(
+                                      context: context,
+                                      builder: (ctx) => ItemAtividadeModalWidget(
+                                        initialItem: item,
+                                        tipoJogo: _selectedTipoJogo,
+                                      ),
+                                    );
+                                    if (updatedItem != null) {
+                                      setState(() {
+                                        _editingItens[index] = updatedItem;
+                                      });
+                                    }
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                                  tooltip: 'Excluir Item',
+                                  onPressed: () {
+                                    setState(() {
+                                      _editingItens.removeAt(index);
+                                    });
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -969,7 +1092,7 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
 
                   const Divider(height: 36),
 
-                  // Rodapé de Ações com "Salvar Progresso (Rascunho)" e "Publicar"
+                  // Rodapé de Ações com "Salvar Progresso" e "Publicar"
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -992,7 +1115,7 @@ class _AreaProfessorPageState extends State<AreaProfessorPage> {
                             ),
                             onPressed: () => _saveProgressDraft(state),
                             icon: const Icon(Icons.save_rounded),
-                            label: const Text('Salvar Progresso (Rascunho)', style: TextStyle(fontWeight: FontWeight.bold)),
+                            label: const Text('Salvar Progresso', style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                           const SizedBox(width: 12),
                           ElevatedButton.icon(

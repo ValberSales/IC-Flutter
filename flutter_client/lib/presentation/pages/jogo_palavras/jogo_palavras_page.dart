@@ -152,34 +152,58 @@ class _JogoPalavrasPageState extends State<JogoPalavrasPage> {
       totalOpcoes = 5;
     }
 
-    // Coleta banco global de palavras/descrições para usar como distratores reais
-    final Set<String> distractorPool = {};
-    for (final p in _palavras) {
-      if (p.descricao.trim().isNotEmpty) {
-        distractorPool.add(p.descricao.trim());
-      }
-    }
-    for (final at in state.atividades) {
-      for (final item in at.itens) {
-        if (item.descricao.trim().isNotEmpty) {
-          distractorPool.add(item.descricao.trim());
+    final String correta = palavraSorteada.descricao.trim();
+
+    // 1. Prioriza os distratores específicos cadastrados no item do jogo pelo professor
+    final List<String> distratoresItem = palavraSorteada.opcoes
+        .map((o) => o.trim())
+        .where((o) => o.isNotEmpty && o != correta)
+        .toList();
+
+    final List<String> distratoresSelecionados = [];
+
+    // Adiciona os distratores do próprio item (embaralhados)
+    distratoresItem.shuffle(random);
+    distratoresSelecionados.addAll(distratoresItem);
+
+    final int qtdNecessaria = totalOpcoes - 1;
+
+    // 2. Se faltarem distratores para atingir a quantidade da dificuldade (ex: 3, 4 ou 5 opções),
+    // complementa com palavras de outros itens ou do banco
+    if (distratoresSelecionados.length < qtdNecessaria) {
+      final Set<String> fallbackPool = {};
+
+      for (final p in _palavras) {
+        if (p.descricao.trim().isNotEmpty) {
+          fallbackPool.add(p.descricao.trim());
         }
       }
-    }
-    for (final item in LocalDataSource.familiaPadrao) {
-      distractorPool.add(item['descricao']!);
-    }
-    for (final item in LocalDataSource.animaisPadrao) {
-      distractorPool.add(item['descricao']!);
-    }
+      for (final at in state.atividades) {
+        for (final item in at.itens) {
+          if (item.descricao.trim().isNotEmpty) {
+            fallbackPool.add(item.descricao.trim());
+          }
+        }
+      }
+      for (final item in LocalDataSource.familiaPadrao) {
+        fallbackPool.add(item['descricao']!);
+      }
+      for (final item in LocalDataSource.animaisPadrao) {
+        fallbackPool.add(item['descricao']!);
+      }
 
-    // Remove a resposta correta da lista de distratores
-    final String correta = palavraSorteada.descricao.trim();
-    distractorPool.remove(correta);
+      fallbackPool.remove(correta);
+      for (final d in distratoresSelecionados) {
+        fallbackPool.remove(d);
+      }
 
-    final List<String> distractors = distractorPool.toList()..shuffle(random);
-    final int qtdDistratores = totalOpcoes - 1;
-    final List<String> distratoresSelecionados = distractors.take(qtdDistratores).toList();
+      final List<String> fallbackList = fallbackPool.toList()..shuffle(random);
+      final int faltantes = qtdNecessaria - distratoresSelecionados.length;
+      distratoresSelecionados.addAll(fallbackList.take(faltantes));
+    } else if (distratoresSelecionados.length > qtdNecessaria) {
+      // Se houver mais distratores cadastrados do que o nível de dificuldade exige, trunca para a quantidade exata
+      distratoresSelecionados.length = qtdNecessaria;
+    }
 
     final List<String> listOpcoesFinal = [correta, ...distratoresSelecionados]..shuffle(random);
 

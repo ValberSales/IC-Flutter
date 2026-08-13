@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../state/app_state_provider.dart';
 import '../../../data/models/atividade.dart';
+import '../../widgets/icon_picker_dialog.dart';
 import '../jogo_adivinhacao/jogo_adivinhacao_page.dart';
 import '../jogo_palavras/jogo_palavras_page.dart';
 
@@ -221,7 +222,9 @@ class _SelecaoTemaPageState extends State<SelecaoTemaPage> {
                                   context: context,
                                   titulo: atv.titulo,
                                   descricao: '${atv.itens.length} palavras  •  ${isDefault ? "Tema Padrão" : "Criado por ${atv.criadoPor}"}',
-                                  icone: isAdivinhacao ? Icons.pets_rounded : Icons.diversity_3_rounded,
+                                  icone: atv.icone != null && atv.icone!.isNotEmpty
+                                      ? IconPickerDialogWidget.getIconData(atv.icone)
+                                      : (isAdivinhacao ? Icons.pets_rounded : Icons.diversity_3_rounded),
                                   cor: isAdivinhacao ? AppColors.accent : AppColors.info,
                                   isTeacherCreated: !isDefault,
                                   pctConclusao: pctConclusao,

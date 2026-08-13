@@ -19,6 +19,7 @@ public class Atividade {
     private boolean rascunho = false;
     private String dificuldade = "FACIL";
     private String criadoPor;
+    private String icone;
 
     @OneToMany(mappedBy = "atividade", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
@@ -48,6 +49,9 @@ public class Atividade {
 
     public String getCriadoPor() { return criadoPor; }
     public void setCriadoPor(String criadoPor) { this.criadoPor = criadoPor; }
+
+    public String getIcone() { return icone; }
+    public void setIcone(String icone) { this.icone = icone; }
 
     public List<ItemAtividade> getItens() { return itens; }
     public void setItens(List<ItemAtividade> itens) { this.itens = itens; }

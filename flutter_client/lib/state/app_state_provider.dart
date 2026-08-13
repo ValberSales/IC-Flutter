@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/models/personagem.dart';
 import '../data/models/pontuacao.dart';
@@ -20,6 +21,7 @@ class AppStateProvider extends ChangeNotifier {
   bool _isSyncing = false;
   Usuario? _currentUser;
   String? _token;
+  Timer? _periodicSyncTimer;
 
   // Getters
   Personagem? get activePersonagem => _activePersonagem;
@@ -58,13 +60,20 @@ class AppStateProvider extends ChangeNotifier {
     }
     notifyListeners();
 
-    // Sincroniza atividades do servidor em segundo plano
+    // Sincroniza atividades do servidor em segundo plano imediatamente
     fetchAtividadesOnline();
+
+    // Inicia polling de sincronização em segundo plano (a cada 10 segundos)
+    // Padrão offline-first de sincronização automática para os tablets das crianças
+    _periodicSyncTimer?.cancel();
+    _periodicSyncTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      fetchAtividadesOnline();
+    });
   }
 
   Future<void> fetchAtividadesOnline() async {
     try {
-      final onlineList = await ApiService.getAtividades(apenasAtivas: true);
+      final onlineList = await ApiService.getAtividades(apenasAtivas: false);
       if (onlineList.isNotEmpty) {
         _atividades = onlineList;
         notifyListeners();
@@ -331,6 +340,7 @@ class AppStateProvider extends ChangeNotifier {
   Future<void> salvarRascunhoAtividade(Atividade atv) async {
     atv.rascunho = true;
     _rascunhoAtual = atv;
+    await ApiService.saveAtividade(atv);
     await LocalStorageService.saveRascunhoAtividade(atv);
     notifyListeners();
   }
@@ -340,28 +350,20 @@ class AppStateProvider extends ChangeNotifier {
     if (_currentUser != null) {
       atv.criadoPor = _currentUser!.nome;
     }
-    await LocalStorageService.saveAtividade(atv);
+    await ApiService.saveAtividade(atv);
     await LocalStorageService.clearRascunhoAtividade();
     _rascunhoAtual = null;
-    _atividades = LocalStorageService.getAtividades();
-    notifyListeners();
+    await fetchAtividadesOnline();
   }
 
   Future<void> toggleAtividadeStatus(int id, bool ativo) async {
-    final list = LocalStorageService.getAtividades();
-    final index = list.indexWhere((a) => a.id == id);
-    if (index != -1) {
-      list[index].ativo = ativo;
-      await LocalStorageService.saveAtividade(list[index]);
-      _atividades = LocalStorageService.getAtividades();
-      notifyListeners();
-    }
+    await ApiService.toggleAtividadeStatus(id);
+    await fetchAtividadesOnline();
   }
 
   Future<void> deleteAtividade(int id) async {
-    await LocalStorageService.deleteAtividade(id);
-    _atividades = LocalStorageService.getAtividades();
-    notifyListeners();
+    await ApiService.deleteAtividade(id);
+    await fetchAtividadesOnline();
   }
 
   Future<void> descartarRascunho() async {

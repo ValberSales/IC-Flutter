@@ -35,6 +35,7 @@ class Atividade extends AbstractModel {
   bool rascunho; // Se true, o professor salvou progresso sem publicar
   String dificuldade; // 'FACIL' | 'MEDIO' | 'DIFICIL'
   String? criadoPor;
+  String? icone; // Nome do ícone selecionado
   List<ItemAtividade> itens;
 
   Atividade({
@@ -46,6 +47,7 @@ class Atividade extends AbstractModel {
     this.rascunho = false,
     this.dificuldade = 'FACIL',
     this.criadoPor,
+    this.icone,
     this.itens = const [],
   });
 
@@ -59,6 +61,7 @@ class Atividade extends AbstractModel {
       rascunho: json['rascunho'] as bool? ?? false,
       dificuldade: json['dificuldade'] as String? ?? 'FACIL',
       criadoPor: json['criadoPor'] as String?,
+      icone: json['icone'] as String?,
       itens: json['itens'] != null
           ? (json['itens'] as List).map((i) => ItemAtividade.fromJson(i as Map<String, dynamic>)).toList()
           : const [],
@@ -76,6 +79,7 @@ class Atividade extends AbstractModel {
       'rascunho': rascunho,
       'dificuldade': dificuldade,
       'criadoPor': criadoPor,
+      'icone': icone,
       'itens': itens.map((i) => i.toJson()).toList(),
     };
   }

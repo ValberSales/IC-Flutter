@@ -123,6 +123,20 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
     });
   }
 
+  String _removerAcentosPreservandoCedilha(String text) {
+    return text.toUpperCase().replaceAllMapped(RegExp(r'[ÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜ]'), (match) {
+      final char = match.group(0)!;
+      switch (char) {
+        case 'Á': case 'À': case 'Â': case 'Ã': case 'Ä': return 'A';
+        case 'É': case 'È': case 'Ê': case 'Ë': return 'E';
+        case 'Í': case 'Ì': case 'Î': case 'Ï': return 'I';
+        case 'Ó': case 'Ò': case 'Ô': case 'Õ': case 'Ö': return 'O';
+        case 'Ú': case 'Ù': case 'Û': case 'Ü': return 'U';
+        default: return char;
+      }
+    });
+  }
+
   void _iniciarRodada() {
     if (_palavrasFila.isEmpty) return;
 
@@ -137,7 +151,7 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
     final state = context.read<AppStateProvider>();
     final dificuldade = state.activePersonagem?.dificuldade ?? 'FACIL';
     final random = Random();
-    final palavraTexto = palavraSorteada.descricao.toUpperCase();
+    final palavraTexto = _removerAcentosPreservandoCedilha(palavraSorteada.descricao);
 
     List<Map<String, String>> alfabeto = List<Map<String, String>>.from(state.currentAlfabeto);
     if (dificuldade == 'DIFICIL') {
@@ -168,6 +182,16 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
     });
   }
 
+  void _limparPalavra() {
+    setState(() {
+      _letrasPreenchidas = List.generate(_letrasPalavra.length, (_) => null);
+      _slotValidation = List.generate(_letrasPalavra.length, (_) => null);
+      _activeSlotIndex = 0;
+      _feedback = 'VAZIO';
+      _endGame = false;
+    });
+  }
+
   void _selectLetra(Map<String, String> letraData) {
     if (_endGame) return;
     if (_activeSlotIndex < 0 || _activeSlotIndex >= _letrasPalavra.length) return;
@@ -183,12 +207,11 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
       
       // Quando preencher a última letra da palavra
       if (_activeSlotIndex == -1) {
-        _endGame = true;
         bool temErro = false;
 
         for (int i = 0; i < _letrasPalavra.length; i++) {
-          final String digitado = _letrasPreenchidas[i]?['letra'] ?? '';
-          final String correto = _letrasPalavra[i];
+          final String digitado = _removerAcentosPreservandoCedilha(_letrasPreenchidas[i]?['letra'] ?? '');
+          final String correto = _removerAcentosPreservandoCedilha(_letrasPalavra[i]);
           if (digitado == correto) {
             _slotValidation[i] = true;
           } else {
@@ -200,9 +223,11 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
         if (temErro) {
           _errosCount++;
           _feedback = 'ERRO';
+          _endGame = false; // Nao permite avancar para a proxima palavra enquanto houver erro
         } else {
           _acertosCount++;
           _feedback = 'ACERTO';
+          _endGame = true; // Liberado avancar para a proxima palavra somente com acerto total
           
           final diff = state.activePersonagem?.dificuldade ?? 'FACIL';
           final String temaNome = widget.atividadeTema?.titulo ?? 'Animais da Natureza';
@@ -216,7 +241,7 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
         }
 
         final String temaNome = widget.atividadeTema?.titulo ?? 'Animais da Natureza';
-        final bool isMatchComplete = _currentWordIndex >= _palavrasFila.length;
+        final bool isMatchComplete = _currentWordIndex >= _palavrasFila.length && !temErro;
 
         state.salvaPontuacao(
           _acertosCount,
@@ -307,6 +332,8 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
                             slotValidation: _slotValidation,
                             activeIndex: _activeSlotIndex,
                             onSlotTapped: _setActiveSlot,
+                            onClearTapped: _limparPalavra,
+                            feedback: _feedback,
                             isCompact: true,
                             difficulty: dificuldade,
                           ),
@@ -433,6 +460,23 @@ class _JogoAdivinhacaoPageState extends State<JogoAdivinhacaoPage> {
                                             const SizedBox(height: 16),
                                             Center(
                                               child: _buildWebSlots(),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Center(
+                                              child: ElevatedButton.icon(
+                                                onPressed: _limparPalavra,
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: _feedback == 'ERRO' ? AppColors.error : AppColors.secondary,
+                                                  foregroundColor: Colors.white,
+                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                ),
+                                                icon: const Icon(Icons.cleaning_services_rounded, size: 20),
+                                                label: Text(
+                                                  _feedback == 'ERRO' ? 'Tentar Novamente 🧹' : 'Limpar Palavra 🧹',
+                                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
                                             ),
                                             const Spacer(),
                                             const SizedBox(height: 16),
@@ -687,6 +731,8 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
   final List<bool?> slotValidation;
   final int activeIndex;
   final ValueChanged<int> onSlotTapped;
+  final VoidCallback onClearTapped;
+  final String feedback;
   final bool isCompact;
   final String difficulty;
 
@@ -697,6 +743,8 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.slotValidation,
     required this.activeIndex,
     required this.onSlotTapped,
+    required this.onClearTapped,
+    required this.feedback,
     required this.isCompact,
     required this.difficulty,
   });
@@ -706,7 +754,7 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 260.0;
+  double get maxExtent => 280.0;
 
   @override
   double get minExtent => 96.0;
@@ -759,8 +807,23 @@ class JogoAdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
                           color: AppColors.secondary,
                         ),
                       ),
-                    const SizedBox(height: 8),
-                    _buildSlotsRow(slotSize, fontSize),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildSlotsRow(slotSize, fontSize),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: Icon(
+                            Icons.cleaning_services_rounded,
+                            color: feedback == 'ERRO' ? AppColors.error : AppColors.secondary,
+                            size: 24,
+                          ),
+                          tooltip: 'Limpar Palavra',
+                          onPressed: onClearTapped,
+                        ),
+                      ],
+                    ),
                   ],
                 )
               : Row(

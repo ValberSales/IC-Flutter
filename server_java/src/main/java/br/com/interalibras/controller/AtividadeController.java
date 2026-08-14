@@ -22,9 +22,9 @@ public class AtividadeController {
     @GetMapping
     public ResponseEntity<List<Atividade>> getAllAtividades(@RequestParam(required = false) Boolean apenasAtivas) {
         if (Boolean.TRUE.equals(apenasAtivas)) {
-            return ResponseEntity.ok(atividadeRepository.findByAtivoTrueAndRascunhoFalse());
+            return ResponseEntity.ok(atividadeRepository.findByAtivoTrueAndRascunhoFalseOrderByTituloAsc());
         }
-        return ResponseEntity.ok(atividadeRepository.findAll());
+        return ResponseEntity.ok(atividadeRepository.findAllByOrderByTituloAsc());
     }
 
     @PostMapping

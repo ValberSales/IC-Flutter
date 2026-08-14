@@ -138,6 +138,11 @@ flutter_client/.pub/
 flutter_client/.pub-cache/
 flutter_client/build/
 
-# Harness Log
-HARNESS_LOG.md
+# Maven and Java builds
+server_java/target/
+**/target/
+*.class
 
+# macOS
+.DS_Store
+**/.DS_Store

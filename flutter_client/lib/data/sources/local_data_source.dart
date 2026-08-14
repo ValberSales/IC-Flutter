@@ -220,8 +220,5 @@ class LocalDataSource {
     "assets/avatar/avatar_7.jpg",
     "assets/avatar/avatar_8.jpg",
     "assets/avatar/avatar_9.jpg",
-    "assets/avatar/avatar_10.jpg",
-    "assets/avatar/avatar_11.jpg",
-    "assets/avatar/avatar_12.jpg",
   ];
 }

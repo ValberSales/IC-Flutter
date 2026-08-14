@@ -24,10 +24,24 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // 1. Criar usuário padrão admin se não existir
+        // 1. Criar ou atualizar usuário padrão admin para garantir role ADMIN
         if (!usuarioRepository.existsByUsername("admin")) {
             Usuario admin = new Usuario(null, "Professor Admin", "admin@interalibras.com.br", "admin", passwordEncoder.encode("123456"));
+            admin.setRole("ADMIN");
+            admin.setCodigoIdentificador("ADM-0001");
+            admin.setAvatar("assets/avatar/avatar_1.jpg");
             usuarioRepository.save(admin);
+        } else {
+            usuarioRepository.findByUsername("admin").ifPresent(admin -> {
+                admin.setRole("ADMIN");
+                if (admin.getCodigoIdentificador() == null) {
+                    admin.setCodigoIdentificador("ADM-0001");
+                }
+                if (admin.getAvatar() == null) {
+                    admin.setAvatar("assets/avatar/avatar_1.jpg");
+                }
+                usuarioRepository.save(admin);
+            });
         }
 
         // 2. Semear Atividades Padrão se o repositório de atividades estiver vazio

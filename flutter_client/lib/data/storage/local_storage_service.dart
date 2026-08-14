@@ -6,7 +6,7 @@ import '../models/usuario.dart';
 import '../models/atividade.dart';
 
 class LocalStorageService {
-  static late final SharedPreferences _prefs;
+  static late SharedPreferences _prefs;
 
   static const String _keyPersonagens = 'JOGO_LIBRAS_PERSONAGENS';
   static const String _keyPontuacoes = 'JOGO_LIBRAS_PONTUACOES';
@@ -17,6 +17,8 @@ class LocalStorageService {
   static const String _keyUser = 'logged_in_user';
   static const String _keyAtividades = 'JOGO_LIBRAS_ATIVIDADES';
   static const String _keyRascunhoAtividade = 'JOGO_LIBRAS_RASCUNHO_ATIVIDADE';
+  static const String _keyGuestMode = 'IS_GUEST_MODE';
+  static const String _keyUsuariosList = 'JOGO_LIBRAS_USUARIOS_LIST';
 
 
   static Future<void> init() async {
@@ -75,6 +77,34 @@ class LocalStorageService {
 
   static Future<void> clearUser() async {
     await _prefs.remove(_keyUser);
+  }
+
+  // --- MODO CONVIDADO ---
+
+  static bool isGuestMode() {
+    return _prefs.getBool(_keyGuestMode) ?? false;
+  }
+
+  static Future<void> setGuestMode(bool value) async {
+    await _prefs.setBool(_keyGuestMode, value);
+  }
+
+  // --- CACHE DE USUÁRIOS (OFFLINE-FIRST) ---
+
+  static List<Usuario> getUsuariosList() {
+    final raw = _prefs.getString(_keyUsuariosList);
+    if (raw == null) return [];
+    try {
+      final List<dynamic> decoded = jsonDecode(raw);
+      return decoded.map((item) => Usuario.fromJson(item)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> saveUsuariosList(List<Usuario> list) async {
+    final jsonList = list.map((u) => u.toJson()).toList();
+    await _prefs.setString(_keyUsuariosList, jsonEncode(jsonList));
   }
 
   // --- PERSONAGEM ---

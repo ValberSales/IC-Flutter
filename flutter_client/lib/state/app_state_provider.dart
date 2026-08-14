@@ -23,18 +23,25 @@ class AppStateProvider extends ChangeNotifier {
   String? _token;
   Timer? _periodicSyncTimer;
 
+  bool _isGuestMode = false;
+  List<Usuario> _usuarios = [];
+  String _currentDificuldade = 'FACIL';
+
   // Getters
   Personagem? get activePersonagem => _activePersonagem;
   List<Personagem> get personagens => _personagens;
+  String get currentDificuldade => _activePersonagem?.dificuldade ?? _currentDificuldade;
   Turma? get activeTurma => _activeTurma;
   List<Palavra> get customPalavras => _customPalavras;
   List<Atividade> get atividades => _atividades;
+  List<Usuario> get usuarios => _usuarios;
   Atividade? get rascunhoAtual => _rascunhoAtual;
   bool get useLegacyLetters => _useLegacyLetters;
   bool get isSyncing => _isSyncing;
   Usuario? get currentUser => _currentUser;
   String? get token => _token;
-  bool get isLoggedIn => _token != null;
+  bool get isLoggedIn => _token != null && _currentUser != null;
+  bool get isGuestMode => _isGuestMode;
 
   // Letras atuais do alfabeto manual dependendo da configuração
   List<Map<String, String>> get currentAlfabeto {
@@ -50,6 +57,8 @@ class AppStateProvider extends ChangeNotifier {
     _activePersonagem = LocalStorageService.getActivePersonagem();
     _token = LocalStorageService.getToken();
     _currentUser = LocalStorageService.getUser();
+    _isGuestMode = LocalStorageService.isGuestMode();
+    _usuarios = LocalStorageService.getUsuariosList();
     _atividades = LocalStorageService.getAtividades();
     _rascunhoAtual = LocalStorageService.getRascunhoAtividade();
     
@@ -58,16 +67,27 @@ class AppStateProvider extends ChangeNotifier {
     if (codigoTurma != null) {
       _loadMockTurmaForCode(codigoTurma);
     }
+
+    if (_currentUser != null && _activePersonagem == null) {
+      _activePersonagem = Personagem(
+        id: _currentUser!.id,
+        nome: _currentUser!.nome ?? _currentUser!.username ?? 'Aluno',
+        avatar: _currentUser!.avatar ?? 'assets/avatar/avatar_1.jpg',
+        dificuldade: _currentDificuldade,
+      );
+    }
+
     notifyListeners();
 
-    // Sincroniza atividades do servidor em segundo plano imediatamente
+    // Sincroniza atividades e usuários do servidor em segundo plano imediatamente
     fetchAtividadesOnline();
+    fetchUsuariosOnline();
 
     // Inicia polling de sincronização em segundo plano (a cada 10 segundos)
-    // Padrão offline-first de sincronização automática para os tablets das crianças
     _periodicSyncTimer?.cancel();
     _periodicSyncTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       fetchAtividadesOnline();
+      fetchUsuariosOnline();
     });
   }
 
@@ -75,6 +95,7 @@ class AppStateProvider extends ChangeNotifier {
     try {
       final onlineList = await ApiService.getAtividades(apenasAtivas: false);
       if (onlineList.isNotEmpty) {
+        onlineList.sort((a, b) => a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase()));
         _atividades = onlineList;
         notifyListeners();
       }
@@ -84,6 +105,17 @@ class AppStateProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fetchUsuariosOnline({String? busca}) async {
+    try {
+      final list = await ApiService.getUsuarios(busca: busca);
+      if (list.isNotEmpty || busca != null) {
+        _usuarios = list;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Erro ao sincronizar usuários: $e');
+    }
+  }
 
   // --- CARREGAMENTO DE TURMA LOCAL ---
   void _loadMockTurmaForCode(String code) {
@@ -124,16 +156,42 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- AUTENTICAÇÃO ---
+  // --- AUTENTICAÇÃO E PERFIL ---
 
-  Future<bool> login(String username, String password) async {
+  Future<void> enterGuestMode() async {
+    _isGuestMode = true;
+    await LocalStorageService.setGuestMode(true);
+    if (_activePersonagem == null) {
+      _activePersonagem = Personagem(
+        id: 0,
+        nome: 'Pequeno Aprendiz',
+        avatar: 'assets/avatar/avatar_1.jpg',
+        dificuldade: _currentDificuldade,
+      );
+      await LocalStorageService.setActivePersonagem(_activePersonagem!);
+    }
+    notifyListeners();
+  }
+
+  Future<bool> login(String identifier, String password) async {
     try {
-      final result = await ApiService.login(username, password);
+      final result = await ApiService.login(identifier, password);
       if (result != null && result['token'] != null && result['user'] != null) {
         _token = result['token'] as String;
         _currentUser = Usuario.fromJson(result['user'] as Map<String, dynamic>);
+        _isGuestMode = false;
+        await LocalStorageService.setGuestMode(false);
         await LocalStorageService.saveToken(_token!);
         await LocalStorageService.saveUser(_currentUser!);
+
+        _activePersonagem = Personagem(
+          id: _currentUser!.id,
+          nome: _currentUser!.nome ?? _currentUser!.username ?? 'Aluno',
+          avatar: _currentUser!.avatar ?? 'assets/avatar/avatar_1.jpg',
+          dificuldade: _currentDificuldade,
+        );
+        await LocalStorageService.setActivePersonagem(_activePersonagem!);
+
         notifyListeners();
         return true;
       }
@@ -149,8 +207,19 @@ class AppStateProvider extends ChangeNotifier {
       if (result != null && result['token'] != null && result['user'] != null) {
         _token = result['token'] as String;
         _currentUser = Usuario.fromJson(result['user'] as Map<String, dynamic>);
+        _isGuestMode = false;
+        await LocalStorageService.setGuestMode(false);
         await LocalStorageService.saveToken(_token!);
         await LocalStorageService.saveUser(_currentUser!);
+
+        _activePersonagem = Personagem(
+          id: _currentUser!.id,
+          nome: _currentUser!.nome ?? _currentUser!.username ?? 'Aluno',
+          avatar: _currentUser!.avatar ?? 'assets/avatar/avatar_1.jpg',
+          dificuldade: _currentDificuldade,
+        );
+        await LocalStorageService.setActivePersonagem(_activePersonagem!);
+
         notifyListeners();
         return true;
       }
@@ -160,11 +229,172 @@ class AppStateProvider extends ChangeNotifier {
     return false;
   }
 
+  Future<bool> updateUserProfile({String? nome, String? avatar}) async {
+    if (_currentUser == null) return false;
+
+    if (nome != null && nome.trim().isNotEmpty) {
+      _currentUser!.nome = nome.trim();
+    }
+    if (avatar != null && avatar.trim().isNotEmpty) {
+      _currentUser!.avatar = avatar.trim();
+    }
+
+    if (_activePersonagem != null) {
+      if (nome != null) _activePersonagem!.nome = nome;
+      if (avatar != null) _activePersonagem!.avatar = avatar;
+      await LocalStorageService.savePersonagem(_activePersonagem!);
+      await LocalStorageService.setActivePersonagem(_activePersonagem!);
+    }
+
+    await LocalStorageService.saveUser(_currentUser!);
+    await ApiService.updateUsuario(_currentUser!);
+    notifyListeners();
+    return true;
+  }
+
+  Future<Map<String, dynamic>> updateAccountDetails({
+    String? nome,
+    String? username,
+    String? newPassword,
+    String? avatar,
+  }) async {
+    if (_currentUser == null) {
+      return {'success': false, 'error': 'Usuário não autenticado.'};
+    }
+
+    final bool loginDataChanged = (username != null &&
+            username.trim().isNotEmpty &&
+            username.trim().toLowerCase() != (_currentUser!.username ?? '').toLowerCase()) ||
+        (newPassword != null && newPassword.trim().isNotEmpty);
+
+    final updatedUser = Usuario(
+      id: _currentUser!.id,
+      nome: (nome != null && nome.trim().isNotEmpty) ? nome.trim() : _currentUser!.nome,
+      username: (username != null && username.trim().isNotEmpty) ? username.trim() : _currentUser!.username,
+      password: (newPassword != null && newPassword.trim().isNotEmpty) ? newPassword.trim() : null,
+      avatar: (avatar != null && avatar.trim().isNotEmpty) ? avatar.trim() : _currentUser!.avatar,
+      codigoIdentificador: _currentUser!.codigoIdentificador,
+      role: _currentUser!.role,
+      email: _currentUser!.email,
+    );
+
+    try {
+      final updated = await ApiService.updateUsuario(updatedUser);
+      if (updated != null) {
+        if (loginDataChanged) {
+          await logout();
+          return {
+            'success': true,
+            'loginDataChanged': true,
+            'message': 'Dados de login alterados com sucesso! Por favor, entre novamente.',
+          };
+        } else {
+          _currentUser = updated;
+          if (_activePersonagem != null) {
+            if (nome != null) _activePersonagem!.nome = nome.trim();
+            if (avatar != null) _activePersonagem!.avatar = avatar.trim();
+            await LocalStorageService.savePersonagem(_activePersonagem!);
+            await LocalStorageService.setActivePersonagem(_activePersonagem!);
+          }
+          await LocalStorageService.saveUser(_currentUser!);
+          notifyListeners();
+          return {
+            'success': true,
+            'loginDataChanged': false,
+            'message': 'Perfil atualizado com sucesso!',
+          };
+        }
+      } else {
+        return {'success': false, 'error': 'Erro ao atualizar dados no servidor ou nome de usuário já em uso.'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Erro de conexão: $e'};
+    }
+  }
+
+  Future<String?> resetUserPassword(int userId) async {
+    final tempPassword = await ApiService.resetPassword(userId);
+    if (tempPassword != null) {
+      final index = _usuarios.indexWhere((u) => u.id == userId);
+      if (index != -1) {
+        _usuarios[index].mustChangePassword = true;
+        await LocalStorageService.saveUsuariosList(_usuarios);
+      }
+      if (_currentUser?.id == userId) {
+        _currentUser!.mustChangePassword = true;
+        await LocalStorageService.saveUser(_currentUser!);
+      }
+      notifyListeners();
+      return tempPassword;
+    }
+    return null;
+  }
+
+  Future<bool> changePasswordAfterReset(String newPassword) async {
+    if (_currentUser == null) return false;
+    final updatedUser = Usuario(
+      id: _currentUser!.id,
+      nome: _currentUser!.nome,
+      username: _currentUser!.username,
+      password: newPassword.trim(),
+      avatar: _currentUser!.avatar,
+      codigoIdentificador: _currentUser!.codigoIdentificador,
+      role: _currentUser!.role,
+      email: _currentUser!.email,
+      mustChangePassword: false,
+    );
+
+    try {
+      final updated = await ApiService.updateUsuario(updatedUser);
+      if (updated != null) {
+        _currentUser = updated;
+        _currentUser!.mustChangePassword = false;
+        await LocalStorageService.saveUser(_currentUser!);
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      print('Erro ao alterar senha obrigatória: $e');
+    }
+    return false;
+  }
+
+  Future<bool> updateUserRole(int id, String newRole) async {
+    final index = _usuarios.indexWhere((u) => u.id == id);
+    if (index != -1) {
+      _usuarios[index].role = newRole;
+      await LocalStorageService.saveUsuariosList(_usuarios);
+      await ApiService.updateUsuario(_usuarios[index]);
+
+      if (_currentUser?.id == id) {
+        _currentUser!.role = newRole;
+        await LocalStorageService.saveUser(_currentUser!);
+      }
+
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> deleteUser(int id) async {
+    final success = await ApiService.deleteUsuario(id);
+    if (success) {
+      _usuarios.removeWhere((u) => u.id == id);
+      await LocalStorageService.saveUsuariosList(_usuarios);
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
   Future<void> logout() async {
     _token = null;
     _currentUser = null;
+    _isGuestMode = false;
     _activeTurma = null;
     _customPalavras = [];
+    await LocalStorageService.setGuestMode(false);
     await LocalStorageService.clearToken();
     await LocalStorageService.clearUser();
     await LocalStorageService.setCodigoTurma(null);
@@ -172,6 +402,19 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   // --- GERENCIAMENTO DE PERSONAGENS ---
+
+  Future<void> setActivePersonagem(Personagem p) => selectPersonagem(p);
+
+  Future<void> updatePersonagemDificuldade(String diff) async {
+    _currentDificuldade = diff;
+    if (_activePersonagem != null) {
+      _activePersonagem!.dificuldade = diff;
+      await LocalStorageService.savePersonagem(_activePersonagem!);
+      await LocalStorageService.setActivePersonagem(_activePersonagem!);
+      _personagens = LocalStorageService.getPersonagens();
+    }
+    notifyListeners();
+  }
 
   Future<void> selectPersonagem(Personagem p) async {
     _activePersonagem = p;
@@ -357,6 +600,12 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   Future<void> toggleAtividadeStatus(int id, bool ativo) async {
+    final idx = _atividades.indexWhere((a) => a.id == id);
+    if (idx != -1) {
+      _atividades[idx].ativo = ativo;
+      _atividades.sort((a, b) => a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase()));
+      notifyListeners();
+    }
     await ApiService.toggleAtividadeStatus(id);
     await fetchAtividadesOnline();
   }

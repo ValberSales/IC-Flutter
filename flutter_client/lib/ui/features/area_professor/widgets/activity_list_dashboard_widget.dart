@@ -248,17 +248,19 @@ class ActivityListDashboardWidget extends StatelessWidget {
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     leading: Container(
-                      padding: const EdgeInsets.all(12),
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: (isAdivinhacao ? AppColors.accent : AppColors.info).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(16),
+                        color: (isAdivinhacao ? AppColors.accent : AppColors.info).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(
                         atv.icone != null && atv.icone!.isNotEmpty
                             ? IconPickerDialogWidget.getIconData(atv.icone)
                             : (isAdivinhacao ? Icons.drag_indicator_rounded : Icons.collections_rounded),
                         color: isAdivinhacao ? AppColors.accent : AppColors.info,
-                        size: 32,
+                        size: 26,
                       ),
                     ),
                     title: Wrap(

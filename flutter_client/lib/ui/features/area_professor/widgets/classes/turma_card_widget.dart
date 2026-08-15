@@ -39,7 +39,9 @@ class TurmaCardWidget extends StatelessWidget {
           children: [
             // Ícone da Turma
             Container(
-              padding: const EdgeInsets.all(12),
+              width: 48,
+              height: 48,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(14),

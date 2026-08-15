@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../state/app_state_provider.dart';
-import '../../../core/avatar_selector_dialog.dart';
 import '../../../core/logout_helper.dart';
 import '../../../core/sobre_projeto_dialog.dart';
+import 'profile/professor_avatar_header_widget.dart';
+import 'profile/professor_security_section_widget.dart';
 
+/// Aba "Meu Perfil" da Área do Professor.
 class ProfessorProfileTabWidget extends StatefulWidget {
   final AppStateProvider state;
 
@@ -22,8 +24,6 @@ class _ProfessorProfileTabWidgetState extends State<ProfessorProfileTabWidget> {
   late TextEditingController _confirmPasswordController;
 
   String? _selectedAvatar;
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
   bool _isSaving = false;
   String? _errorMessage;
 
@@ -93,7 +93,6 @@ class _ProfessorProfileTabWidgetState extends State<ProfessorProfileTabWidget> {
     if (res['success'] == true) {
       final loginDataChanged = res['loginDataChanged'] == true;
       if (loginDataChanged) {
-        // Redireciona para a tela inicial / login após alteração de credenciais
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(res['message'] ?? 'Credenciais alteradas com sucesso! Faça login novamente.'),
@@ -173,97 +172,15 @@ class _ProfessorProfileTabWidgetState extends State<ProfessorProfileTabWidget> {
                     ),
                     const Divider(height: 36),
 
-                    // Seção de Avatar
-                    Center(
-                      child: Column(
-                        children: [
-                          Stack(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.purple, width: 3),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.purple.withOpacity(0.2),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: CircleAvatar(
-                                  radius: 50,
-                                  backgroundImage: AssetImage(currentAvatar),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: InkWell(
-                                  onTap: () async {
-                                    final selected = await AvatarSelectorDialog.show(context, currentAvatar);
-                                    if (selected != null && selected != currentAvatar) {
-                                      setState(() => _selectedAvatar = selected);
-                                    }
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.secondary,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.camera_alt_rounded, size: 18, color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          TextButton.icon(
-                            onPressed: () async {
-                              final selected = await AvatarSelectorDialog.show(context, currentAvatar);
-                              if (selected != null && selected != currentAvatar) {
-                                setState(() => _selectedAvatar = selected);
-                              }
-                            },
-                            icon: const Icon(Icons.palette_rounded, size: 18),
-                            label: const Text('Alterar Avatar', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Badge de Cargo / Role
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.purple.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.verified_user_rounded, color: Colors.purple, size: 18),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Acesso: ${user?.role ?? "ADMIN (Professor)"}',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.purple,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    // Avatar e Cargo
+                    ProfessorAvatarHeaderWidget(
+                      currentAvatar: currentAvatar,
+                      role: user?.role ?? "ADMIN (Professor)",
+                      onAvatarSelected: (selected) => setState(() => _selectedAvatar = selected),
                     ),
                     const SizedBox(height: 24),
 
-                    // Mensagem de Erro (se houver)
+                    // Mensagem de Erro
                     if (_errorMessage != null) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -292,7 +209,7 @@ class _ProfessorProfileTabWidgetState extends State<ProfessorProfileTabWidget> {
                       const SizedBox(height: 18),
                     ],
 
-                    // Campo Nome de Exibição
+                    // Campos de Dados Pessoais
                     const Text(
                       'Nome Completo / Exibido',
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDark),
@@ -310,7 +227,6 @@ class _ProfessorProfileTabWidgetState extends State<ProfessorProfileTabWidget> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Campo Nome de Usuário (Username)
                     const Text(
                       'Nome de Usuário (@username)',
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDark),
@@ -328,80 +244,10 @@ class _ProfessorProfileTabWidgetState extends State<ProfessorProfileTabWidget> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Seção de Alteração de Senha
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: AppColors.bgSoft,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Row(
-                            children: [
-                              Icon(Icons.lock_reset_rounded, color: AppColors.primary, size: 22),
-                              SizedBox(width: 8),
-                              Text(
-                                'Alteração de Senha',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textDark,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Deixe os campos abaixo em branco se desejar manter a senha atual.',
-                            style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.65)),
-                          ),
-                          const SizedBox(height: 14),
-
-                          // Nova Senha
-                          TextField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            decoration: InputDecoration(
-                              labelText: 'Nova Senha',
-                              prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.primary),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                                  color: Colors.grey,
-                                ),
-                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Confirmar Nova Senha
-                          TextField(
-                            controller: _confirmPasswordController,
-                            obscureText: _obscureConfirmPassword,
-                            decoration: InputDecoration(
-                              labelText: 'Confirmar Nova Senha',
-                              prefixIcon: const Icon(Icons.lock_rounded, color: AppColors.primary),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureConfirmPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                                  color: Colors.grey,
-                                ),
-                                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                            ),
-                          ),
-                        ],
-                      ),
+                    // Alteração de Senha
+                    ProfessorSecuritySectionWidget(
+                      passwordController: _passwordController,
+                      confirmPasswordController: _confirmPasswordController,
                     ),
                     const SizedBox(height: 28),
 
@@ -432,7 +278,7 @@ class _ProfessorProfileTabWidgetState extends State<ProfessorProfileTabWidget> {
                     const Divider(),
                     const SizedBox(height: 12),
 
-                    // Ações Secundárias (Sobre o Projeto e Sair da Conta)
+                    // Ações Secundárias
                     Row(
                       children: [
                         Expanded(

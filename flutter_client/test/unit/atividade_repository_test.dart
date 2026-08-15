@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_client/data/models/atividade.dart';
 import 'package:flutter_client/data/repositories/atividade_repository.dart';
 import 'package:flutter_client/data/storage/local_storage_service.dart';
-import 'package:flutter_client/services/api_service.dart';
+import 'package:flutter_client/data/services/api_service.dart';
 
 void main() {
   late AtividadeRepository atividadeRepository;

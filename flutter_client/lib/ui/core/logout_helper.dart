@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../../presentation/pages/home/home_page.dart';
 import '../../state/app_state_provider.dart';
+import '../features/home/views/home_view.dart';
 
 class LogoutHelper {
   static Future<void> executeLogout(BuildContext context, AppStateProvider state) async {
@@ -36,7 +36,7 @@ class LogoutHelper {
       await state.logout();
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomePage()),
+          MaterialPageRoute(builder: (_) => const HomeView()),
           (route) => false,
         );
       }

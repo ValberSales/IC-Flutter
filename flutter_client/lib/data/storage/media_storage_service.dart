@@ -13,7 +13,7 @@ enum MediaType {
 }
 
 class MediaStorageService {
-  static const String _mediaBaseFolder = 'intera_libras_media';
+  static const String _mediaBaseFolder = 'alfabetiza_libras_media';
   static const String _imagesFolder = 'images';
   static const String _videosFolder = 'videos';
 

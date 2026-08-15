@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../data/models/atividade.dart';
 import '../../../../state/app_state_provider.dart';
-import '../../../core/icon_picker_dialog.dart';
 import '../view_models/area_professor_view_model.dart';
+import 'activities/activity_card_item_widget.dart';
+import 'activities/activity_draft_banner_widget.dart';
+import 'activities/activity_filter_header_widget.dart';
 
+/// Painel da lista de atividades e jogos cadastrados na Área do Professor.
 class ActivityListDashboardWidget extends StatelessWidget {
   final AreaProfessorViewModel viewModel;
   final AppStateProvider state;
@@ -14,51 +16,6 @@ class ActivityListDashboardWidget extends StatelessWidget {
     required this.viewModel,
     required this.state,
   });
-
-  Widget _buildCategoriaChip(String key, String label, IconData icon) {
-    final isSelected = viewModel.categoriaFiltro == key;
-    return Expanded(
-      child: InkWell(
-        onTap: () => viewModel.setCategoriaFiltro(key),
-        borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: isSelected ? Colors.white : AppColors.textDark.withOpacity(0.7)),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textDark.withOpacity(0.8),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,418 +41,68 @@ class ActivityListDashboardWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Cabeçalho da Aba de Atividades
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(Icons.sports_esports_rounded, color: Colors.blue, size: 30),
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Gestão de Jogos e Atividades',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Crie novos temas para os jogos de Adivinhação e Palavras.',
-                              style: TextStyle(fontSize: 13, color: AppColors.textDark),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 2,
-                        ),
-                        onPressed: () => viewModel.initCreationForm(),
-                        icon: const Icon(Icons.add_rounded, size: 20),
-                        label: const Text(
-                          'Criar Nova Atividade',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              // Cabeçalho e Filtros
+              ActivityFilterHeaderWidget(
+                viewModel: viewModel,
+                countTodos: countTodos,
+                countAdivinhacao: countAdivinhacao,
+                countPalavras: countPalavras,
               ),
               const SizedBox(height: 20),
 
-          // Card de Rascunho se houver progresso salvo
-          if (rascunho != null)
-            Card(
-              color: AppColors.secondaryLight.withOpacity(0.3),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: const BorderSide(color: AppColors.secondary, width: 2),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
-                        color: AppColors.secondary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.history_rounded, color: Colors.white, size: 28),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Você possui um cadastro em andamento! 💾',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                          ),
-                          Text(
-                            'Tema: ${rascunho.titulo.isEmpty ? "Sem Título" : rascunho.titulo} • ${rascunho.itens.length} itens cadastrados',
-                            style: TextStyle(fontSize: 14, color: AppColors.textDark.withOpacity(0.8)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                        side: const BorderSide(color: AppColors.error),
-                      ),
-                      onPressed: () => state.descartarRascunho(),
-                      child: const Text('Descartar'),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary),
-                      onPressed: () => viewModel.initCreationForm(existingAtividade: rascunho),
-                      icon: const Icon(Icons.edit_rounded, color: Colors.white),
-                      label: const Text('Continuar Cadastro', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
+              // Card de Rascunho se houver progresso salvo
+              if (rascunho != null) ...[
+                ActivityDraftBannerWidget(
+                  rascunho: rascunho,
+                  viewModel: viewModel,
+                  state: state,
                 ),
-              ),
-            ),
-
-          if (rascunho != null) const SizedBox(height: 20),
-
-          // Seletor de Categorias por Tipo de Jogo
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: AppColors.bgSoft,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                _buildCategoriaChip('TODOS', 'Todos os Jogos ($countTodos)', Icons.apps_rounded),
-                const SizedBox(width: 6),
-                _buildCategoriaChip('JOGO_ADIVINHACAO', 'Adivinhação ($countAdivinhacao)', Icons.pets_rounded),
-                const SizedBox(width: 6),
-                _buildCategoriaChip('JOGO_PALAVRAS', 'Jogo de Palavras ($countPalavras)', Icons.diversity_3_rounded),
+                const SizedBox(height: 20),
               ],
-            ),
-          ),
-          const SizedBox(height: 20),
 
-          // Lista de Atividades
-          if (atividadesExibidas.isEmpty)
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              child: const Padding(
-                padding: EdgeInsets.all(40.0),
-                child: Column(
-                  children: [
-                    Icon(Icons.gamepad_rounded, size: 64, color: AppColors.primaryLight),
-                    SizedBox(height: 16),
-                    Text('Nenhuma atividade encontrada nesta categoria', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8),
-                    Text('Clique no botão "Criar Nova Atividade" acima para cadastrar.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textDark)),
-                  ],
-                ),
-              ),
-            )
-          else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: atividadesExibidas.length,
-              itemBuilder: (context, index) {
-                final atv = atividadesExibidas[index];
-                final isAdivinhacao = atv.tipoJogo == 'JOGO_ADIVINHACAO';
-
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
+              // Estado Vazio ou Lista de Atividades
+              if (atividadesExibidas.isEmpty)
+                Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    leading: Container(
-                      width: 48,
-                      height: 48,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: (isAdivinhacao ? AppColors.accent : AppColors.info).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(
-                        atv.icone != null && atv.icone!.isNotEmpty
-                            ? IconPickerDialogWidget.getIconData(atv.icone)
-                            : (isAdivinhacao ? Icons.drag_indicator_rounded : Icons.collections_rounded),
-                        color: isAdivinhacao ? AppColors.accent : AppColors.info,
-                        size: 26,
-                      ),
-                    ),
-                    title: Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(40.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(atv.titulo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        // Badge 1: Status Global
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: atv.ativo ? AppColors.accentLight : AppColors.errorLight,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                atv.ativo ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                                size: 13,
-                                color: atv.ativo ? AppColors.accent : AppColors.error,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                atv.ativo ? 'Ativo' : 'Inativo',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: atv.ativo ? AppColors.accent : AppColors.error,
-                                ),
-                              ),
-                            ],
-                          ),
+                        Icon(Icons.layers_clear_rounded, size: 64, color: Colors.grey.shade400),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Nenhuma atividade encontrada nesta categoria.',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
                         ),
-                        // Badge 2: Visibilidade Pública / Privada
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: atv.publica
-                                ? AppColors.primaryLight.withOpacity(0.2)
-                                : Colors.amber.shade100,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                atv.publica ? Icons.public_rounded : Icons.lock_rounded,
-                                size: 13,
-                                color: atv.publica ? AppColors.primaryDark : Colors.amber.shade900,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                atv.publica ? 'Pública' : 'Privada (Turmas)',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: atv.publica ? AppColors.primaryDark : Colors.amber.shade900,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 6.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Tipo: ${isAdivinhacao ? 'Adivinhação (Libras)' : 'Jogo de Palavras (Associação)'}  •  ${atv.itens.length} palavra(s)',
-                            style: TextStyle(fontSize: 13, color: AppColors.textDark.withOpacity(0.8)),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            !atv.ativo
-                                ? '⚠️ Desativado globalmente (não aparece para ninguém).'
-                                : (atv.publica
-                                    ? '🌐 Visível para convidados e turmas.'
-                                    : '🔒 Visível somente para turmas com tema direcionado.'),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: !atv.ativo
-                                  ? AppColors.error
-                                  : (atv.publica ? AppColors.primary : Colors.amber.shade900),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Toggle 1: Pública / Privada
-                        Tooltip(
-                          message: atv.publica
-                              ? 'Tornar Privada (exclusiva para turmas direcionadas)'
-                              : 'Tornar Pública (visível para convidados e todos)',
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: atv.publica
-                                  ? AppColors.primary.withOpacity(0.08)
-                                  : Colors.amber.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: atv.publica
-                                    ? AppColors.primary.withOpacity(0.3)
-                                    : Colors.amber.shade700.withOpacity(0.35),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  atv.publica ? Icons.public_rounded : Icons.lock_rounded,
-                                  size: 16,
-                                  color: atv.publica ? AppColors.primary : Colors.amber.shade900,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  atv.publica ? 'Pública' : 'Privada',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: atv.publica ? AppColors.primary : Colors.amber.shade900,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Switch(
-                                  value: atv.publica,
-                                  activeColor: AppColors.primary,
-                                  inactiveThumbColor: Colors.amber.shade800,
-                                  inactiveTrackColor: Colors.amber.shade200,
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  onChanged: (val) => state.toggleAtividadePublica(atv.id!, val),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-
-                        // Toggle 2: Ativo / Inativo Global
-                        Tooltip(
-                          message: atv.ativo
-                              ? 'Desativar tema globalmente'
-                              : 'Ativar tema no sistema',
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: atv.ativo
-                                  ? AppColors.accent.withOpacity(0.08)
-                                  : AppColors.error.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: atv.ativo
-                                    ? AppColors.accent.withOpacity(0.3)
-                                    : AppColors.error.withOpacity(0.3),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  atv.ativo ? Icons.power_settings_new_rounded : Icons.power_off_rounded,
-                                  size: 16,
-                                  color: atv.ativo ? AppColors.accent : AppColors.error,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  atv.ativo ? 'Ativa' : 'Inativa',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: atv.ativo ? AppColors.accent : AppColors.error,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Switch(
-                                  value: atv.ativo,
-                                  activeColor: AppColors.accent,
-                                  inactiveThumbColor: AppColors.error,
-                                  inactiveTrackColor: AppColors.errorLight,
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  onChanged: (val) => state.toggleAtividadeStatus(atv.id!, val),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-
-                        IconButton(
-                          tooltip: 'Editar Tema',
-                          icon: const Icon(Icons.edit_rounded, color: AppColors.primary),
-                          onPressed: () => viewModel.initCreationForm(existingAtividade: atv),
-                        ),
-                        IconButton(
-                          tooltip: 'Excluir Tema',
-                          icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('Excluir Atividade?'),
-                                content: Text('Tem certeza que deseja excluir "${atv.titulo}"?'),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-                                    onPressed: () {
-                                      Navigator.pop(ctx);
-                                      state.deleteAtividade(atv.id!);
-                                    },
-                                    child: const Text('Excluir', style: TextStyle(color: Colors.white)),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Clique em "Criar Nova Atividade" para adicionar seu primeiro tema customizado.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13, color: AppColors.textDark),
                         ),
                       ],
                     ),
                   ),
-                );
-              },
-            ),
-          ],
+                )
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: atividadesExibidas.length,
+                  itemBuilder: (context, index) {
+                    final atv = atividadesExibidas[index];
+                    return ActivityCardItemWidget(
+                      atv: atv,
+                      viewModel: viewModel,
+                      state: state,
+                    );
+                  },
+                ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

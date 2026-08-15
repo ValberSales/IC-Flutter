@@ -1,4 +1,4 @@
-# 🤟 InteraLibras - Plataforma Gamificada de Aprendizado de Libras
+# 🤟 Alfabetiza Libras - Plataforma Gamificada de Aprendizado de Libras
 
 [![Flutter](https://img.shields.io/badge/Frontend-Flutter%203.x-02569B?logo=flutter)](https://flutter.dev)
 [![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20Repository-orange)](https://flutter.dev)
@@ -6,11 +6,11 @@
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%2015-4169E1?logo=postgresql)](https://www.postgresql.org)
 [![MinIO](https://img.shields.io/badge/Storage-MinIO-C72C48?logo=minio)](https://min.io)
 [![Docker](https://img.shields.io/badge/Infrastructure-Docker-2496ED?logo=docker)](https://www.docker.com)
-[![Tests](https://img.shields.io/badge/Tests-26%2F26%20Passing-success)](https://flutter.dev)
+[![Tests](https://img.shields.io/badge/Tests-41%2F41%20Passing-success)](https://flutter.dev)
 
-> 🎓 **Projeto de Iniciação Científica (IC)**
+> 🎓 **Projeto de Iniciação Científica (IC) - UTFPR Câmpus Pato Branco**
 > 
-> Este repositório é fruto de uma pesquisa de Iniciação Científica (IC) dedicada ao aperfeiçoamento, modernização e expansão da plataforma educativa desenvolvida originalmente como **Trabalho de Conclusão de Curso (TCC)** por **Luan Finatto**.
+> Este repositório é fruto de uma pesquisa de Iniciação Científica (IC) dedicada ao aperfeiçoamento, modernização arquitetural e expansão da plataforma educativa desenvolvida originalmente como **Trabalho de Conclusão de Curso (TCC)** por **Luan Filipe Finatto**.
 > 
 > 🔗 Repositório de referência do TCC original: [finattttto/TCC](https://github.com/finattttto/TCC)
 
@@ -18,14 +18,14 @@
 
 ## 📌 Sobre o Projeto
 
-O **InteraLibras** é uma plataforma educacional inclusiva e gamificada desenvolvida para auxiliar o ensino e a prática da Língua Brasileira de Sinais (Libras) para crianças e estudantes surdos ou ouvintes.
+O **Alfabetiza Libras** é uma plataforma educacional inclusiva e gamificada desenvolvida para auxiliar o ensino e a prática da Língua Brasileira de Sinais (Libras) para crianças e estudantes surdos ou ouvintes.
 
 ---
 
 ## 🎮 Funcionalidades Principais
 
 ### 1. Hub de Jogos Pedagógicos
-- 🔤 **Alfabeto Manual**: Exploração e prática dos sinais dactilológicos das letras de A a Z e Ç.
+- 🔤 **Alfabeto Manual**: Exploração e prática dos sinais dactilológicos das letras de A a Z e Ç com ilustrações e fotos de referência.
 - 🧠 **Jogo da Memória**: Associação visual e memorização entre letras e seus respectivos sinais.
 - 🔍 **Jogo de Adivinhação**: Montagem de palavras em Libras com card responsivo, slots dinâmicos, suporte a mouse/trackpad e feedback do mascote.
 - 📖 **Jogo de Palavras**: Associação de imagens reais às palavras corretas com alternativas dinâmicas e balanceamento de distratores.
@@ -36,76 +36,45 @@ O **InteraLibras** é uma plataforma educacional inclusiva e gamificada desenvol
 - Diálogo animado de celebração com confetes ao atingir 100% de conclusão de cada módulo.
 
 ### 3. Autenticação Inclusiva & Gestão de Usuários
-- 👶 **Cadastro Infantil Simplificado**: Apenas com o primeiro nome da criança, gerando automaticamente um identificador único (`USER_ID`) e avatar aleatório, sem exigir e-mail ou dados complexos.
+- 👶 **Cadastro Infantil Simplificado**: Apenas com o primeiro nome da criança, nome de usuário e avatar, sem exigir e-mail ou dados sensíveis.
 - 🕹️ **Modo Convidado**: Permite que crianças joguem imediatamente sem necessidade de cadastro, mantendo o progresso salvo localmente.
-- 👤 **Modal de Perfil**: Permite alteração de nome, escolha de avatar visual e alteração de credenciais (com logout de segurança imediato caso usuário ou senha sejam modificados).
-- 🔑 **Reset de Senhas no Painel Admin**: Administradores podem redefinir a senha de qualquer aluno, gerando uma senha temporária alfanumérica de 6 dígitos que exige a criação de uma nova senha definitiva no primeiro login (`mustChangePassword`).
+- 👩‍🏫 **Área do Professor & Gestão Pedagógica**: Painel administrativo com gestão de turmas por código PIN, criação de atividades, relatórios analíticos de precisão por aluno/turma, exportação em CSV/impressão e gestão de perfil docente.
 
-### 4. Área do Professor / Painel Administrativo
-- 🔒 **Acesso Exclusivo**: Restrito a usuários com perfil de Administrador (`ADMIN`).
-- 🖥️ **Barreira de Viewport (< 720px)**: Bloqueio amigável de telas menores com aviso informativo para acesso via computadores ou tablets.
-- 🏛️ **Interface Centralizada**: Abas da barra superior e título (*Área do Professor*) perfeitamente centralizados para melhor ergonomia visual em monitores amplos.
-- 👥 **Gestão de Usuários**: Listagem, busca em tempo real por nome/username/ID e redefinição de senhas.
-- 📝 **Criação de Atividades**: Wizard para criação de novos temas e inclusão de itens com upload de imagens.
+### 4. Cache e Armazenamento Offline de Mídias
+- Gerenciamento local persistente de imagens e mídia no dispositivo móvel através de `MediaStorageService` com suporte a pré-carregamento determinístico por SHA-256 e pavimentação para reprodutor de vídeo.
 
 ---
 
-## 🏗️ Padrão Arquitetural MVVM
+## 🏗️ Arquitetura do Sistema
 
-O frontend Flutter foi completamente refatorado seguindo o padrão **MVVM (Model-View-ViewModel)** com separação estrita de responsabilidades:
-
-```mermaid
-graph TD;
-    subgraph UI Layer
-        View[📱 Views / Widgets] -->|Observa estado| ViewModel[⚙️ ViewModels ChangeNotifier]
-    end
-    
-    subgraph State Management
-        ViewModel -->|Consome / Atualiza| AppState[🌐 AppStateProvider Global]
-    end
-    
-    subgraph Data Layer
-        ViewModel -->|Solicita dados| Repo[📦 Repositories]
-        AppState -->|Persistência| Repo
-        Repo -->|API REST| ApiService[🌐 ApiService]
-        Repo -->|Cache Offline| LocalStorage[💾 LocalStorageService]
-    end
-    
-    subgraph Backend
-        ApiService -->|HTTP / JSON| Server[☕ Spring Boot :8081]
-        Server --> DB[(🛢️ PostgreSQL)]
-        Server --> MinIO[(📦 MinIO Storage)]
-    end
 ```
-
-### Divisão das Camadas:
-1. **Views (`lib/ui/features/.../views`)**: Telas puras, declarativas e desacopladas, responsáveis exclusivamente pela renderização dos componentes e eventos do usuário.
-2. **ViewModels (`lib/ui/features/.../view_models`)**: Classes `ChangeNotifier` contendo a lógica de negócios local de cada jogo ou tela, expondo estados reativos via `Provider`.
-3. **Repositories (`lib/data/repositories`)**: Abstração da fonte de dados (`AuthRepository`, `AtividadeRepository`, `PersonagemRepository`, `PontuacaoRepository`), decidindo entre consumo da API remota ou do armazenamento local.
-4. **Services (`lib/data/services`)**: Comunicação HTTP com o backend (`ApiService`) e persistência segura (`LocalStorageService`).
-5. **State Global (`lib/state/app_state_provider.dart`)**: Gerenciador de estado global da aplicação que sincroniza o usuário ativo, pontuações e configurações.
+IC-Flutter/
+├── flutter_client/         # Frontend Multiplataforma (Flutter / Web / Mobile)
+│   ├── lib/
+│   │   ├── core/           # Constantes de tema, cores, helpers e utilitários
+│   │   ├── data/           # Models, Repositories, Services HTTP e Storage Local/Mídia
+│   │   ├── state/          # Gerenciamento de Estado Central (AppStateProvider)
+│   │   └── ui/             # Padrão MVVM: Views, ViewModels e Widgets por Feature
+│   └── test/               # Suíte completa de testes unitários e de integração
+└── server_java/            # Backend RESTful (Spring Boot 3 / Java 25)
+    ├── src/main/java/br/com/interalibras/
+    │   ├── config/         # Configurações de Segurança, MinIO e Seeder (DataLoader)
+    │   ├── controller/     # Controllers REST concisos
+    │   ├── entity/         # Entidades JPA (Usuario, Turma, Atividade, Pontuacao)
+    │   ├── repository/     # Interfaces Spring Data JPA
+    │   ├── security/       # JWT Auth Provider e Filters
+    │   └── service/        # Camada de Serviços de Domínio e Regras de Negócio
+    └── src/main/resources/ # application.yml
+```
 
 ---
 
-## 🧪 Testes Automatizados
+## 🚀 Como Executar o Projeto Localmente
 
-O projeto conta com suíte de testes unitários automatizados cobrindo fluxos essenciais de autenticação, persistência, ViewModels e normalização de textos:
-
-```bash
-cd flutter_client
-flutter test
-```
-> ✅ **26/26 testes passando com 100% de sucesso**.
-
----
-
-## 💻 Como Rodar o Projeto Localmente
-
-### 1️⃣ Clonar o Repositório
-```bash
-git clone https://github.com/ValberSales/IC-Flutter.git
-cd IC-Flutter
-```
+### 1️⃣ Pré-requisitos
+- **Flutter SDK** (3.x ou superior)
+- **Java OpenJDK** (versão 21 ou 25) e **Maven**
+- **Docker** e **Docker Compose**
 
 ---
 
@@ -146,13 +115,17 @@ flutter run -d chrome
 
 ---
 
-## 🤝 Créditos e Agradecimentos
+## 🤝 Créditos Oficiais
 
-- **Luan Finatto**: Criador do projeto de TCC original ([Repositório finattttto/TCC](https://github.com/finattttto/TCC)).
-- **Equipe de Iniciação Científica (IC)**: Responsável pela modernização arquitetural, implementação do padrão MVVM, expansão pedagógica e novas funcionalidades.
+- **Autoria do Projeto (Flutter & Spring Boot)**: Valber Sales Junior
+- **Orientadora**: Profª. Drª. Rúbia Eliza de Oliveira Schultz Ascari
+- **Colaboradoras**: Profª. Me. Mirelia Flausino Vogel e Profª. Me. Aline Brancalione
+- **Projeto Base Original (TCC em Angular/Node.js)**: Luan Filipe Finatto ([finattttto/TCC](https://github.com/finattttto/TCC))
+- **Instituição**: Universidade Tecnológica Federal do Paraná (UTFPR) - Câmpus Pato Branco
 
 ---
 
-## 📄 Licença
+## 📄 Licença e Direitos Reservados
 
-Este projeto é desenvolvido para fins acadêmicos e educacionais sem fins lucrativos.
+Projeto desenvolvido para fins acadêmicos e pedagógicos no âmbito de Iniciação Científica (IC).  
+© UTFPR - Câmpus Pato Branco. Todos os direitos reservados.

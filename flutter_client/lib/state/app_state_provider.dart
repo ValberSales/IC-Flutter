@@ -9,7 +9,7 @@ import '../data/repositories/turma_repository.dart';
 import '../data/storage/local_storage_service.dart';
 import '../data/storage/media_storage_service.dart';
 import '../data/sources/local_data_source.dart';
-import '../services/api_service.dart';
+import '../data/services/api_service.dart';
 
 class AppStateProvider extends ChangeNotifier {
   final TurmaRepository _turmaRepository = TurmaRepository();

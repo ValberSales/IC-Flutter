@@ -33,10 +33,10 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) {
         // 1. Criar ou atualizar usuário padrão admin para garantir role ADMIN
         if (!usuarioRepository.existsByUsername("admin")) {
-            Usuario admin = new Usuario(null, "Professor Admin", "admin@interalibras.com.br", "admin", passwordEncoder.encode("123456"));
+            Usuario admin = new Usuario(null, "Professor Admin", "admin@alfabetizalibras.com.br", "admin", passwordEncoder.encode("123456"));
             admin.setRole("ADMIN");
             admin.setCodigoIdentificador("ADM-0001");
-            admin.setAvatar("assets/avatar/avatar_1.jpg");
+            admin.setAvatar("assets/avatar/avatar_1.png");
             usuarioRepository.save(admin);
         } else {
             usuarioRepository.findByUsername("admin").ifPresent(admin -> {
@@ -45,7 +45,7 @@ public class DataLoader implements CommandLineRunner {
                     admin.setCodigoIdentificador("ADM-0001");
                 }
                 if (admin.getAvatar() == null) {
-                    admin.setAvatar("assets/avatar/avatar_1.jpg");
+                    admin.setAvatar("assets/avatar/avatar_1.png");
                 }
                 usuarioRepository.save(admin);
             });
@@ -59,7 +59,7 @@ public class DataLoader implements CommandLineRunner {
             temaAnimais.setTipoJogo("JOGO_ADIVINHACAO");
             temaAnimais.setDificuldade("FACIL");
             temaAnimais.setAtivo(true);
-            temaAnimais.setCriadoPor("Sistema InteraLibras");
+            temaAnimais.setCriadoPor("Sistema Alfabetiza Libras");
 
             temaAnimais.addItem(newItem("Gato", "assets/animais/gato.png", "[]"));
             temaAnimais.addItem(newItem("Cachorro", "assets/animais/cachorro.png", "[]"));
@@ -76,7 +76,7 @@ public class DataLoader implements CommandLineRunner {
             temaFamilia.setTipoJogo("JOGO_PALAVRAS");
             temaFamilia.setDificuldade("FACIL");
             temaFamilia.setAtivo(true);
-            temaFamilia.setCriadoPor("Sistema InteraLibras");
+            temaFamilia.setCriadoPor("Sistema Alfabetiza Libras");
 
             temaFamilia.addItem(newItem("Mãe", "assets/familia/mae.jpg", "[\"Mãe\", \"Pai\", \"Tia\"]"));
             temaFamilia.addItem(newItem("Pai", "assets/familia/pai.jpg", "[\"Pai\", \"Tio\", \"Avô\"]"));

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
-import '../../presentation/pages/home/home_page.dart';
 import '../../state/app_state_provider.dart';
 import '../features/area_professor/views/area_professor_view.dart';
 import 'logout_helper.dart';

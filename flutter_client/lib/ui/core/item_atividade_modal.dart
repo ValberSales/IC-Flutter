@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/atividade.dart';
-import '../../services/api_service.dart';
+import '../../data/services/api_service.dart';
+import '../../data/sources/local_data_source.dart';
 import 'web_drop_zone_widget.dart';
 
 class ItemAtividadeModalWidget extends StatefulWidget {

@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../../services/api_service.dart';
+import '../../data/services/api_service.dart';
 
 class WebDropZoneWidget extends StatefulWidget {
   final Function(String url) onImageUploaded;

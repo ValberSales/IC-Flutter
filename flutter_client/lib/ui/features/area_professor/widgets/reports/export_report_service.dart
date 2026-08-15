@@ -10,7 +10,7 @@ class ExportReportService {
     // UTF-8 BOM para garantir acentuação correta no Excel
     buffer.write('\uFEFF');
 
-    buffer.writeln('RELATÓRIO PEDAGÓGICO - INTERALIBRAS');
+    buffer.writeln('RELATÓRIO PEDAGÓGICO - ALFABETIZA LIBRAS');
     buffer.writeln('Turma:;"${relatorio.turmaNome}";Código:;"${relatorio.turmaCodigo}"');
     buffer.writeln('Data de Emissão:;"${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}"');
     buffer.writeln('Total de Alunos:;${relatorio.totalAlunos};Total de Partidas:;${relatorio.totalPartidas}');
@@ -150,7 +150,7 @@ class ExportReportService {
 <body>
   <div class="header">
     <div>
-      <h1 class="title">InteraLibras • Relatório Pedagógico</h1>
+      <h1 class="title">Alfabetiza Libras • Relatório Pedagógico</h1>
       <div class="subtitle">Turma: <strong>${relatorio.turmaNome}</strong> (PIN: ${relatorio.turmaCodigo})</div>
     </div>
     <div style="text-align: right; font-size: 12px; color: #718096;">
@@ -206,7 +206,7 @@ class ExportReportService {
   </table>
 
   <div class="footer">
-    Documento gerado automaticamente pelo Sistema InteraLibras • Plataforma Pedagógica de Alfabetização em Libras
+    Documento gerado automaticamente pelo Sistema Alfabetiza Libras • Plataforma Pedagógica de Alfabetização em Libras
   </div>
 
   <script>
@@ -257,7 +257,7 @@ class ExportReportService {
 <body>
   <div class="header">
     <div>
-      <h1 class="title">InteraLibras • Ficha Individual de Desempenho</h1>
+      <h1 class="title">Alfabetiza Libras • Ficha Individual de Desempenho</h1>
       <div style="margin-top: 4px;">Aluno(a): <strong>${aluno.nome}</strong> (@${aluno.username} • Turma: $turmaNome)</div>
     </div>
     <div style="font-size: 12px; color: #718096; text-align: right;">
@@ -315,7 +315,7 @@ class ExportReportService {
   '''}
 
   <div class="footer">
-    Documento gerado automaticamente pelo Sistema InteraLibras • Plataforma Pedagógica de Alfabetização em Libras
+    Documento gerado automaticamente pelo Sistema Alfabetiza Libras • Plataforma Pedagógica de Alfabetização em Libras
   </div>
 
   <script>

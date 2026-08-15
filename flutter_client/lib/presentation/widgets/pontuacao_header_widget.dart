@@ -18,7 +18,9 @@ class PontuacaoHeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppStateProvider>();
-    final activeChar = state.activePersonagem;
+    final user = state.currentUser;
+    final avatarPath = user?.avatar ?? 'assets/avatar/avatar_1.jpg';
+    final displayName = user?.nome ?? user?.username ?? 'Pequeno Aprendiz';
     
     // Check if tablet or web for responsive sizing
     final isCompact = MediaQuery.of(context).size.width < 600;
@@ -57,29 +59,26 @@ class PontuacaoHeaderWidget extends StatelessWidget {
             tooltip: 'Voltar para o Início',
           ),
           
-          // Personagem Ativo (Avatar + Nome)
-          if (activeChar != null)
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: isCompact ? 20 : 26,
-                  backgroundImage: AssetImage(activeChar.avatar),
-                  backgroundColor: AppColors.primaryLight,
-                ),
-                const SizedBox(width: 10),
-                if (!isCompact)
-                  Text(
-                    activeChar.nome,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
-                    ),
+          // Usuário Ativo (Avatar + Nome)
+          Row(
+            children: [
+              CircleAvatar(
+                radius: isCompact ? 20 : 26,
+                backgroundImage: AssetImage(avatarPath),
+                backgroundColor: AppColors.primaryLight,
+              ),
+              const SizedBox(width: 10),
+              if (!isCompact)
+                Text(
+                  displayName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
                   ),
-              ],
-            )
-          else
-            const SizedBox(),
+                ),
+            ],
+          ),
 
           // Painel de Pontuação (Acertos e Erros)
           Row(

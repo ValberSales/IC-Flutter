@@ -175,29 +175,31 @@ class GameCategoryCardWidget extends StatelessWidget {
               child: Column(
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: pctAcertos != null ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
                     children: [
                       Flexible(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
+                          alignment: pctAcertos != null ? Alignment.centerLeft : Alignment.center,
                           child: Text(
                             'Conclusão: ${pctConclusao.toStringAsFixed(0)}%',
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            'Acertos: ${pctAcertos != null ? "${pctAcertos!.toStringAsFixed(0)}%" : "-"}',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                      if (pctAcertos != null) ...[
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              'Acertos: ${pctAcertos!.toStringAsFixed(0)}%',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 6),

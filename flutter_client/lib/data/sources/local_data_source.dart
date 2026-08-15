@@ -1,36 +1,5 @@
 class LocalDataSource {
-  // Alfabeto Manual Original (Estudante)
-  static const List<Map<String, String>> alfabetoManualOriginal = [
-    {"letra": "A", "path": "assets/alfabeto-manual/letra-a.png"},
-    {"letra": "B", "path": "assets/alfabeto-manual/letra-b.png"},
-    {"letra": "C", "path": "assets/alfabeto-manual/letra-c.png"},
-    {"letra": "D", "path": "assets/alfabeto-manual/letra-d.png"},
-    {"letra": "E", "path": "assets/alfabeto-manual/letra-e.png"},
-    {"letra": "F", "path": "assets/alfabeto-manual/letra-f.png"},
-    {"letra": "G", "path": "assets/alfabeto-manual/letra-g.png"},
-    {"letra": "H", "path": "assets/alfabeto-manual/letra-h.png"},
-    {"letra": "I", "path": "assets/alfabeto-manual/letra-i.png"},
-    {"letra": "J", "path": "assets/alfabeto-manual/letra-j.png"},
-    {"letra": "K", "path": "assets/alfabeto-manual/letra-k.png"},
-    {"letra": "L", "path": "assets/alfabeto-manual/letra-l.png"},
-    {"letra": "M", "path": "assets/alfabeto-manual/letra-m.png"},
-    {"letra": "N", "path": "assets/alfabeto-manual/letra-n.png"},
-    {"letra": "O", "path": "assets/alfabeto-manual/letra-o.png"},
-    {"letra": "P", "path": "assets/alfabeto-manual/letra-p.png"},
-    {"letra": "Q", "path": "assets/alfabeto-manual/letra-q.png"},
-    {"letra": "R", "path": "assets/alfabeto-manual/letra-r.png"},
-    {"letra": "S", "path": "assets/alfabeto-manual/letra-s.png"},
-    {"letra": "T", "path": "assets/alfabeto-manual/letra-t.png"},
-    {"letra": "U", "path": "assets/alfabeto-manual/letra-u.png"},
-    {"letra": "V", "path": "assets/alfabeto-manual/letra-v.png"},
-    {"letra": "W", "path": "assets/alfabeto-manual/letra-w.png"},
-    {"letra": "X", "path": "assets/alfabeto-manual/letra-y.png"}, // Note: X points to y in original json
-    {"letra": "Y", "path": "assets/alfabeto-manual/letra-x.png"}, // Note: Y points to x in original json
-    {"letra": "Z", "path": "assets/alfabeto-manual/letra-z.png"},
-    {"letra": "Ç", "path": "assets/alfabeto-manual/letra-cedilha.png"}
-  ];
-
-  // Alfabeto Manual das Professoras (Default)
+  // Alfabeto Manual das Professoras (Padrão Oficial)
   static const List<Map<String, String>> alfabetoManualProf = [
     {"letra": "A", "path": "assets/alfabeto-manual-professoras/A.jpg"},
     {"letra": "B", "path": "assets/alfabeto-manual-professoras/B.jpg"},

@@ -18,7 +18,7 @@ class SelecaoTemaViewModel extends ChangeNotifier {
 
   void setDifficulty(String diff) {
     _currentDifficulty = diff;
-    appState.updatePersonagemDificuldade(diff);
+    appState.updateDificuldade(diff);
     notifyListeners();
   }
 

@@ -7,7 +7,7 @@ import '../widgets/activity_list_dashboard_widget.dart';
 import '../widgets/activity_wizard_widget.dart';
 import '../widgets/professor_auth_card_widget.dart';
 import '../widgets/professor_classes_tab_widget.dart';
-import '../widgets/professor_config_tab_widget.dart';
+import '../widgets/professor_profile_tab_widget.dart';
 import '../widgets/professor_reports_tab_widget.dart';
 import '../widgets/professor_users_tab_widget.dart';
 
@@ -197,8 +197,8 @@ class _AreaProfessorViewState extends State<AreaProfessorView> {
                     Tab(icon: Icon(Icons.add_task_rounded), text: 'Atividades'),
                     Tab(icon: Icon(Icons.people_alt_rounded), text: 'Usuários'),
                     Tab(icon: Icon(Icons.school_rounded), text: 'Turmas'),
-                    Tab(icon: Icon(Icons.settings_rounded), text: 'Configurações'),
                     Tab(icon: Icon(Icons.analytics_rounded), text: 'Relatórios'),
+                    Tab(icon: Icon(Icons.account_circle_rounded), text: 'Meu Perfil'),
                   ],
                 ),
               ),
@@ -211,8 +211,8 @@ class _AreaProfessorViewState extends State<AreaProfessorView> {
                         : ActivityListDashboardWidget(viewModel: vm, state: state),
                     ProfessorUsersTabWidget(state: state),
                     ProfessorClassesTabWidget(viewModel: vm, state: state),
-                    ProfessorConfigTabWidget(state: state),
                     ProfessorReportsTabWidget(state: state),
+                    ProfessorProfileTabWidget(state: state),
                   ],
                 ),
               ),

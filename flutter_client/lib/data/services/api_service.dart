@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../models/atividade.dart';
-import '../models/personagem.dart';
 import '../models/pontuacao.dart';
 import '../models/turma.dart';
 import '../models/palavra.dart';
@@ -600,30 +599,6 @@ class ApiService {
     return null;
   }
 
-  // --- PERSONAGEM ---
-
-  static Future<Personagem?> salvaPersonagem(Personagem p) async {
-    if (!useBackend) {
-      return p;
-    }
-
-    try {
-      final url = Uri.parse('$baseUrl/personagens');
-      final response = await http.post(
-        url,
-        headers: _getHeaders(),
-        body: jsonEncode(p.toJson()),
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        return Personagem.fromJson(jsonDecode(response.body));
-      }
-    } catch (e) {
-      print('Erro ao salvar personagem no servidor: $e');
-    }
-    return null;
-  }
-
   // --- PONTUAÇÃO ---
 
   static Future<Pontuacao?> salvaPontuacao(Pontuacao score) async {
@@ -648,13 +623,13 @@ class ApiService {
     return null;
   }
 
-  static Future<List<Pontuacao>> buscaPontuacaoPersonagem(int personagemId) async {
+  static Future<List<Pontuacao>> buscaPontuacaoUsuario(int usuarioId) async {
     if (!useBackend) {
       return [];
     }
 
     try {
-      final url = Uri.parse('$baseUrl/pontuacoes/personagem/$personagemId');
+      final url = Uri.parse('$baseUrl/pontuacoes/usuario/$usuarioId');
       final response = await http.get(url, headers: _getHeaders(includeContentType: false));
 
       if (response.statusCode == 200) {
@@ -716,16 +691,17 @@ class ApiService {
   }) async {
     if (!useBackend) {
       final list = LocalStorageService.getUsuariosList();
-      final prefix = role.toUpperCase() == 'ADMIN' ? 'ADM-' : 'ALU-';
       final random = math.Random();
-      final code = '$prefix${1000 + random.nextInt(9000)}';
+      final hexChars = '0123456789abcdef';
+      final uuid = List.generate(32, (_) => hexChars[random.nextInt(16)]).join();
+      final formattedUuid = '${uuid.substring(0,8)}-${uuid.substring(8,12)}-${uuid.substring(12,16)}-${uuid.substring(16,20)}-${uuid.substring(20,32)}';
       final newUser = Usuario(
         id: DateTime.now().millisecondsSinceEpoch,
         nome: nome != null && nome.isNotEmpty ? nome : username,
         username: username,
         password: password ?? '123456',
         role: role.toUpperCase(),
-        codigoIdentificador: code,
+        codigoIdentificador: formattedUuid,
         avatar: avatar ?? 'assets/avatar/avatar_1.jpg',
         mustChangePassword: mustChangePassword,
       );
@@ -841,6 +817,69 @@ class ApiService {
       }
     } catch (e) {
       print('Erro ao resetar senha no servidor: $e');
+    }
+    return null;
+  }
+
+  static Future<bool> changePassword({required String username, required String newPassword}) async {
+    if (!useBackend) {
+      final list = LocalStorageService.getUsuariosList();
+      final index = list.indexWhere((u) => (u.username ?? '').toLowerCase() == username.toLowerCase());
+      if (index != -1) {
+        list[index].password = newPassword.trim();
+        list[index].mustChangePassword = false;
+        await LocalStorageService.saveUsuariosList(list);
+        return true;
+      }
+      return false;
+    }
+
+    try {
+      final url = Uri.parse('$baseUrl/usuarios/change-password');
+      final response = await http.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode({
+          'username': username,
+          'newPassword': newPassword.trim(),
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Erro ao trocar senha no servidor: $e');
+    }
+    return false;
+  }
+
+  // --- RELATÓRIOS PEDAGÓGICOS & ANALYTICS ---
+
+  static Future<Map<String, dynamic>?> getRelatorioTurma(int turmaId) async {
+    if (!useBackend) return null;
+
+    try {
+      final url = Uri.parse('$baseUrl/relatorios/turma/$turmaId');
+      final response = await http.get(url, headers: _getHeaders(includeContentType: false));
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      print('Erro ao obter relatório da turma $turmaId do servidor: $e');
+    }
+    return null;
+  }
+
+  static Future<Map<String, dynamic>?> getRelatorioAluno(int alunoId) async {
+    if (!useBackend) return null;
+
+    try {
+      final url = Uri.parse('$baseUrl/relatorios/aluno/$alunoId');
+      final response = await http.get(url, headers: _getHeaders(includeContentType: false));
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      print('Erro ao obter relatório do aluno $alunoId do servidor: $e');
     }
     return null;
   }

@@ -71,7 +71,7 @@ class UserCardWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '@${user.username ?? ''} • ID: ${user.codigoIdentificador ?? 'ID #${user.id}'}',
+                    '@${user.username ?? ''}',
                     style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
                   ),
                 ],

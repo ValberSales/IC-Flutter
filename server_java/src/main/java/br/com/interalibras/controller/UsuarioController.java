@@ -71,23 +71,38 @@ public class UsuarioController {
         usuario.setAvatar(avatar != null && !avatar.trim().isEmpty() ? avatar.trim() : "assets/avatar/avatar_1.jpg");
         usuario.setMustChangePassword(mustChangePassword != null ? mustChangePassword : false);
 
-        // Gerar código identificador com prefixo de acordo com a Role
-        String prefix = "ADMIN".equalsIgnoreCase(cleanRole) ? "ADM-" : "ALU-";
-        Random random = new Random();
-        String generatedCode;
-        do {
-            int codeNum = 1000 + random.nextInt(9000);
-            generatedCode = prefix + codeNum;
-        } while (usuarioRepository.existsByCodigoIdentificador(generatedCode));
-        usuario.setCodigoIdentificador(generatedCode);
+        // Gerar UUID único interno
+        if (usuario.getCodigoIdentificador() == null || usuario.getCodigoIdentificador().trim().isEmpty()) {
+            usuario.setCodigoIdentificador(java.util.UUID.randomUUID().toString());
+        }
 
         Usuario saved = usuarioRepository.save(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> atualizarUsuario(@PathVariable Long id, @RequestBody Usuario dadosAtualizados) {
-        Optional<Usuario> opt = usuarioRepository.findById(id);
+    private Optional<Usuario> findUserByIdentifier(String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) return Optional.empty();
+        String clean = identifier.trim();
+        if (clean.matches("\\d+")) {
+            try {
+                Optional<Usuario> byId = usuarioRepository.findById(Long.parseLong(clean));
+                if (byId.isPresent()) return byId;
+            } catch (Exception ignored) {}
+        }
+        Optional<Usuario> byUsername = usuarioRepository.findByUsername(clean);
+        if (byUsername.isPresent()) return byUsername;
+        return usuarioRepository.findByCodigoIdentificador(clean);
+    }
+
+    @PutMapping("/{identifier}")
+    public ResponseEntity<?> atualizarUsuario(@PathVariable String identifier, @RequestBody Usuario dadosAtualizados) {
+        Optional<Usuario> opt = findUserByIdentifier(identifier);
+        if (opt.isEmpty() && dadosAtualizados.getId() != null) {
+            opt = usuarioRepository.findById(dadosAtualizados.getId());
+        }
+        if (opt.isEmpty() && dadosAtualizados.getUsername() != null) {
+            opt = usuarioRepository.findByUsername(dadosAtualizados.getUsername().trim());
+        }
         if (opt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -108,19 +123,6 @@ public class UsuarioController {
         }
         if (dadosAtualizados.getRole() != null && !dadosAtualizados.getRole().trim().isEmpty()) {
             String newRole = dadosAtualizados.getRole().trim().toUpperCase();
-            // Se mudou a role e o código atual tem prefixo antigo, regenera o código identificador correspondente
-            if (!newRole.equalsIgnoreCase(usuario.getRole())) {
-                String prefix = "ADMIN".equalsIgnoreCase(newRole) ? "ADM-" : "ALU-";
-                if (usuario.getCodigoIdentificador() == null || !usuario.getCodigoIdentificador().startsWith(prefix)) {
-                    Random random = new Random();
-                    String generatedCode;
-                    do {
-                        int codeNum = 1000 + random.nextInt(9000);
-                        generatedCode = prefix + codeNum;
-                    } while (usuarioRepository.existsByCodigoIdentificador(generatedCode));
-                    usuario.setCodigoIdentificador(generatedCode);
-                }
-            }
             usuario.setRole(newRole);
         }
         if (dadosAtualizados.getMustChangePassword() != null) {
@@ -137,9 +139,36 @@ public class UsuarioController {
         return ResponseEntity.ok(saved);
     }
 
-    @PostMapping("/{id}/reset-password")
-    public ResponseEntity<?> resetarSenha(@PathVariable Long id) {
-        Optional<Usuario> opt = usuarioRepository.findById(id);
+    @PostMapping("/change-password")
+    public ResponseEntity<?> trocarSenha(@RequestBody Map<String, String> payload, java.security.Principal principal) {
+        String username = payload.get("username");
+        if ((username == null || username.trim().isEmpty()) && principal != null) {
+            username = principal.getName();
+        }
+        String newPassword = payload.get("newPassword");
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            newPassword = payload.get("password");
+        }
+        if (username == null || newPassword == null || newPassword.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Usuário e nova senha são obrigatórios."));
+        }
+
+        Optional<Usuario> opt = findUserByIdentifier(username);
+        if (opt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Usuario usuario = opt.get();
+        usuario.setPassword(passwordEncoder.encode(newPassword.trim()));
+        usuario.setMustChangePassword(false);
+        Usuario saved = usuarioRepository.save(usuario);
+
+        return ResponseEntity.ok(saved);
+    }
+
+    @PostMapping("/{identifier}/reset-password")
+    public ResponseEntity<?> resetarSenha(@PathVariable String identifier) {
+        Optional<Usuario> opt = findUserByIdentifier(identifier);
         if (opt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }

@@ -32,7 +32,8 @@ class _JogoHubViewState extends State<JogoHubView> {
     final state = context.watch<AppStateProvider>();
     final user = state.currentUser;
     final isGuest = state.isGuestMode;
-    final avatarPath = user?.avatar ?? state.activePersonagem?.avatar ?? 'assets/avatar/avatar_1.jpg';
+    final avatarPath = user?.avatar ?? 'assets/avatar/avatar_1.jpg';
+    final displayName = isGuest ? 'Pequeno Aprendiz' : (user?.nome ?? user?.username ?? 'Aluno');
 
     return ChangeNotifierProvider.value(
       value: _viewModel,
@@ -65,7 +66,7 @@ class _JogoHubViewState extends State<JogoHubView> {
               ),
               actions: [
                 // Imagem de perfil que é um botão
-                if (state.isLoggedIn || isGuest || state.activePersonagem != null)
+                if (state.isLoggedIn || isGuest)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6.0),
                     child: Tooltip(
@@ -115,49 +116,48 @@ class _JogoHubViewState extends State<JogoHubView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              if (state.activePersonagem != null)
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      CircleAvatar(
-                                        backgroundImage: AssetImage(state.activePersonagem!.avatar),
-                                        radius: 28,
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Olá, ${state.activePersonagem!.nome}!',
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                fontSize: 22,
-                                                fontWeight: FontWeight.w900,
-                                                color: AppColors.primary,
-                                              ),
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundImage: AssetImage(avatarPath),
+                                      radius: 28,
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Olá, $displayName!',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w900,
+                                              color: AppColors.primary,
                                             ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              'Escolha o nível de cada jogo no card correspondente abaixo:',
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                color: AppColors.textDark.withOpacity(0.7),
-                                              ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Escolha o nível de cada jogo no card correspondente abaixo:',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: AppColors.textDark.withOpacity(0.7),
                                             ),
+                                          ),
                                           ],
                                         ),
                                       ),
@@ -196,7 +196,7 @@ class _JogoHubViewState extends State<JogoHubView> {
                                     pctConclusao: progressoAlfabeto,
                                     pctAcertos: acertosAlfabeto,
                                     onPlay: () {
-                                      state.updatePersonagemDificuldade(vm.diffAlfabeto);
+                                      state.updateDificuldade(vm.diffAlfabeto);
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -216,9 +216,9 @@ class _JogoHubViewState extends State<JogoHubView> {
                                     currentDiff: vm.diffMemoria,
                                     onDiffChanged: vm.setDiffMemoria,
                                     pctConclusao: progressoMemoria,
-                                    pctAcertos: acertosMemoria,
+                                    pctAcertos: null,
                                     onPlay: () {
-                                      state.updatePersonagemDificuldade(vm.diffMemoria);
+                                      state.updateDificuldade(vm.diffMemoria);
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -240,7 +240,7 @@ class _JogoHubViewState extends State<JogoHubView> {
                                     pctConclusao: progressoAdivinhacao,
                                     pctAcertos: acertosAdivinhacao,
                                     onPlay: () {
-                                      state.updatePersonagemDificuldade(vm.diffAdivinhacao);
+                                      state.updateDificuldade(vm.diffAdivinhacao);
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -265,7 +265,7 @@ class _JogoHubViewState extends State<JogoHubView> {
                                     pctConclusao: progressoPalavras,
                                     pctAcertos: acertosPalavras,
                                     onPlay: () {
-                                      state.updatePersonagemDificuldade(vm.diffPalavras);
+                                      state.updateDificuldade(vm.diffPalavras);
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(

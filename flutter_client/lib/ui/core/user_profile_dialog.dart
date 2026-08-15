@@ -5,6 +5,7 @@ import '../../presentation/pages/home/home_page.dart';
 import '../../state/app_state_provider.dart';
 import 'avatar_selector_dialog.dart';
 import 'logout_helper.dart';
+import 'sobre_projeto_dialog.dart';
 
 class UserProfileDialog extends StatefulWidget {
   const UserProfileDialog({super.key});
@@ -133,18 +134,14 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
     final state = context.watch<AppStateProvider>();
     final user = state.currentUser;
     final isGuest = state.isGuestMode || user == null;
-    final avatar = isGuest
-        ? (state.activePersonagem?.avatar ?? 'assets/avatar/avatar_1.jpg')
-        : (user.avatar ?? 'assets/avatar/avatar_1.jpg');
-    final nome = isGuest
-        ? (state.activePersonagem?.nome ?? 'Pequeno Aprendiz')
-        : (user.nome ?? user.username ?? 'Aluno');
+    final avatar = user?.avatar ?? 'assets/avatar/avatar_1.jpg';
+    final nome = isGuest ? 'Pequeno Aprendiz' : (user.nome ?? user.username ?? 'Aluno');
     final username = isGuest ? 'Convidado' : (user.username ?? '');
     final idCode = isGuest ? 'Modo Convidado' : (user.codigoIdentificador ?? 'ID #${user.id ?? 1}');
     final role = isGuest ? 'VISITANTE' : (user.role ?? 'USER');
 
     // Estatísticas de pontuação
-    final history = state.getPontuacaoHistoryForActivePersonagem();
+    final history = state.getPontuacaoHistoryForCurrentUser();
     int totalAcertos = 0;
     int totalErros = 0;
     for (final p in history) {
@@ -294,15 +291,6 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'ID Único: $idCode',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark.withOpacity(0.6),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -356,6 +344,24 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                   ),
                   const SizedBox(height: 10),
                 ],
+
+                // Botão Sobre o Projeto
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary.withOpacity(0.12),
+                    foregroundColor: AppColors.primary,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  onPressed: () => SobreProjetoDialog.show(context),
+                  icon: const Icon(Icons.info_outline_rounded),
+                  label: const Text(
+                    'Sobre o Projeto',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 10),
 
                 // Botão de Sair / Logout
                 ElevatedButton.icon(

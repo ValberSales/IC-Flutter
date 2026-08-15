@@ -137,25 +137,34 @@ class JogoMemoriaViewModel extends ChangeNotifier {
         _primeiraCarta!.figura != _segundaCarta!.figura;
 
     if (saoPares) {
-      _acertosCount++;
+      final letraPar = _primeiraCarta!.letra;
       _feedback = 'ACERTO';
       _primeiraCarta = null;
       _segundaCarta = null;
       _bloqueado = false;
 
+      // Registra o par acertado para progresso parcial
+      appState.registrarPalavraConcluida(
+        jogo: 'JOGO_MEMORIA',
+        tema: null,
+        temaNomePadrao: 'Memoria',
+        palavra: letraPar,
+        dificuldade: _diff,
+      );
+
       final bool todasReveladas = _cartas.every((c) => c.revelada);
       if (todasReveladas) {
         _endGame = true;
         appState.salvaPontuacao(
-          _acertosCount,
-          _errosCount,
+          0,
+          0,
           'JOGO_MEMORIA',
+          tema: 'Memoria',
           concluido: true,
         );
       }
       notifyListeners();
     } else {
-      _errosCount++;
       _feedback = 'ERRO';
       notifyListeners();
 

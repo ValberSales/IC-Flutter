@@ -33,7 +33,12 @@ class _JogoAlfabetoViewState extends State<JogoAlfabetoView> {
     );
   }
 
+  bool _dialogShowing = false;
+
   void _exibirCelebracao() {
+    if (_dialogShowing) return;
+    _dialogShowing = true;
+
     final diff = _viewModel.dificuldade;
     Future.microtask(() {
       if (mounted) {
@@ -46,7 +51,9 @@ class _JogoAlfabetoViewState extends State<JogoAlfabetoView> {
             dificuldade: diff,
             totalAcertos: _viewModel.acertosCount,
             totalErros: _viewModel.errosCount,
-            onVoltarTema: () => Navigator.of(context).pop(),
+            onVoltarTema: () {
+              Navigator.of(context).pop();
+            },
           ),
         );
       }

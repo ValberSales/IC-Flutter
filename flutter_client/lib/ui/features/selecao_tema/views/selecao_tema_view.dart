@@ -133,7 +133,7 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
               if (!aTurma && bTurma) return 1;
               return a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase());
             });
-          final avatarPath = state.currentUser?.avatar ?? state.activePersonagem?.avatar ?? 'assets/avatar/avatar_1.jpg';
+          final avatarPath = state.currentUser?.avatar ?? 'assets/avatar/avatar_1.jpg';
 
           return Scaffold(
             appBar: AppBar(
@@ -148,7 +148,7 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
                 ),
               ),
               actions: [
-                if (state.isLoggedIn || state.isGuestMode || state.activePersonagem != null)
+                if (state.isLoggedIn || state.isGuestMode)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6.0),
                     child: Tooltip(

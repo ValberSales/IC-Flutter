@@ -68,7 +68,7 @@ class _UserCreateDialogState extends State<UserCreateDialog> {
           final prefixDesc = created.role == 'ADMIN' ? 'Professor/Admin' : 'Aluno';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('🎉 $prefixDesc "${created.nome}" criado com sucesso! ID: ${created.codigoIdentificador}'),
+              content: Text('🎉 $prefixDesc "${created.nome}" (@${created.username}) criado com sucesso!'),
               backgroundColor: AppColors.accent,
             ),
           );
@@ -196,11 +196,6 @@ class _UserCreateDialogState extends State<UserCreateDialog> {
                                   color: !isAdmin ? AppColors.primary : AppColors.textDark,
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Gera ID: ALU-XXXX',
-                                style: TextStyle(fontSize: 11, color: !isAdmin ? AppColors.primaryDark : AppColors.textDark.withOpacity(0.6)),
-                              ),
                             ],
                           ),
                         ),
@@ -233,11 +228,6 @@ class _UserCreateDialogState extends State<UserCreateDialog> {
                                   fontWeight: isAdmin ? FontWeight.bold : FontWeight.w600,
                                   color: isAdmin ? Colors.purple : AppColors.textDark,
                                 ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Gera ID: ADM-XXXX',
-                                style: TextStyle(fontSize: 11, color: isAdmin ? Colors.purple.shade700 : AppColors.textDark.withOpacity(0.6)),
                               ),
                             ],
                           ),

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/personagem.dart';
 import '../models/pontuacao.dart';
 import '../models/usuario.dart';
 import '../models/atividade.dart';
@@ -9,13 +8,10 @@ import '../models/turma.dart';
 class LocalStorageService {
   static late SharedPreferences _prefs;
 
-  static const String _keyPersonagens = 'JOGO_LIBRAS_PERSONAGENS';
   static const String _keyPontuacoes = 'JOGO_LIBRAS_PONTUACOES';
-  static const String _keyActivePersonagemId = 'JOGO_LIBRAS_ACTIVE_PERSONAGEM_ID';
   static const String _keyCodigoTurma = 'CODIGO_TURMA';
   static const String _keyActiveTurma = 'ACTIVE_TURMA';
   static const String _keyTurmasList = 'JOGO_LIBRAS_TURMAS_LIST';
-  static const String _keyLetrasAntigas = 'LETRAS_ANTIGAS';
   static const String _keyToken = 'auth_token';
   static const String _keyUser = 'logged_in_user';
   static const String _keyAtividades = 'JOGO_LIBRAS_ATIVIDADES';
@@ -40,14 +36,6 @@ class LocalStorageService {
     } else {
       await _prefs.setString(_keyCodigoTurma, value);
     }
-  }
-
-  static bool getUseLegacyLetters() {
-    return _prefs.getBool(_keyLetrasAntigas) ?? false;
-  }
-
-  static Future<void> setUseLegacyLetters(bool value) async {
-    await _prefs.setBool(_keyLetrasAntigas, value);
   }
 
   // --- AUTENTICAÇÃO ---
@@ -112,94 +100,6 @@ class LocalStorageService {
     await _prefs.setString(_keyUsuariosList, jsonEncode(jsonList));
   }
 
-  // --- PERSONAGEM ---
-
-  static List<Personagem> getPersonagens() {
-    final raw = _prefs.getString(_keyPersonagens);
-    if (raw == null) return [];
-    try {
-      final List<dynamic> decoded = jsonDecode(raw);
-      return decoded.map((item) => Personagem.fromJson(item)).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  static Future<void> savePersonagem(Personagem p) async {
-    final list = getPersonagens();
-    if (p.id == null) {
-      // Gerar ID negativo para indicar registro offline
-      int minId = -1;
-      for (final existing in list) {
-        if (existing.id != null && existing.id! < minId) {
-          minId = existing.id!;
-        }
-      }
-      p.id = minId - 1;
-      p.createdAt = DateTime.now();
-    }
-
-    // Se já existe, atualiza, senão adiciona
-    final index = list.indexWhere((item) => item.id == p.id);
-    if (index != -1) {
-      list[index] = p;
-    } else {
-      list.add(p);
-    }
-
-    await savePersonagensList(list);
-    
-    // Se for o personagem ativo atualmente, atualiza o ativo
-    final activeId = getActivePersonagemId();
-    if (activeId == p.id) {
-      await setActivePersonagem(p);
-    }
-  }
-
-  static Future<void> savePersonagensList(List<Personagem> list) async {
-    await _prefs.setString(_keyPersonagens, jsonEncode(list.map((item) => item.toJson()).toList()));
-  }
-
-  static Future<void> deletePersonagem(int id) async {
-    final list = getPersonagens();
-    list.removeWhere((item) => item.id == id);
-    await _prefs.setString(_keyPersonagens, jsonEncode(list.map((item) => item.toJson()).toList()));
-
-    // Remover também as pontuações associadas a esse personagem
-    final scoreList = getPontuacoes();
-    scoreList.removeWhere((item) => item.personagem?.id == id);
-    await _prefs.setString(_keyPontuacoes, jsonEncode(scoreList.map((item) => item.toJson()).toList()));
-
-    // Se o personagem removido era o ativo, limpa o ativo
-    final activeId = getActivePersonagemId();
-    if (activeId == id) {
-      await _prefs.remove(_keyActivePersonagemId);
-    }
-  }
-
-  static int? getActivePersonagemId() {
-    return _prefs.getInt(_keyActivePersonagemId);
-  }
-
-  static Personagem? getActivePersonagem() {
-    final activeId = getActivePersonagemId();
-    if (activeId == null) return null;
-    final list = getPersonagens();
-    try {
-      return list.firstWhere((item) => item.id == activeId);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  static Future<void> setActivePersonagem(Personagem? p) async {
-    if (p == null || p.id == null) {
-      await _prefs.remove(_keyActivePersonagemId);
-    } else {
-      await _prefs.setInt(_keyActivePersonagemId, p.id!);
-    }
-  }
-
   // --- PONTUAÇÃO ---
 
   static List<Pontuacao> getPontuacoes() {
@@ -213,23 +113,74 @@ class LocalStorageService {
     }
   }
 
-  static Future<void> savePontuacao(Pontuacao score) async {
+  static Future<void> savePontuacao(Pontuacao score, {int? oldId}) async {
     final list = getPontuacoes();
-    if (score.id == null) {
-      int minId = -1;
-      for (final existing in list) {
-        if (existing.id != null && existing.id! < minId) {
-          minId = existing.id!;
-        }
-      }
-      score.id = minId - 1;
-      score.createdAt = DateTime.now();
-    }
 
-    final index = list.indexWhere((item) => item.id == score.id);
-    if (index != -1) {
-      list[index] = score;
+    final newTot = score.acertos + score.erros;
+    final double newTaxa = (score.atividade.toUpperCase() == 'JOGO_MEMORIA')
+        ? (score.concluido ? 100.0 : 0.0)
+        : (newTot > 0 ? (score.acertos / newTot) * 100.0 : 0.0);
+
+    final scoreUid = score.usuarioId ?? score.usuario?.id;
+
+    // Procura registro prévio do mesmo aluno para o mesmo jogo, tema e dificuldade
+    final matchIndex = list.indexWhere((existing) {
+      if (oldId != null && existing.id == oldId) return true;
+      if (score.id != null && existing.id == score.id) return true;
+
+      final existingUid = existing.usuarioId ?? existing.usuario?.id;
+      final sameUser = scoreUid != null && existingUid != null && scoreUid == existingUid;
+      if (!sameUser) return false;
+
+      final sameAtividade = existing.atividade.toUpperCase() == score.atividade.toUpperCase();
+      final sameTema = (existing.tema ?? existing.atividade).trim().toUpperCase() == (score.tema ?? score.atividade).trim().toUpperCase();
+      final sameDiff = (existing.dificuldade).toUpperCase() == (score.dificuldade).toUpperCase();
+
+      return sameAtividade && sameTema && sameDiff;
+    });
+
+    if (matchIndex != -1) {
+      final existing = list[matchIndex];
+      final oldTot = existing.acertos + existing.erros;
+      final double oldTaxa = (existing.atividade.toUpperCase() == 'JOGO_MEMORIA')
+          ? (existing.concluido ? 100.0 : 0.0)
+          : (oldTot > 0 ? (existing.acertos / oldTot) * 100.0 : 0.0);
+
+      // Mescla progresso de itens
+      if (score.progressoItens != null && score.progressoItens!.trim().isNotEmpty) {
+        final Set<String> merged = {};
+        if (existing.progressoItens != null) {
+          merged.addAll(existing.progressoItens!.split(','));
+        }
+        merged.addAll(score.progressoItens!.split(','));
+        existing.progressoItens = merged.join(',');
+      }
+
+      if (newTaxa >= oldTaxa || oldId != null) {
+        // Sobrescreve com o aproveitamento atualizado/evoluído
+        score.id = existing.id ?? score.id;
+        score.createdAt = DateTime.now();
+        if (score.progressoItens == null || score.progressoItens!.isEmpty) {
+          score.progressoItens = existing.progressoItens;
+        }
+        list[matchIndex] = score;
+      } else {
+        // Mantém a melhor pontuação anterior mas atualiza o progresso mesclado
+        list[matchIndex] = existing;
+        await savePontuacoesList(list);
+        return;
+      }
     } else {
+      if (score.id == null) {
+        int minId = -1;
+        for (final existing in list) {
+          if (existing.id != null && existing.id! < minId) {
+            minId = existing.id!;
+          }
+        }
+        score.id = minId - 1;
+        score.createdAt = DateTime.now();
+      }
       list.add(score);
     }
     await savePontuacoesList(list);
@@ -239,20 +190,20 @@ class LocalStorageService {
     await _prefs.setString(_keyPontuacoes, jsonEncode(list.map((item) => item.toJson()).toList()));
   }
 
-  static List<Pontuacao> getPontuacaoForPersonagem(int personagemId) {
+  static List<Pontuacao> getPontuacaoForUsuario(int usuarioId) {
     final all = getPontuacoes();
-    return all.where((score) => score.personagem?.id == personagemId).toList();
+    return all.where((score) => (score.usuarioId == usuarioId || score.usuario?.id == usuarioId)).toList();
   }
 
   // --- PROGRESSO E CONCLUSÃO DE PALAVRAS ---
   static const String _keyCompletedWords = 'ic_completed_words';
 
-  static Set<String> getCompletedWords(int personagemId, String jogo, String temaKey, String dificuldade) {
+  static Set<String> getCompletedWords(int usuarioId, String jogo, String temaKey, String dificuldade) {
     final raw = _prefs.getString(_keyCompletedWords);
     if (raw == null) return {};
     try {
       final Map<String, dynamic> map = jsonDecode(raw);
-      final key = '${personagemId}_${jogo}_${temaKey}_$dificuldade';
+      final key = '${usuarioId}_${jogo}_${temaKey}_$dificuldade';
       final List<dynamic>? list = map[key];
       return list != null ? list.map((e) => e.toString()).toSet() : {};
     } catch (e) {
@@ -260,7 +211,7 @@ class LocalStorageService {
     }
   }
 
-  static Future<void> saveCompletedWord(int personagemId, String jogo, String temaKey, String dificuldade, String palavra) async {
+  static Future<void> saveCompletedWord(int usuarioId, String jogo, String temaKey, String dificuldade, String palavra) async {
     final raw = _prefs.getString(_keyCompletedWords);
     Map<String, dynamic> map = {};
     if (raw != null) {
@@ -268,7 +219,7 @@ class LocalStorageService {
         map = Map<String, dynamic>.from(jsonDecode(raw));
       } catch (_) {}
     }
-    final key = '${personagemId}_${jogo}_${temaKey}_$dificuldade';
+    final key = '${usuarioId}_${jogo}_${temaKey}_$dificuldade';
     final List<String> current = (map[key] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
     if (!current.contains(palavra)) {
       current.add(palavra);

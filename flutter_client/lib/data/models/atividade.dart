@@ -3,11 +3,13 @@ import 'abstract_model.dart';
 class ItemAtividade {
   String descricao;
   String imagem;
+  String? video;
   List<String> opcoes;
 
   ItemAtividade({
     required this.descricao,
     required this.imagem,
+    this.video,
     this.opcoes = const [],
   });
 
@@ -15,6 +17,7 @@ class ItemAtividade {
     return ItemAtividade(
       descricao: json['descricao'] as String? ?? '',
       imagem: json['imagem'] as String? ?? '',
+      video: json['video'] as String?,
       opcoes: json['opcoes'] != null ? List<String>.from(json['opcoes']) : const [],
     );
   }
@@ -23,6 +26,7 @@ class ItemAtividade {
     return {
       'descricao': descricao,
       'imagem': imagem,
+      'video': video,
       'opcoes': opcoes,
     };
   }

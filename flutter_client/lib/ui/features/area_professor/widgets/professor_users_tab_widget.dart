@@ -152,7 +152,7 @@ class _ProfessorUsersTabWidgetState extends State<ProfessorUsersTabWidget> {
                 controller: _searchController,
                 onChanged: (val) => setState(() => _filtro = val),
                 decoration: InputDecoration(
-                  hintText: 'Pesquisar usuário por nome, @username ou ID...',
+                  hintText: 'Pesquisar usuário por nome ou @username...',
                   prefixIcon: const Icon(Icons.search_rounded),
                   filled: true,
                   fillColor: Colors.white,

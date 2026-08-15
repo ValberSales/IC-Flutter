@@ -122,9 +122,11 @@ class JogoAdivinhacaoViewModel extends ChangeNotifier {
     _activeSlotIndex = 0;
     _endGame = false;
     _feedback = 'VAZIO';
-    _isMatchComplete = false;
+    _errouPalavraAtual = false;
     notifyListeners();
   }
+
+  bool _errouPalavraAtual = false;
 
   void setActiveSlot(int index) {
     if (_endGame) {
@@ -185,7 +187,7 @@ class JogoAdivinhacaoViewModel extends ChangeNotifier {
         _feedback = 'ACERTO';
         _endGame = true; // Libera avanço com acerto total
 
-        final diff = appState.activePersonagem?.dificuldade ?? 'FACIL';
+        final diff = appState.currentDificuldade;
         final String temaNome = atividadeTema?.titulo ?? 'Animais da Natureza';
         appState.registrarPalavraConcluida(
           jogo: 'JOGO_ADIVINHACAO',
@@ -199,16 +201,15 @@ class JogoAdivinhacaoViewModel extends ChangeNotifier {
       final String temaNome = atividadeTema?.titulo ?? 'Animais da Natureza';
       final bool roundEnded = _currentWordIndex >= _palavrasFila.length && !temErro;
 
-      appState.salvaPontuacao(
-        _acertosCount,
-        _errosCount,
-        'JOGO_ADIVINHACAO',
-        tema: temaNome,
-        concluido: roundEnded,
-      );
-
-      if (roundEnded) {
+      if (roundEnded && !_isMatchComplete) {
         _isMatchComplete = true;
+        appState.salvaPontuacao(
+          _acertosCount,
+          _errosCount,
+          'JOGO_ADIVINHACAO',
+          tema: temaNome,
+          concluido: true,
+        );
       }
     }
 

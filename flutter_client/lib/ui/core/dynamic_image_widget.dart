@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../../services/api_service.dart';
+import '../../data/services/api_service.dart';
+import '../../data/storage/media_storage_service.dart';
 
-class DynamicImageWidget extends StatelessWidget {
+class DynamicImageWidget extends StatefulWidget {
   final String imagePath;
   final BoxFit fit;
   final double? width;
@@ -23,20 +26,69 @@ class DynamicImageWidget extends StatelessWidget {
   });
 
   @override
+  State<DynamicImageWidget> createState() => _DynamicImageWidgetState();
+}
+
+class _DynamicImageWidgetState extends State<DynamicImageWidget> {
+  File? _localCachedFile;
+  bool _checkedLocal = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLocalCache();
+  }
+
+  @override
+  void didUpdateWidget(covariant DynamicImageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.imagePath != widget.imagePath) {
+      _checkedLocal = false;
+      _localCachedFile = null;
+      _checkLocalCache();
+    }
+  }
+
+  Future<void> _checkLocalCache() async {
+    final path = widget.imagePath.trim();
+    if (kIsWeb || !MediaStorageService.isCacheableUrl(path)) {
+      if (mounted) {
+        setState(() {
+          _checkedLocal = true;
+        });
+      }
+      return;
+    }
+
+    final local = await MediaStorageService.getLocalMediaFile(path);
+    if (mounted) {
+      setState(() {
+        _localCachedFile = local;
+        _checkedLocal = true;
+      });
+    }
+
+    // Se ainda não estiver em cache, dispara download em background para próximas execuções offline
+    if (local == null) {
+      MediaStorageService.downloadAndCacheMedia(path);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final String path = imagePath.trim();
+    final String path = widget.imagePath.trim();
 
     if (path.isEmpty) {
       return _buildFallback();
     }
 
-    // 1. Asset local (assets/...)
+    // 1. Asset local empacotado (assets/...)
     if (path.startsWith('assets/')) {
       return Image.asset(
         path,
-        fit: fit,
-        width: width,
-        height: height,
+        fit: widget.fit,
+        width: widget.width,
+        height: widget.height,
         errorBuilder: (context, error, stackTrace) => _buildFallback(),
       );
     }
@@ -49,9 +101,9 @@ class DynamicImageWidget extends StatelessWidget {
         final Uint8List bytes = base64Decode(base64Str);
         return Image.memory(
           bytes,
-          fit: fit,
-          width: width,
-          height: height,
+          fit: widget.fit,
+          width: widget.width,
+          height: widget.height,
           errorBuilder: (context, error, stackTrace) => _buildFallback(),
         );
       } catch (e) {
@@ -59,19 +111,29 @@ class DynamicImageWidget extends StatelessWidget {
       }
     }
 
-    // 3. URL de Rede ou Rota Relativa do Servidor (/api/files/...)
-    String fullUrl = path;
-    if (path.startsWith('/')) {
-      fullUrl = '${ApiService.baseUrl.replaceAll('/api', '')}$path';
-    } else if (!path.startsWith('http://') && !path.startsWith('https://')) {
-      fullUrl = '${ApiService.baseUrl}/files/$path';
+    // 3. Imagem salva em cache local em disco (100% Offline no Smartphone)
+    if (!kIsWeb && _localCachedFile != null) {
+      return Image.file(
+        _localCachedFile!,
+        fit: widget.fit,
+        width: widget.width,
+        height: widget.height,
+        errorBuilder: (context, error, stackTrace) => _buildNetworkOrFallback(path),
+      );
     }
+
+    // 4. URL de Rede com fallback inteligente
+    return _buildNetworkOrFallback(path);
+  }
+
+  Widget _buildNetworkOrFallback(String path) {
+    String fullUrl = MediaStorageService.resolveFullUrl(path);
 
     return Image.network(
       fullUrl,
-      fit: fit,
-      width: width,
-      height: height,
+      fit: widget.fit,
+      width: widget.width,
+      height: widget.height,
       loadingBuilder: (context, child, loadingProgress) {
         if (loadingProgress == null) return child;
         return Center(
@@ -90,14 +152,14 @@ class DynamicImageWidget extends StatelessWidget {
 
   Widget _buildFallback() {
     return Container(
-      width: width,
-      height: height,
+      width: widget.width,
+      height: widget.height,
       color: AppColors.bgSoft,
       alignment: Alignment.center,
       child: Icon(
-        fallbackIcon,
-        size: width != null && width! < 60 ? 24 : 48,
-        color: fallbackIconColor ?? AppColors.primaryLight,
+        widget.fallbackIcon,
+        size: widget.width != null && widget.width! < 60 ? 24 : 48,
+        color: widget.fallbackIconColor ?? AppColors.primaryLight,
       ),
     );
   }

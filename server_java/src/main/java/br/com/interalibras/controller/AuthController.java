@@ -54,7 +54,7 @@ public class AuthController {
                     ("admin".equalsIgnoreCase(user.getUsername()) && ("admin".equals(password) || "123456".equals(password)));
 
             if (matches) {
-                String token = tokenProvider.generateToken(user.getUsername());
+                String token = tokenProvider.generateToken(user.getUsername(), user.getRole());
                 return ResponseEntity.ok(Map.of(
                         "token", token,
                         "user", user
@@ -84,16 +84,9 @@ public class AuthController {
             user.setRole("USER");
         }
 
-        // Gera código identificador único conforme a role se não houver
+        // Gera UUID único interno se não houver
         if (user.getCodigoIdentificador() == null || user.getCodigoIdentificador().trim().isEmpty()) {
-            String prefix = "ADMIN".equalsIgnoreCase(user.getRole()) ? "ADM-" : "ALU-";
-            String generatedCode;
-            Random random = new Random();
-            do {
-                int codeNum = 1000 + random.nextInt(9000);
-                generatedCode = prefix + codeNum;
-            } while (usuarioRepository.existsByCodigoIdentificador(generatedCode));
-            user.setCodigoIdentificador(generatedCode);
+            user.setCodigoIdentificador(java.util.UUID.randomUUID().toString());
         }
 
         if (user.getNome() == null || user.getNome().trim().isEmpty()) {
@@ -112,7 +105,7 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Usuario saved = usuarioRepository.save(user);
 
-        String token = tokenProvider.generateToken(saved.getUsername());
+        String token = tokenProvider.generateToken(saved.getUsername(), saved.getRole());
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("token", token, "user", saved));
     }
 }

@@ -7,7 +7,6 @@ import '../../../core/celebracao_conclusao_dialog.dart';
 import '../../../core/jogo_breadcrumb_widget.dart';
 import '../../../core/mascote_feedback_widget.dart';
 import '../../../core/pontuacao_header_widget.dart';
-import '../../../core/tutorial_widget.dart';
 import '../view_models/jogo_memoria_view_model.dart';
 import '../widgets/memoria_card_widget.dart';
 
@@ -33,7 +32,12 @@ class _JogoMemoriaViewState extends State<JogoMemoriaView> {
     );
   }
 
+  bool _dialogShowing = false;
+
   void _exibirCelebracao() {
+    if (_dialogShowing) return;
+    _dialogShowing = true;
+
     final diff = _viewModel.dificuldade;
     Future.microtask(() {
       if (mounted) {
@@ -46,7 +50,9 @@ class _JogoMemoriaViewState extends State<JogoMemoriaView> {
             dificuldade: diff,
             totalAcertos: _viewModel.acertosCount,
             totalErros: _viewModel.errosCount,
-            onVoltarTema: () => Navigator.of(context).pop(),
+            onVoltarTema: () {
+              Navigator.of(context).pop();
+            },
           ),
         );
       }

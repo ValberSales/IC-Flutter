@@ -1,5 +1,6 @@
 package br.com.interalibras.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -7,6 +8,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "turmas")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Turma {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

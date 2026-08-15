@@ -1,5 +1,4 @@
 import 'abstract_model.dart';
-import 'personagem.dart';
 import 'palavra.dart';
 import 'turma.dart';
 
@@ -11,8 +10,8 @@ class Usuario extends AbstractModel {
   String? email;
   String? avatar;
   String? role;
+  String dificuldade;
   bool mustChangePassword;
-  List<Personagem>? personagens;
   List<Palavra>? palavras;
   List<Turma>? turmas;
 
@@ -26,8 +25,8 @@ class Usuario extends AbstractModel {
     this.email,
     this.avatar,
     this.role,
+    this.dificuldade = 'FACIL',
     this.mustChangePassword = false,
-    this.personagens,
     this.palavras,
     this.turmas,
   });
@@ -45,10 +44,8 @@ class Usuario extends AbstractModel {
       email: json['email'] as String?,
       avatar: json['avatar'] as String? ?? 'assets/avatar/avatar_1.jpg',
       role: json['role'] as String? ?? 'USER',
+      dificuldade: json['dificuldade'] as String? ?? 'FACIL',
       mustChangePassword: json['mustChangePassword'] as bool? ?? false,
-      personagens: json['personagens'] != null
-          ? (json['personagens'] as List).map((e) => Personagem.fromJson(e)).toList()
-          : null,
       palavras: json['palavras'] != null
           ? (json['palavras'] as List).map((e) => Palavra.fromJson(e)).toList()
           : null,
@@ -70,8 +67,8 @@ class Usuario extends AbstractModel {
       'email': email,
       'avatar': avatar ?? 'assets/avatar/avatar_1.jpg',
       'role': role ?? 'USER',
+      'dificuldade': dificuldade,
       'mustChangePassword': mustChangePassword,
-      'personagens': personagens?.map((e) => e.toJson()).toList(),
       'palavras': palavras?.map((e) => e.toJson()).toList(),
       'turmas': turmas?.map((e) => e.toJson()).toList(),
     };

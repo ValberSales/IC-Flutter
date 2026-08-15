@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../data/models/personagem.dart';
 import '../data/models/pontuacao.dart';
 import '../data/models/turma.dart';
 import '../data/models/palavra.dart';
@@ -8,20 +7,18 @@ import '../data/models/usuario.dart';
 import '../data/models/atividade.dart';
 import '../data/repositories/turma_repository.dart';
 import '../data/storage/local_storage_service.dart';
+import '../data/storage/media_storage_service.dart';
 import '../data/sources/local_data_source.dart';
 import '../services/api_service.dart';
 
 class AppStateProvider extends ChangeNotifier {
   final TurmaRepository _turmaRepository = TurmaRepository();
 
-  Personagem? _activePersonagem;
-  List<Personagem> _personagens = [];
   Turma? _activeTurma;
   List<Turma> _turmas = [];
   List<Palavra> _customPalavras = [];
   List<Atividade> _atividades = [];
   Atividade? _rascunhoAtual;
-  bool _useLegacyLetters = false;
   bool _isSyncing = false;
   Usuario? _currentUser;
   String? _token;
@@ -32,36 +29,29 @@ class AppStateProvider extends ChangeNotifier {
   String _currentDificuldade = 'FACIL';
 
   // Getters
-  Personagem? get activePersonagem => _activePersonagem;
-  List<Personagem> get personagens => _personagens;
-  String get currentDificuldade => _activePersonagem?.dificuldade ?? _currentDificuldade;
+  String get currentDificuldade => _currentUser?.dificuldade ?? _currentDificuldade;
   Turma? get activeTurma => _activeTurma;
   List<Turma> get turmas => _turmas;
   List<Palavra> get customPalavras => _customPalavras;
   List<Atividade> get atividades => _atividades;
   List<Usuario> get usuarios => _usuarios;
   Atividade? get rascunhoAtual => _rascunhoAtual;
-  bool get useLegacyLetters => _useLegacyLetters;
   bool get isSyncing => _isSyncing;
   Usuario? get currentUser => _currentUser;
   String? get token => _token;
   bool get isLoggedIn => _token != null && _currentUser != null;
   bool get isGuestMode => _isGuestMode;
 
-  // Letras atuais do alfabeto manual dependendo da configuração
-  List<Map<String, String>> get currentAlfabeto {
-    return _useLegacyLetters
-        ? LocalDataSource.alfabetoManualOriginal
-        : LocalDataSource.alfabetoManualProf;
-  }
+  // Letras atuais do alfabeto manual padrão
+  List<Map<String, String>> get currentAlfabeto => LocalDataSource.alfabetoManualProf;
 
   // Inicializa o estado lendo do LocalStorage e tentando sincronizar com o servidor
   void loadInitialState() {
-    _useLegacyLetters = LocalStorageService.getUseLegacyLetters();
-    _personagens = LocalStorageService.getPersonagens();
-    _activePersonagem = LocalStorageService.getActivePersonagem();
     _token = LocalStorageService.getToken();
     _currentUser = LocalStorageService.getUser();
+    if (_currentUser?.dificuldade != null) {
+      _currentDificuldade = _currentUser!.dificuldade;
+    }
     _isGuestMode = LocalStorageService.isGuestMode();
     _usuarios = LocalStorageService.getUsuariosList();
     _atividades = LocalStorageService.getAtividades();
@@ -69,19 +59,13 @@ class AppStateProvider extends ChangeNotifier {
     _turmas = LocalStorageService.getTurmas();
     _activeTurma = LocalStorageService.getActiveTurma();
     
+    // Limpa registros inflados locais mantendo apenas o melhor aproveitamento por tema/jogo
+    _cleanAndRetainBestScores();
+
     // Tenta restabelecer turma se já estiver salva localmente
     final codigoTurma = LocalStorageService.getCodigoTurma();
     if (codigoTurma != null && _activeTurma == null) {
       _loadMockTurmaForCode(codigoTurma);
-    }
-
-    if (_currentUser != null && _activePersonagem == null) {
-      _activePersonagem = Personagem(
-        id: _currentUser!.id,
-        nome: _currentUser!.nome ?? _currentUser!.username ?? 'Aluno',
-        avatar: _currentUser!.avatar ?? 'assets/avatar/avatar_1.jpg',
-        dificuldade: _currentDificuldade,
-      );
     }
 
     notifyListeners();
@@ -91,6 +75,7 @@ class AppStateProvider extends ChangeNotifier {
     fetchUsuariosOnline();
     fetchTurmasOnline();
     fetchAlunoTurmaOnline();
+    syncPontuacoesPendentes();
 
     // Inicia polling de sincronização em segundo plano (a cada 5 segundos para atualizações instantâneas)
     _periodicSyncTimer?.cancel();
@@ -98,6 +83,7 @@ class AppStateProvider extends ChangeNotifier {
       fetchAtividadesOnline();
       fetchUsuariosOnline();
       fetchTurmasOnline();
+      syncPontuacoesPendentes();
       if (_currentUser != null) {
         fetchAlunoTurmaOnline();
       }
@@ -179,6 +165,8 @@ class AppStateProvider extends ChangeNotifier {
         onlineList.sort((a, b) => a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase()));
         _atividades = onlineList;
         notifyListeners();
+        // Pré-download em background de todas as mídias para funcionamento offline
+        MediaStorageService.prefetchAtividadesMedia(_atividades);
       }
       await syncPontuacoesPendentes();
     } catch (e) {
@@ -233,27 +221,11 @@ class AppStateProvider extends ChangeNotifier {
     }
   }
 
-  // --- CONFIGURAÇÃO DAS LETRAS ---
-  Future<void> setUseLegacyLetters(bool value) async {
-    _useLegacyLetters = value;
-    await LocalStorageService.setUseLegacyLetters(value);
-    notifyListeners();
-  }
-
   // --- AUTENTICAÇÃO E PERFIL ---
 
   Future<void> enterGuestMode() async {
     _isGuestMode = true;
     await LocalStorageService.setGuestMode(true);
-    if (_activePersonagem == null) {
-      _activePersonagem = Personagem(
-        id: 0,
-        nome: 'Pequeno Aprendiz',
-        avatar: 'assets/avatar/avatar_1.jpg',
-        dificuldade: _currentDificuldade,
-      );
-      await LocalStorageService.setActivePersonagem(_activePersonagem!);
-    }
     notifyListeners();
   }
 
@@ -263,18 +235,13 @@ class AppStateProvider extends ChangeNotifier {
       if (result != null && result['token'] != null && result['user'] != null) {
         _token = result['token'] as String;
         _currentUser = Usuario.fromJson(result['user'] as Map<String, dynamic>);
+        if (_currentUser?.dificuldade != null) {
+          _currentDificuldade = _currentUser!.dificuldade;
+        }
         _isGuestMode = false;
         await LocalStorageService.setGuestMode(false);
         await LocalStorageService.saveToken(_token!);
         await LocalStorageService.saveUser(_currentUser!);
-
-        _activePersonagem = Personagem(
-          id: _currentUser!.id,
-          nome: _currentUser!.nome ?? _currentUser!.username ?? 'Aluno',
-          avatar: _currentUser!.avatar ?? 'assets/avatar/avatar_1.jpg',
-          dificuldade: _currentDificuldade,
-        );
-        await LocalStorageService.setActivePersonagem(_activePersonagem!);
 
         notifyListeners();
         return true;
@@ -291,18 +258,13 @@ class AppStateProvider extends ChangeNotifier {
       if (result != null && result['token'] != null && result['user'] != null) {
         _token = result['token'] as String;
         _currentUser = Usuario.fromJson(result['user'] as Map<String, dynamic>);
+        if (_currentUser?.dificuldade != null) {
+          _currentDificuldade = _currentUser!.dificuldade;
+        }
         _isGuestMode = false;
         await LocalStorageService.setGuestMode(false);
         await LocalStorageService.saveToken(_token!);
         await LocalStorageService.saveUser(_currentUser!);
-
-        _activePersonagem = Personagem(
-          id: _currentUser!.id,
-          nome: _currentUser!.nome ?? _currentUser!.username ?? 'Aluno',
-          avatar: _currentUser!.avatar ?? 'assets/avatar/avatar_1.jpg',
-          dificuldade: _currentDificuldade,
-        );
-        await LocalStorageService.setActivePersonagem(_activePersonagem!);
 
         notifyListeners();
         return true;
@@ -321,13 +283,6 @@ class AppStateProvider extends ChangeNotifier {
     }
     if (avatar != null && avatar.trim().isNotEmpty) {
       _currentUser!.avatar = avatar.trim();
-    }
-
-    if (_activePersonagem != null) {
-      if (nome != null) _activePersonagem!.nome = nome;
-      if (avatar != null) _activePersonagem!.avatar = avatar;
-      await LocalStorageService.savePersonagem(_activePersonagem!);
-      await LocalStorageService.setActivePersonagem(_activePersonagem!);
     }
 
     await LocalStorageService.saveUser(_currentUser!);
@@ -360,6 +315,7 @@ class AppStateProvider extends ChangeNotifier {
       codigoIdentificador: _currentUser!.codigoIdentificador,
       role: _currentUser!.role,
       email: _currentUser!.email,
+      dificuldade: _currentUser!.dificuldade,
     );
 
     try {
@@ -374,12 +330,6 @@ class AppStateProvider extends ChangeNotifier {
           };
         } else {
           _currentUser = updated;
-          if (_activePersonagem != null) {
-            if (nome != null) _activePersonagem!.nome = nome.trim();
-            if (avatar != null) _activePersonagem!.avatar = avatar.trim();
-            await LocalStorageService.savePersonagem(_activePersonagem!);
-            await LocalStorageService.setActivePersonagem(_activePersonagem!);
-          }
           await LocalStorageService.saveUser(_currentUser!);
           notifyListeners();
           return {
@@ -416,24 +366,28 @@ class AppStateProvider extends ChangeNotifier {
 
   Future<bool> changePasswordAfterReset(String newPassword) async {
     if (_currentUser == null) return false;
-    final updatedUser = Usuario(
-      id: _currentUser!.id,
-      nome: _currentUser!.nome,
-      username: _currentUser!.username,
-      password: newPassword.trim(),
-      avatar: _currentUser!.avatar,
-      codigoIdentificador: _currentUser!.codigoIdentificador,
-      role: _currentUser!.role,
-      email: _currentUser!.email,
-      mustChangePassword: false,
-    );
+    final username = _currentUser!.username ?? '';
+    if (username.isEmpty) return false;
 
     try {
-      final updated = await ApiService.updateUsuario(updatedUser);
-      if (updated != null) {
-        _currentUser = updated;
+      final success = await ApiService.changePassword(
+        username: username,
+        newPassword: newPassword.trim(),
+      );
+
+      if (success || !ApiService.useBackend) {
+        _currentUser!.password = newPassword.trim();
         _currentUser!.mustChangePassword = false;
         await LocalStorageService.saveUser(_currentUser!);
+
+        final list = LocalStorageService.getUsuariosList();
+        final idx = list.indexWhere((u) => (u.username ?? '').toLowerCase() == username.toLowerCase() || u.id == _currentUser!.id);
+        if (idx != -1) {
+          list[idx].password = newPassword.trim();
+          list[idx].mustChangePassword = false;
+          await LocalStorageService.saveUsuariosList(list);
+        }
+
         notifyListeners();
         return true;
       }
@@ -513,56 +467,28 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- GERENCIAMENTO DE PERSONAGENS ---
+  // --- GERENCIAMENTO DE DIFICULDADE ---
 
-  Future<void> setActivePersonagem(Personagem p) => selectPersonagem(p);
-
-  Future<void> updatePersonagemDificuldade(String diff) async {
+  Future<void> updateDificuldade(String diff) async {
     _currentDificuldade = diff;
-    if (_activePersonagem != null) {
-      _activePersonagem!.dificuldade = diff;
-      await LocalStorageService.savePersonagem(_activePersonagem!);
-      await LocalStorageService.setActivePersonagem(_activePersonagem!);
-      _personagens = LocalStorageService.getPersonagens();
+    if (_currentUser != null) {
+      _currentUser!.dificuldade = diff;
+      await LocalStorageService.saveUser(_currentUser!);
+      await ApiService.updateUsuario(_currentUser!);
     }
     notifyListeners();
   }
 
-  Future<void> selectPersonagem(Personagem p) async {
-    _activePersonagem = p;
-    await LocalStorageService.setActivePersonagem(p);
-    notifyListeners();
-  }
-
-  Future<void> savePersonagem(Personagem p) async {
-    await LocalStorageService.savePersonagem(p);
-    _personagens = LocalStorageService.getPersonagens();
-    
-    // Se não havia personagem ativo, ou se atualizamos o ativo atual
-    if (_activePersonagem == null || _activePersonagem!.id == p.id) {
-      _activePersonagem = LocalStorageService.getActivePersonagem();
-    }
-    
-    notifyListeners();
-  }
-
-  Future<void> deletePersonagem(int id) async {
-    await LocalStorageService.deletePersonagem(id);
-    _personagens = LocalStorageService.getPersonagens();
-    
-    if (_activePersonagem?.id == id) {
-      _activePersonagem = null;
-    }
-    
-    notifyListeners();
-  }
+  Future<void> updatePersonagemDificuldade(String diff) => updateDificuldade(diff);
 
   // --- HISTÓRICO DE PONTUAÇÃO ---
 
-  List<Pontuacao> getPontuacaoHistoryForActivePersonagem() {
-    if (_activePersonagem == null || _activePersonagem!.id == null) return [];
-    return LocalStorageService.getPontuacaoForPersonagem(_activePersonagem!.id!);
+  List<Pontuacao> getPontuacaoHistoryForCurrentUser() {
+    final uid = _currentUser?.id ?? 0;
+    return LocalStorageService.getPontuacaoForUsuario(uid);
   }
+
+  List<Pontuacao> getPontuacaoHistoryForActivePersonagem() => getPontuacaoHistoryForCurrentUser();
 
   Future<void> salvaPontuacao(
     int acertos,
@@ -570,18 +496,19 @@ class AppStateProvider extends ChangeNotifier {
     String atividade, {
     String? tema,
     bool concluido = false,
+    String? progressoItens,
   }) async {
-    if (_activePersonagem == null) return;
-
     final pontuacao = Pontuacao(
+      usuarioId: _currentUser?.id,
+      usuario: _currentUser,
       atividade: atividade,
       acertos: acertos,
       erros: erros,
-      dificuldade: _activePersonagem!.dificuldade,
-      personagem: _activePersonagem,
+      dificuldade: currentDificuldade,
       sincronizado: false,
       concluido: concluido,
       tema: tema,
+      progressoItens: progressoItens,
     );
 
     // Salva localmente primeiro
@@ -600,19 +527,58 @@ class AppStateProvider extends ChangeNotifier {
       if (unsynced.isEmpty) return;
 
       for (final score in unsynced) {
-        if (score.personagem != null && score.personagem!.id != null && score.personagem!.id! > 0) {
+        final oldId = score.id;
+        final uid = score.usuarioId ?? score.usuario?.id;
+        if (uid != null && uid > 0) {
           final onlineScore = await ApiService.salvaPontuacao(score);
           if (onlineScore != null) {
             score.sincronizado = true;
             if (onlineScore.id != null) {
               score.id = onlineScore.id;
             }
-            await LocalStorageService.savePontuacao(score);
+            await LocalStorageService.savePontuacao(score, oldId: oldId);
           }
         }
       }
     } catch (e) {
       print('Erro ao sincronizar pontuções pendentes: $e');
+    }
+  }
+
+  void _cleanAndRetainBestScores() {
+    try {
+      final list = LocalStorageService.getPontuacoes();
+      if (list.isEmpty) return;
+
+      final Map<String, Pontuacao> bestMap = {};
+      for (final s in list) {
+        final uid = s.usuarioId ?? s.usuario?.id ?? 0;
+        final atv = s.atividade.toUpperCase();
+        final tema = (s.tema ?? s.atividade).trim().toUpperCase();
+        final diff = s.dificuldade.toUpperCase();
+        final key = '${uid}_${atv}_${tema}_$diff';
+
+        final tot = s.acertos + s.erros;
+        final taxa = (atv == 'JOGO_MEMORIA') ? (s.concluido ? 100.0 : 0.0) : (tot > 0 ? (s.acertos / tot) * 100.0 : 0.0);
+
+        if (!bestMap.containsKey(key)) {
+          bestMap[key] = s;
+        } else {
+          final currentBest = bestMap[key]!;
+          final curTot = currentBest.acertos + currentBest.erros;
+          final curTaxa = (currentBest.atividade.toUpperCase() == 'JOGO_MEMORIA')
+              ? (currentBest.concluido ? 100.0 : 0.0)
+              : (curTot > 0 ? (currentBest.acertos / curTot) * 100.0 : 0.0);
+
+          if (taxa >= curTaxa) {
+            bestMap[key] = s;
+          }
+        }
+      }
+
+      LocalStorageService.savePontuacoesList(bestMap.values.toList());
+    } catch (e) {
+      print('Erro ao limpar pontuacoes duplicadas locais: $e');
     }
   }
 
@@ -830,8 +796,6 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- MÉTRICAS DE DESEMPENHO POR TEMA / ATIVIDADE ---
-
   // --- MÉTRICAS DE DESEMPENHO POR TEMA / DIFICULDADE / JOGO ---
 
   Future<void> registrarPalavraConcluida({
@@ -841,9 +805,9 @@ class AppStateProvider extends ChangeNotifier {
     required String palavra,
     required String dificuldade,
   }) async {
-    if (_activePersonagem == null) return;
+    final int uid = _currentUser?.id ?? 0;
     final String temaKey = tema?.id != null ? tema!.id.toString() : temaNomePadrao;
-    await LocalStorageService.saveCompletedWord(_activePersonagem!.id ?? -1, jogo, temaKey, dificuldade, palavra);
+    await LocalStorageService.saveCompletedWord(uid, jogo, temaKey, dificuldade, palavra);
     notifyListeners();
   }
 
@@ -853,9 +817,9 @@ class AppStateProvider extends ChangeNotifier {
     required String temaNomePadrao,
     required String dificuldade,
   }) {
-    if (_activePersonagem == null) return {};
+    final int uid = _currentUser?.id ?? 0;
     final String temaKey = tema?.id != null ? tema!.id.toString() : temaNomePadrao;
-    return LocalStorageService.getCompletedWords(_activePersonagem!.id ?? -1, jogo, temaKey, dificuldade);
+    return LocalStorageService.getCompletedWords(uid, jogo, temaKey, dificuldade);
   }
 
   double getTemaCompletionPercentage({
@@ -876,42 +840,55 @@ class AppStateProvider extends ChangeNotifier {
     return pct > 100.0 ? 100.0 : pct;
   }
 
-  double getOverallGameProgress(String jogo) {
-    if (_activePersonagem == null) return 0.0;
+  List<Atividade> getAtividadesVisiveis(String tipoJogo) {
+    return _atividades.where((a) {
+      if (a.tipoJogo != tipoJogo) return false;
+      if (!a.ativo) return false;
+      if (a.rascunho) return false;
 
+      final bool isAlocadaNaTurma = isTemaDaTurma(a.titulo, a.id);
+
+      // Convidado / Não logado só visualiza atividades públicas
+      if (isGuestMode || !isLoggedIn) {
+        return a.publica;
+      }
+
+      // Aluno logado visualiza se for pública OU se for direcionada à sua turma ativa
+      return a.publica || isAlocadaNaTurma;
+    }).toList();
+  }
+
+  double getOverallGameProgress(String jogo) {
+    final int uid = _currentUser?.id ?? 0;
     int totalPossivel = 0;
     int totalConcluido = 0;
     final diffs = ['FACIL', 'MEDIO', 'DIFICIL'];
 
     if (jogo == 'JOGO_ADIVINHACAO' || jogo == 'JOGO_PALAVRAS') {
-      final temasAtivos = _atividades.where((a) => a.ativo && a.tipoJogo == jogo).toList();
-      
-      if (temasAtivos.isNotEmpty) {
-        for (final atv in temasAtivos) {
-          final int count = atv.itens.length > 0 ? atv.itens.length : 5;
+      final temasVisiveis = getAtividadesVisiveis(jogo);
+
+      if (temasVisiveis.isNotEmpty) {
+        for (final atv in temasVisiveis) {
+          final int count = atv.itens.isNotEmpty ? atv.itens.length : (jogo == 'JOGO_ADIVINHACAO' ? 5 : 4);
           final String key = atv.id != null ? atv.id.toString() : atv.titulo;
           for (final diff in diffs) {
             totalPossivel += count;
-            totalConcluido += LocalStorageService.getCompletedWords(_activePersonagem!.id ?? -1, jogo, key, diff).length;
+            totalConcluido += LocalStorageService.getCompletedWords(uid, jogo, key, diff).length;
           }
         }
       } else {
-        final int defaultCount = jogo == 'JOGO_ADIVINHACAO' ? 5 : 4;
-        final String defaultKey = jogo == 'JOGO_ADIVINHACAO' ? 'Animais da Natureza' : 'Membros da Família';
-        for (final diff in diffs) {
-          totalPossivel += defaultCount;
-          totalConcluido += LocalStorageService.getCompletedWords(_activePersonagem!.id ?? -1, jogo, defaultKey, diff).length;
-        }
+        return 0.0;
       }
     } else if (jogo == 'JOGO_ALFABETO') {
       for (final diff in diffs) {
         totalPossivel += 26;
-        totalConcluido += LocalStorageService.getCompletedWords(_activePersonagem!.id ?? -1, jogo, 'Alfabeto', diff).length;
+        totalConcluido += LocalStorageService.getCompletedWords(uid, jogo, 'Alfabeto', diff).length;
       }
     } else if (jogo == 'JOGO_MEMORIA') {
+      final paresPorNivel = {'FACIL': 6, 'MEDIO': 8, 'DIFICIL': 10};
       for (final diff in diffs) {
-        totalPossivel += 10;
-        totalConcluido += LocalStorageService.getCompletedWords(_activePersonagem!.id ?? -1, jogo, 'Memoria', diff).length;
+        totalPossivel += paresPorNivel[diff] ?? 6;
+        totalConcluido += LocalStorageService.getCompletedWords(uid, jogo, 'Memoria', diff).length;
       }
     }
 
@@ -921,19 +898,18 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   double getCompletionPercentage(String atividadeTipo, String tema) {
-    final diff = _activePersonagem?.dificuldade ?? 'FACIL';
     return getTemaCompletionPercentage(
       jogo: atividadeTipo,
       tema: null,
       temaNomePadrao: tema,
       totalItens: 5,
-      dificuldade: diff,
+      dificuldade: currentDificuldade,
     );
   }
 
   double? getAccuracyPercentage(String atividadeTipo, String tema, {String? dificuldade}) {
-    final history = getPontuacaoHistoryForActivePersonagem();
-    final diff = dificuldade ?? _activePersonagem?.dificuldade ?? 'FACIL';
+    final history = getPontuacaoHistoryForCurrentUser();
+    final diff = dificuldade ?? currentDificuldade;
 
     // Considera apenas partidas 100% concluídas daquele tema e daquela dificuldade específica
     final filtered = history.where((p) {
@@ -959,7 +935,7 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   double? getOverallGameAccuracy(String jogo) {
-    final history = getPontuacaoHistoryForActivePersonagem();
+    final history = getPontuacaoHistoryForCurrentUser();
 
     // Considera apenas partidas 100% concluídas do jogo em qualquer tema ou nível
     final filtered = history.where((p) {

@@ -36,10 +36,9 @@ void main() {
       expect(appState.currentUser?.username, equals('duda'));
       expect(appState.currentUser?.avatar, equals('assets/avatar/avatar_3.jpg'));
       expect(appState.currentUser?.isAdmin, isFalse);
-      expect(appState.activePersonagem?.nome, equals('Maria Eduarda'));
     });
 
-    test('Modo Convidado permite jogar sem cadastro mantendo personagem ativo', () async {
+    test('Modo Convidado permite jogar sem cadastro', () async {
       final appState = AppStateProvider();
       appState.loadInitialState();
 
@@ -50,8 +49,6 @@ void main() {
 
       expect(appState.isGuestMode, isTrue);
       expect(appState.isLoggedIn, isFalse);
-      expect(appState.activePersonagem, isNotNull);
-      expect(appState.activePersonagem?.nome, equals('Pequeno Aprendiz'));
     });
 
     test('Atualizacao de perfil altera avatar e nome com persistencia local', () async {
@@ -77,7 +74,6 @@ void main() {
       expect(updated, isTrue);
       expect(appState.currentUser?.nome, equals('Lucas Gabriel'));
       expect(appState.currentUser?.avatar, equals('assets/avatar/avatar_7.jpg'));
-      expect(appState.activePersonagem?.avatar, equals('assets/avatar/avatar_7.jpg'));
 
       // Valida persistência
       final savedUser = LocalStorageService.getUser();
@@ -173,7 +169,7 @@ void main() {
       expect(appState.currentUser, isNull);
     });
 
-    test('createUsuario gera ID com prefixo ADM- para admin e ALU- para aluno', () async {
+    test('createUsuario gera ID unico alfanumerico UUID', () async {
       final appState = AppStateProvider();
       appState.loadInitialState();
 
@@ -187,7 +183,7 @@ void main() {
       expect(aluno, isNotNull);
       expect(aluno!.role, equals('USER'));
       expect(aluno.codigoIdentificador, isNotNull);
-      expect(aluno.codigoIdentificador!.startsWith('ALU-'), isTrue);
+      expect(aluno.codigoIdentificador!.length, greaterThanOrEqualTo(32));
       expect(aluno.isAdmin, isFalse);
 
       // 2. Criar novo Professor / Admin
@@ -200,7 +196,7 @@ void main() {
       expect(admin, isNotNull);
       expect(admin!.role, equals('ADMIN'));
       expect(admin.codigoIdentificador, isNotNull);
-      expect(admin.codigoIdentificador!.startsWith('ADM-'), isTrue);
+      expect(admin.codigoIdentificador!.length, greaterThanOrEqualTo(32));
       expect(admin.isAdmin, isTrue);
     });
   });

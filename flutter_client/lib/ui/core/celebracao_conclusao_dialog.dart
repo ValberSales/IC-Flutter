@@ -109,52 +109,64 @@ class CelebracaoConclusaoDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: AppColors.border, width: 1.5),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Column(
-                    children: [
-                      const Text(
-                        'Acertos',
-                        style: TextStyle(fontSize: 13, color: AppColors.textDark),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '$totalAcertos',
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.accent),
-                      ),
-                    ],
-                  ),
-                  Container(width: 1, height: 32, color: AppColors.border),
-                  Column(
-                    children: [
-                      const Text(
-                        'Erros',
-                        style: TextStyle(fontSize: 13, color: AppColors.textDark),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '$totalErros',
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.error),
-                      ),
-                    ],
-                  ),
-                  Container(width: 1, height: 32, color: AppColors.border),
-                  Column(
-                    children: [
-                      const Text(
-                        'Conclusão',
-                        style: TextStyle(fontSize: 13, color: AppColors.textDark),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        '100%',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.secondary),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              child: (jogoNome.toLowerCase().contains('memória') || jogoNome.toLowerCase().contains('memoria'))
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle_rounded, color: AppColors.secondary, size: 28),
+                        SizedBox(width: 10),
+                        Text(
+                          'Conclusão: 100%',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.secondary),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            const Text(
+                              'Acertos',
+                              style: TextStyle(fontSize: 13, color: AppColors.textDark),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '$totalAcertos',
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.accent),
+                            ),
+                          ],
+                        ),
+                        Container(width: 1, height: 32, color: AppColors.border),
+                        Column(
+                          children: [
+                            const Text(
+                              'Erros',
+                              style: TextStyle(fontSize: 13, color: AppColors.textDark),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '$totalErros',
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.error),
+                            ),
+                          ],
+                        ),
+                        Container(width: 1, height: 32, color: AppColors.border),
+                        Column(
+                          children: [
+                            const Text(
+                              'Conclusão',
+                              style: TextStyle(fontSize: 13, color: AppColors.textDark),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              '100%',
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.secondary),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
             ),
             const SizedBox(height: 24),
 

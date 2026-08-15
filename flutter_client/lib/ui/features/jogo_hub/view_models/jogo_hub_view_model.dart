@@ -24,25 +24,25 @@ class JogoHubViewModel extends ChangeNotifier {
 
   void setDiffAlfabeto(String diff) {
     _diffAlfabeto = diff;
-    appState.updatePersonagemDificuldade(diff);
+    appState.updateDificuldade(diff);
     notifyListeners();
   }
 
   void setDiffMemoria(String diff) {
     _diffMemoria = diff;
-    appState.updatePersonagemDificuldade(diff);
+    appState.updateDificuldade(diff);
     notifyListeners();
   }
 
   void setDiffAdivinhacao(String diff) {
     _diffAdivinhacao = diff;
-    appState.updatePersonagemDificuldade(diff);
+    appState.updateDificuldade(diff);
     notifyListeners();
   }
 
   void setDiffPalavras(String diff) {
     _diffPalavras = diff;
-    appState.updatePersonagemDificuldade(diff);
+    appState.updateDificuldade(diff);
     notifyListeners();
   }
 

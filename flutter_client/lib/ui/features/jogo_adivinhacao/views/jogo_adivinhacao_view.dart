@@ -43,7 +43,12 @@ class _JogoAdivinhacaoViewState extends State<JogoAdivinhacaoView> {
     );
   }
 
+  bool _dialogShowing = false;
+
   void _exibirCelebracaoConclusao() {
+    if (_dialogShowing) return;
+    _dialogShowing = true;
+
     final diff = _viewModel.dificuldade;
     final String temaNome = widget.atividadeTema?.titulo ?? 'Animais da Natureza';
 
@@ -58,7 +63,9 @@ class _JogoAdivinhacaoViewState extends State<JogoAdivinhacaoView> {
             dificuldade: diff,
             totalAcertos: _viewModel.acertosCount,
             totalErros: _viewModel.errosCount,
-            onVoltarTema: () => Navigator.of(context).pop(),
+            onVoltarTema: () {
+              Navigator.of(context).pop();
+            },
           ),
         );
       }

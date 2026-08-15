@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../state/app_state_provider.dart';
+import '../../ui/core/sobre_projeto_dialog.dart';
 import '../pages/area_professor/area_professor_page.dart';
 
 class AppHeaderWidget extends StatelessWidget implements PreferredSizeWidget {
@@ -66,6 +67,16 @@ class AppHeaderWidget extends StatelessWidget implements PreferredSizeWidget {
               ],
             ),
           ),
+
+        // Botão Sobre o Projeto
+        Padding(
+          padding: const EdgeInsets.only(right: 4.0),
+          child: IconButton(
+            tooltip: 'Sobre o Projeto',
+            icon: const Icon(Icons.info_outline_rounded, color: AppColors.textDark, size: 22),
+            onPressed: () => SobreProjetoDialog.show(context),
+          ),
+        ),
 
         // Botão Área do Professor
         Padding(

@@ -185,9 +185,9 @@ class _HomeViewState extends State<HomeView> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      'ID: $idCode • @${user.username}',
+                      '@${user.username}',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: AppColors.primary,
                       ),

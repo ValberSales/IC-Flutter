@@ -1,31 +1,121 @@
 package br.com.interalibras.controller;
 
 import br.com.interalibras.entity.Pontuacao;
+import br.com.interalibras.entity.Usuario;
 import br.com.interalibras.repository.PontuacaoRepository;
+import br.com.interalibras.repository.UsuarioRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.security.Principal;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/pontuacoes")
 public class PontuacaoController {
 
     private final PontuacaoRepository pontuacaoRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public PontuacaoController(PontuacaoRepository pontuacaoRepository) {
+    public PontuacaoController(
+            PontuacaoRepository pontuacaoRepository,
+            UsuarioRepository usuarioRepository
+    ) {
         this.pontuacaoRepository = pontuacaoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @PostMapping
-    public ResponseEntity<Pontuacao> save(@RequestBody Pontuacao pontuacao) {
+    public ResponseEntity<Pontuacao> save(@RequestBody Pontuacao pontuacao, Principal principal) {
+        // Resolve usuário: 1. pelo ID informado, 2. pelo username informado, 3. pelo Principal autenticado
+        Usuario targetUser = null;
+        if (pontuacao.getUsuario() != null && pontuacao.getUsuario().getId() != null) {
+            targetUser = usuarioRepository.findById(pontuacao.getUsuario().getId()).orElse(null);
+        }
+        if (targetUser == null && pontuacao.getUsuario() != null && pontuacao.getUsuario().getUsername() != null) {
+            targetUser = usuarioRepository.findByUsername(pontuacao.getUsuario().getUsername().trim()).orElse(null);
+        }
+        if (targetUser == null && principal != null) {
+            targetUser = usuarioRepository.findByUsername(principal.getName()).orElse(null);
+        }
+
+        pontuacao.setUsuario(targetUser);
+
+        String atividade = pontuacao.getAtividade() != null ? pontuacao.getAtividade() : "";
+        String tema = pontuacao.getTema() != null ? pontuacao.getTema() : atividade;
+        String diff = pontuacao.getDificuldade() != null ? pontuacao.getDificuldade() : "FACIL";
+
+        int newTotal = pontuacao.getAcertos() + pontuacao.getErros();
+        double newTaxa = "JOGO_MEMORIA".equalsIgnoreCase(atividade)
+                ? (pontuacao.isConcluido() ? 100.0 : 0.0)
+                : (newTotal > 0 ? ((double) pontuacao.getAcertos() / newTotal) * 100.0 : 0.0);
+
+        final Usuario resolvedUser = targetUser;
+        List<Pontuacao> allScores = resolvedUser != null
+                ? pontuacaoRepository.findByUsuarioId(resolvedUser.getId())
+                : pontuacaoRepository.findAll();
+
+        Optional<Pontuacao> optExisting = allScores.stream().filter(p -> {
+            boolean userMatch = (resolvedUser == null && p.getUsuario() == null) ||
+                    (resolvedUser != null && p.getUsuario() != null && Objects.equals(resolvedUser.getId(), p.getUsuario().getId()));
+            if (!userMatch) return false;
+
+            boolean atvMatch = atividade.equalsIgnoreCase(p.getAtividade());
+            String pTema = p.getTema() != null ? p.getTema() : (p.getAtividade() != null ? p.getAtividade() : "");
+            boolean temaMatch = tema.equalsIgnoreCase(pTema);
+            String pDiff = p.getDificuldade() != null ? p.getDificuldade() : "FACIL";
+            boolean diffMatch = diff.equalsIgnoreCase(pDiff);
+
+            return atvMatch && temaMatch && diffMatch;
+        }).findFirst();
+
+        if (optExisting.isPresent()) {
+            Pontuacao existing = optExisting.get();
+            int oldTotal = existing.getAcertos() + existing.getErros();
+            double oldTaxa = "JOGO_MEMORIA".equalsIgnoreCase(existing.getAtividade())
+                    ? (existing.isConcluido() ? 100.0 : 0.0)
+                    : (oldTotal > 0 ? ((double) existing.getAcertos() / oldTotal) * 100.0 : 0.0);
+
+            // Mescla progresso de itens
+            if (pontuacao.getProgressoItens() != null && !pontuacao.getProgressoItens().trim().isEmpty()) {
+                Set<String> mergedItems = new LinkedHashSet<>();
+                if (existing.getProgressoItens() != null) {
+                    mergedItems.addAll(Arrays.asList(existing.getProgressoItens().split(",")));
+                }
+                mergedItems.addAll(Arrays.asList(pontuacao.getProgressoItens().split(",")));
+                existing.setProgressoItens(String.join(",", mergedItems));
+            }
+
+            if (newTaxa >= oldTaxa) {
+                existing.setAcertos(pontuacao.getAcertos());
+                existing.setErros(pontuacao.getErros());
+                existing.setConcluido(pontuacao.isConcluido());
+                existing.setCreatedAt(LocalDateTime.now());
+                if (targetUser != null) existing.setUsuario(targetUser);
+
+                Pontuacao updated = pontuacaoRepository.save(existing);
+                return ResponseEntity.status(HttpStatus.CREATED).body(updated);
+            } else {
+                if (targetUser != null && existing.getUsuario() == null) existing.setUsuario(targetUser);
+                Pontuacao updated = pontuacaoRepository.save(existing);
+                return ResponseEntity.status(HttpStatus.OK).body(updated);
+            }
+        }
+
+        pontuacao.setCreatedAt(LocalDateTime.now());
         Pontuacao saved = pontuacaoRepository.save(pontuacao);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    @GetMapping("/personagem/{personagemId}")
-    public ResponseEntity<List<Pontuacao>> getByPersonagem(@PathVariable Long personagemId) {
-        return ResponseEntity.ok(pontuacaoRepository.findByPersonagemId(personagemId));
+    @GetMapping
+    public ResponseEntity<List<Pontuacao>> getAll() {
+        return ResponseEntity.ok(pontuacaoRepository.findAll());
+    }
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<Pontuacao>> getByUsuario(@PathVariable Long usuarioId) {
+        return ResponseEntity.ok(pontuacaoRepository.findByUsuarioIdOrderByCreatedAtDesc(usuarioId));
     }
 }

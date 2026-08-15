@@ -132,7 +132,7 @@ class _AlocarAlunosDialogState extends State<AlocarAlunosDialog> {
                   child: TextField(
                     onChanged: (val) => setState(() => _searchQuery = val),
                     decoration: InputDecoration(
-                      hintText: 'Buscar aluno por nome ou ID...',
+                      hintText: 'Buscar aluno por nome ou @username...',
                       prefixIcon: const Icon(Icons.search_rounded, size: 20),
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -145,37 +145,55 @@ class _AlocarAlunosDialogState extends State<AlocarAlunosDialog> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedIds.addAll(alunos.map((a) => a.id).whereType<int>());
-                    });
-                  },
-                  child: const Text('Todos', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-                TextButton(
-                  onPressed: () => setState(() => _selectedIds.clear()),
-                  child: const Text('Limpar', style: TextStyle(color: AppColors.error)),
-                ),
               ],
             ),
             const SizedBox(height: 12),
 
-            // Lista de alunos
+            // Controles de Selecionar Todos / Desmarcar Todos
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${_selectedIds.length} selecionado(s)',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary),
+                ),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedIds.addAll(alunos.map((a) => a.id).whereType<int>());
+                        });
+                      },
+                      child: const Text('Marcar Todos', style: TextStyle(fontSize: 12)),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedIds.clear();
+                        });
+                      },
+                      child: const Text('Desmarcar', style: TextStyle(fontSize: 12, color: AppColors.error)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const Divider(height: 1),
+
+            // Lista de alunos com Checkbox
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : alunos.isEmpty
                       ? Center(
                           child: Text(
-                            _searchQuery.isEmpty ? 'Nenhum aluno cadastrado.' : 'Nenhum aluno encontrado.',
+                            'Nenhum aluno encontrado.',
                             style: TextStyle(color: AppColors.textDark.withOpacity(0.6)),
                           ),
                         )
-                      : ListView.separated(
+                      : ListView.builder(
                           itemCount: alunos.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
                           itemBuilder: (context, idx) {
                             final aluno = alunos[idx];
                             final isSelected = aluno.id != null && _selectedIds.contains(aluno.id);
@@ -193,7 +211,7 @@ class _AlocarAlunosDialogState extends State<AlocarAlunosDialog> {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
                               subtitle: Text(
-                                'ID: ${aluno.codigoIdentificador ?? "-"} • @${aluno.username ?? "-"}',
+                                '@${aluno.username ?? "-"}',
                                 style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
                               ),
                               onChanged: (checked) {

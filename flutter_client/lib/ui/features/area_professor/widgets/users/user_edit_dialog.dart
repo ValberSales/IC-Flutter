@@ -79,7 +79,7 @@ class _UserEditDialogState extends State<UserEditDialog> {
               children: [
                 const Text('Editar Usuário', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 Text(
-                  '@${widget.user.username ?? ''} (${widget.user.codigoIdentificador ?? 'ID #${widget.user.id}'})',
+                  '@${widget.user.username ?? ''}',
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],

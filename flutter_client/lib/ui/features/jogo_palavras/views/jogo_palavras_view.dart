@@ -9,7 +9,6 @@ import '../../../core/dynamic_image_widget.dart';
 import '../../../core/jogo_breadcrumb_widget.dart';
 import '../../../core/mascote_feedback_widget.dart';
 import '../../../core/pontuacao_header_widget.dart';
-import '../../../core/tutorial_widget.dart';
 import '../view_models/jogo_palavras_view_model.dart';
 import '../widgets/palavra_opcao_button.dart';
 
@@ -41,7 +40,12 @@ class _JogoPalavrasViewState extends State<JogoPalavrasView> {
     );
   }
 
+  bool _dialogShowing = false;
+
   void _exibirCelebracaoConclusao() {
+    if (_dialogShowing) return;
+    _dialogShowing = true;
+
     final diff = _viewModel.dificuldade;
     final String temaNome = widget.atividadeTema?.titulo ?? 'Membros da Família';
 
@@ -56,7 +60,9 @@ class _JogoPalavrasViewState extends State<JogoPalavrasView> {
             dificuldade: diff,
             totalAcertos: _viewModel.acertosCount,
             totalErros: _viewModel.errosCount,
-            onVoltarTema: () => Navigator.of(context).pop(),
+            onVoltarTema: () {
+              Navigator.of(context).pop();
+            },
           ),
         );
       }
@@ -109,7 +115,6 @@ class _JogoPalavrasViewState extends State<JogoPalavrasView> {
           }
 
           final isCompact = ResponsiveLayout.isMobile(context);
-          final appState = vm.appState;
           final dificuldade = vm.dificuldade;
           final correta = vm.selectedPalavra!.descricao;
 

@@ -106,9 +106,11 @@ class JogoAlfabetoViewModel extends ChangeNotifier {
     _opcoes = listOpcoes.map((e) => LetraJogo(letraData: e)).toList();
     _acerto = false;
     _feedback = 'VAZIO';
-    _isMatchComplete = false;
+    _errouLetraAtual = false;
     notifyListeners();
   }
+
+  bool _errouLetraAtual = false;
 
   void verificarResposta(LetraJogo opcaoSelected) {
     if (_acerto || !opcaoSelected.pendente) return;
@@ -118,7 +120,7 @@ class JogoAlfabetoViewModel extends ChangeNotifier {
       _acertosCount++;
       _feedback = 'ACERTO';
 
-      final diff = appState.activePersonagem?.dificuldade ?? 'FACIL';
+      final diff = appState.currentDificuldade;
       appState.registrarPalavraConcluida(
         jogo: 'JOGO_ALFABETO',
         tema: null,
@@ -128,27 +130,19 @@ class JogoAlfabetoViewModel extends ChangeNotifier {
       );
 
       final bool roundEnded = _currentLetterIndex >= _letrasFila.length;
-      appState.salvaPontuacao(
-        _acertosCount,
-        _errosCount,
-        'JOGO_ALFABETO',
-        concluido: roundEnded,
-      );
-
-      if (roundEnded) {
+      if (roundEnded && !_isMatchComplete) {
         _isMatchComplete = true;
+        appState.salvaPontuacao(
+          _acertosCount,
+          _errosCount,
+          'JOGO_ALFABETO',
+          concluido: true,
+        );
       }
     } else {
       opcaoSelected.pendente = false;
       _errosCount++;
       _feedback = 'ERRO';
-
-      appState.salvaPontuacao(
-        _acertosCount,
-        _errosCount,
-        'JOGO_ALFABETO',
-        concluido: false,
-      );
     }
 
     notifyListeners();

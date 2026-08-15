@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
-import '../../data/models/personagem.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../state/app_state_provider.dart';
 import '../features/area_professor/views/area_professor_view.dart';
 import 'logout_helper.dart';
+import 'sobre_projeto_dialog.dart';
 import 'user_profile_dialog.dart';
 
 class AppHeaderWidget extends StatelessWidget implements PreferredSizeWidget {
-  final Personagem? activePersonagem;
   final bool isCleanLogin;
   final bool showAdminButton;
   final bool showProfileButton;
@@ -17,7 +16,6 @@ class AppHeaderWidget extends StatelessWidget implements PreferredSizeWidget {
 
   const AppHeaderWidget({
     super.key,
-    this.activePersonagem,
     this.isCleanLogin = false,
     this.showAdminButton = true,
     this.showProfileButton = true,
@@ -33,11 +31,8 @@ class AppHeaderWidget extends StatelessWidget implements PreferredSizeWidget {
     final isCompact = MediaQuery.of(context).size.width < 600;
     final user = state.currentUser;
     final isGuest = state.isGuestMode;
-    final currentPersonagem = activePersonagem ?? state.activePersonagem;
 
-    final String avatarPath = user?.avatar ??
-        currentPersonagem?.avatar ??
-        'assets/avatar/avatar_1.jpg';
+    final String avatarPath = user?.avatar ?? 'assets/avatar/avatar_1.jpg';
 
     // Se for tela de login limpa, não renderiza nenhuma ação
     if (isCleanLogin) {
@@ -140,8 +135,18 @@ class AppHeaderWidget extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
 
+        // 1.5. Botão Sobre o Projeto (Acessível a todos)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2.0),
+          child: IconButton(
+            tooltip: 'Sobre o Projeto',
+            icon: const Icon(Icons.info_outline_rounded, color: AppColors.textDark, size: 22),
+            onPressed: () => SobreProjetoDialog.show(context),
+          ),
+        ),
+
         // 2. Botão da Imagem de Perfil (Avatar clicável que abre o modal de perfil)
-        if (showProfileButton && (state.isLoggedIn || isGuest || currentPersonagem != null))
+        if (showProfileButton && (state.isLoggedIn || isGuest))
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: Tooltip(

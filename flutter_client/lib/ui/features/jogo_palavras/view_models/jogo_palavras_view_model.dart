@@ -159,9 +159,11 @@ class JogoPalavrasViewModel extends ChangeNotifier {
     _opcoes = listaFinal.map((p) => OpcaoPalavra(palavra: p, pendente: true)).toList();
     _acerto = false;
     _feedback = 'VAZIO';
-    _isMatchComplete = false;
+    _errouPalavraAtual = false;
     notifyListeners();
   }
+
+  bool _errouPalavraAtual = false;
 
   void clearFeedback() {
     _feedback = 'VAZIO';
@@ -181,7 +183,7 @@ class JogoPalavrasViewModel extends ChangeNotifier {
       _feedback = 'ACERTO';
       _acertosCount++;
 
-      final diff = appState.activePersonagem?.dificuldade ?? 'FACIL';
+      final diff = appState.currentDificuldade;
       final String temaNome = atividadeTema?.titulo ?? 'Membros da Família';
       appState.registrarPalavraConcluida(
         jogo: 'JOGO_PALAVRAS',
@@ -192,30 +194,20 @@ class JogoPalavrasViewModel extends ChangeNotifier {
       );
 
       final bool roundEnded = _currentWordIndex >= _palavrasFila.length;
-      appState.salvaPontuacao(
-        _acertosCount,
-        _errosCount,
-        'JOGO_PALAVRAS',
-        tema: temaNome,
-        concluido: roundEnded,
-      );
-
-      if (roundEnded) {
+      if (roundEnded && !_isMatchComplete) {
         _isMatchComplete = true;
+        appState.salvaPontuacao(
+          _acertosCount,
+          _errosCount,
+          'JOGO_PALAVRAS',
+          tema: temaNome,
+          concluido: true,
+        );
       }
     } else {
       opcao.pendente = false;
       _feedback = 'ERRO';
       _errosCount++;
-
-      final String temaNome = atividadeTema?.titulo ?? 'Membros da Família';
-      appState.salvaPontuacao(
-        _acertosCount,
-        _errosCount,
-        'JOGO_PALAVRAS',
-        tema: temaNome,
-        concluido: false,
-      );
     }
 
     notifyListeners();

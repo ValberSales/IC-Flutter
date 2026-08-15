@@ -1,107 +1,373 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../data/storage/local_storage_service.dart';
-import '../../../../state/app_state_provider.dart';
+import 'package:flutter_client/core/constants/app_colors.dart';
+import 'package:flutter_client/data/models/relatorio_turma.dart';
+import 'package:flutter_client/data/models/turma.dart';
+import 'package:flutter_client/data/repositories/relatorio_repository.dart';
+import 'package:flutter_client/state/app_state_provider.dart';
+import 'reports/difficulty_evolution_card.dart';
+import 'reports/export_report_service.dart';
+import 'reports/game_theme_analytics_widget.dart';
+import 'reports/students_performance_list.dart';
+import 'reports/turma_overview_card.dart';
 
-class ProfessorReportsTabWidget extends StatelessWidget {
+class ProfessorReportsTabWidget extends StatefulWidget {
   final AppStateProvider state;
 
   const ProfessorReportsTabWidget({super.key, required this.state});
 
   @override
-  Widget build(BuildContext context) {
-    final allScores = LocalStorageService.getPontuacoes();
+  State<ProfessorReportsTabWidget> createState() => _ProfessorReportsTabWidgetState();
+}
 
-    if (state.personagens.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.people_outline_rounded, size: 64, color: AppColors.primaryLight),
-              SizedBox(height: 12),
-              Text('Nenhum aluno/avatar cadastrado ainda.', style: TextStyle(fontSize: 18, color: AppColors.textDark)),
-            ],
-          ),
-        ),
-      );
+class _ProfessorReportsTabWidgetState extends State<ProfessorReportsTabWidget> {
+  final RelatorioRepository _relatorioRepository = RelatorioRepository();
+
+  Turma? _selectedTurma;
+  RelatorioTurma? _relatorio;
+  bool _isLoading = false;
+  int _currentSectionIndex = 0; // 0: Geral & Alunos, 1: Jogos & Temas, 2: Evolução de Dificuldade
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await widget.state.loadTurmas();
+      if (mounted) {
+        _initTurma();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant ProfessorReportsTabWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.state.turmas.isNotEmpty &&
+        (_selectedTurma == null || !widget.state.turmas.any((t) => t.id == _selectedTurma?.id))) {
+      _selectedTurma = widget.state.turmas.first;
+      _loadRelatorio();
+    }
+  }
+
+  void _initTurma() {
+    if (widget.state.turmas.isNotEmpty) {
+      _selectedTurma = widget.state.turmas.first;
+      _loadRelatorio();
+    }
+  }
+
+  Future<void> _loadRelatorio() async {
+    if (_selectedTurma == null) {
+      if (widget.state.turmas.isNotEmpty) {
+        _selectedTurma = widget.state.turmas.first;
+      } else {
+        return;
+      }
     }
 
+    setState(() => _isLoading = true);
+    try {
+      final rel = await _relatorioRepository.getRelatorioTurma(_selectedTurma!);
+      if (mounted) {
+        setState(() {
+          _relatorio = rel;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final turmas = widget.state.turmas;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Desempenho dos Alunos',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textDark),
-          ),
-          const SizedBox(height: 16),
-          ...state.personagens.map((p) {
-            final pScores = allScores.where((s) => s.personagem?.id == p.id).toList();
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1. Cabeçalho Padronizado da Aba
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.teal.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(Icons.analytics_rounded, color: Colors.teal, size: 30),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Relatórios Pedagógicos & Analytics',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Acompanhe o desempenho, aproveitamento e evolução das turmas e alunos.',
+                              style: TextStyle(fontSize: 13, color: AppColors.textDark),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
 
-            return Card(
-              margin: const EdgeInsets.only(bottom: 20),
-              child: ExpansionTile(
-                leading: CircleAvatar(backgroundImage: AssetImage(p.avatar)),
-                title: Text(p.nome, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                subtitle: Text('Dificuldade: ${p.dificuldade}  •  ${pScores.length} Partidas jogadas'),
-                children: [
-                  if (pScores.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text('Nenhuma partida registrada para este aluno ainda.'),
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Table(
-                        border: TableBorder.all(color: AppColors.border, width: 1, borderRadius: BorderRadius.circular(8)),
-                        columnWidths: const {
-                          0: FlexColumnWidth(2),
-                          1: FlexColumnWidth(1),
-                          2: FlexColumnWidth(1),
-                          3: FlexColumnWidth(1.5),
-                        },
-                        children: [
-                          const TableRow(
-                            decoration: BoxDecoration(color: AppColors.primaryLight),
-                            children: [
-                              Padding(padding: EdgeInsets.all(10), child: Text('Jogo', style: TextStyle(fontWeight: FontWeight.bold))),
-                              Padding(padding: EdgeInsets.all(10), child: Text('Acertos', style: TextStyle(fontWeight: FontWeight.bold))),
-                              Padding(padding: EdgeInsets.all(10), child: Text('Erros', style: TextStyle(fontWeight: FontWeight.bold))),
-                              Padding(padding: EdgeInsets.all(10), child: Text('Data', style: TextStyle(fontWeight: FontWeight.bold))),
-                            ],
+                      // Botões de Exportação no Topo
+                      if (_relatorio != null) ...[
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.teal.shade800,
+                            side: BorderSide(color: Colors.teal.shade400),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
-                          ...pScores.map((score) {
-                            String gameName = score.atividade;
-                            if (gameName == 'JOGO_ALFABETO') gameName = 'Alfabeto';
-                            if (gameName == 'JOGO_MEMORIA') gameName = 'Memória';
-                            if (gameName == 'JOGO_ADIVINHACAO') gameName = 'Adivinhação';
-                            if (gameName == 'JOGO_PALAVRAS') gameName = 'Palavras';
+                          onPressed: () => ExportReportService.printTurmaReport(context, _relatorio!),
+                          icon: const Icon(Icons.print_rounded, size: 18),
+                          label: const Text('Imprimir / PDF', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            elevation: 2,
+                          ),
+                          onPressed: () => ExportReportService.exportTurmaCsv(context, _relatorio!),
+                          icon: const Icon(Icons.download_rounded, size: 18),
+                          label: const Text('Exportar CSV', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
 
-                            final dateStr = score.createdAt != null
-                                ? "${score.createdAt!.day}/${score.createdAt!.month} ${score.createdAt!.hour}:${score.createdAt!.minute.toString().padLeft(2, '0')}"
-                                : '-';
+              // 2. Seletor de Turma
+              if (turmas.isEmpty)
+                Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  child: const Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Column(
+                      children: [
+                        Icon(Icons.school_outlined, size: 54, color: AppColors.primaryLight),
+                        SizedBox(height: 12),
+                        Text(
+                          'Nenhuma turma cadastrada ainda.',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Crie turmas na aba "Turmas" para acompanhar o desempenho pedagógico.',
+                          style: TextStyle(fontSize: 13, color: AppColors.textDark),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else ...[
+                Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.school_rounded, color: AppColors.primary, size: 22),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Turma Selecionada:',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<int>(
+                              isExpanded: true,
+                              value: _selectedTurma?.id ?? turmas.first.id,
+                              items: turmas.map((t) {
+                                return DropdownMenuItem<int>(
+                                  value: t.id,
+                                  child: Text(
+                                    '${t.nome} (Código: ${t.codigo})',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (id) {
+                                if (id != null) {
+                                  final t = turmas.firstWhere((item) => item.id == id);
+                                  setState(() => _selectedTurma = t);
+                                  _loadRelatorio();
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Atualizar Relatório',
+                          icon: const Icon(Icons.refresh_rounded, color: AppColors.primary),
+                          onPressed: _loadRelatorio,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
 
-                            return TableRow(
-                              children: [
-                                Padding(padding: const EdgeInsets.all(10), child: Text(gameName)),
-                                Padding(padding: const EdgeInsets.all(10), child: Text('${score.acertos}', style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold))),
-                                Padding(padding: const EdgeInsets.all(10), child: Text('${score.erros}', style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold))),
-                                Padding(padding: const EdgeInsets.all(10), child: Text(dateStr)),
-                              ],
-                            );
-                          }),
+                // 3. Sub-Navegação por Abas
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSectionTab(
+                        0,
+                        'Visão Geral & Alunos',
+                        Icons.dashboard_rounded,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildSectionTab(
+                        1,
+                        'Desempenho por Jogo & Tema',
+                        Icons.sports_esports_rounded,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildSectionTab(
+                        2,
+                        'Evolução de Dificuldade',
+                        Icons.trending_up_rounded,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // 4. Conteúdo Dinâmico
+                if (_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(48.0),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(color: Colors.teal),
+                          SizedBox(height: 12),
+                          Text('Carregando métricas pedagógicas...', style: TextStyle(color: AppColors.textDark)),
                         ],
                       ),
                     ),
+                  )
+                else if (_relatorio != null) ...[
+                  if (_currentSectionIndex == 0) ...[
+                    TurmaOverviewCard(relatorio: _relatorio!),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Desempenho Individual dos Alunos',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                    ),
+                    const SizedBox(height: 12),
+                    StudentsPerformanceList(
+                      alunos: _relatorio!.alunos,
+                      turmaNome: _relatorio!.turmaNome,
+                    ),
+                  ] else if (_currentSectionIndex == 1) ...[
+                    GameThemeAnalyticsWidget(relatorio: _relatorio!),
+                  ] else ...[
+                    DifficultyEvolutionCard(relatorio: _relatorio!),
+                  ],
+                ] else ...[
+                  Card(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        children: [
+                          Icon(Icons.info_outline_rounded, size: 48, color: Colors.teal.shade300),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Nenhum dado disponível para esta turma.',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Os alunos matriculados ainda não jogaram atividades ou os dados estão sendo sincronizados.',
+                            style: TextStyle(fontSize: 13, color: AppColors.textDark),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.teal,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onPressed: _loadRelatorio,
+                            icon: const Icon(Icons.refresh_rounded, size: 18),
+                            label: const Text('Tentar Novamente'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTab(int index, String label, IconData icon) {
+    final isSelected = _currentSectionIndex == index;
+    return InkWell(
+      onTap: () => setState(() => _currentSectionIndex = index),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.teal.withOpacity(0.15) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? Colors.teal : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: isSelected ? Colors.teal : AppColors.textDark.withOpacity(0.7)),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                  color: isSelected ? Colors.teal : AppColors.textDark,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-            );
-          }),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

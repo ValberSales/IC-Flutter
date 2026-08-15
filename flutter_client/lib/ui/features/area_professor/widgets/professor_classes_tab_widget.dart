@@ -122,12 +122,13 @@ class _ProfessorClassesTabWidgetState extends State<ProfessorClassesTabWidget> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 2,
                         ),
                         onPressed: () => TurmaFormDialog.show(context, widget.state),
-                        icon: const Icon(Icons.add_rounded),
-                        label: const Text('Nova Turma', style: TextStyle(fontWeight: FontWeight.bold)),
+                        icon: const Icon(Icons.add_rounded, size: 20),
+                        label: const Text('Nova Turma', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                       ),
                     ],
                   ),
@@ -151,7 +152,7 @@ class _ProfessorClassesTabWidgetState extends State<ProfessorClassesTabWidget> {
               ),
               const SizedBox(height: 20),
 
-              // Grade de Turmas
+              // Lista de Turmas
               if (turmas.isEmpty)
                 Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -178,15 +179,9 @@ class _ProfessorClassesTabWidgetState extends State<ProfessorClassesTabWidget> {
                   ),
                 )
               else
-                GridView.builder(
+                ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 520,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    mainAxisExtent: 270,
-                  ),
                   itemCount: turmas.length,
                   itemBuilder: (context, index) {
                     final turma = turmas[index];

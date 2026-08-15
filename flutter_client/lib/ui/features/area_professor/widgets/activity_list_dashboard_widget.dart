@@ -78,42 +78,65 @@ class ActivityListDashboardWidget extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Gestão de Jogos e Atividades',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textDark),
+              // Cabeçalho da Aba de Atividades
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(Icons.sports_esports_rounded, color: Colors.blue, size: 30),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Gestão de Jogos e Atividades',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Crie novos temas para os jogos de Adivinhação e Palavras.',
+                              style: TextStyle(fontSize: 13, color: AppColors.textDark),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 2,
+                        ),
+                        onPressed: () => viewModel.initCreationForm(),
+                        icon: const Icon(Icons.add_rounded, size: 20),
+                        label: const Text(
+                          'Criar Nova Atividade',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Crie novos temas para os jogos de Adivinhação e Palavras',
-                    style: TextStyle(fontSize: 14, color: AppColors.textDark),
-                  ),
-                ],
-              ),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                onPressed: () => viewModel.initCreationForm(),
-                icon: const Icon(Icons.add_rounded, color: Colors.white),
-                label: const Text(
-                  'Criar Nova Atividade',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
           // Card de Rascunho se houver progresso salvo
           if (rascunho != null)
@@ -467,8 +490,10 @@ class ActivityListDashboardWidget extends StatelessWidget {
                 );
               },
             ),
-        ],
+          ],
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

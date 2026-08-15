@@ -16,6 +16,10 @@ public class Atividade {
     private String titulo;
     private String tipoJogo; // 'JOGO_ADIVINHACAO' | 'JOGO_PALAVRAS'
     private boolean ativo = true;
+
+    @Column(nullable = true)
+    private Boolean publica = true; // true = pública (convidados + turmas), false = privada (apenas turmas direcionadas)
+
     private boolean rascunho = false;
     private String dificuldade = "FACIL";
     private String criadoPor;
@@ -40,6 +44,10 @@ public class Atividade {
 
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
+
+    public Boolean isPublica() { return publica == null || publica; }
+    public Boolean getPublica() { return publica == null || publica; }
+    public void setPublica(Boolean publica) { this.publica = publica; }
 
     public boolean isRascunho() { return rascunho; }
     public void setRascunho(boolean rascunho) { this.rascunho = rascunho; }

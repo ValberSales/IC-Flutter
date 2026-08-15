@@ -6,9 +6,9 @@ import '../view_models/area_professor_view_model.dart';
 import '../widgets/activity_list_dashboard_widget.dart';
 import '../widgets/activity_wizard_widget.dart';
 import '../widgets/professor_auth_card_widget.dart';
+import '../widgets/professor_classes_tab_widget.dart';
 import '../widgets/professor_config_tab_widget.dart';
 import '../widgets/professor_reports_tab_widget.dart';
-import '../widgets/professor_sync_tab_widget.dart';
 import '../widgets/professor_users_tab_widget.dart';
 
 class AreaProfessorView extends StatefulWidget {
@@ -196,7 +196,7 @@ class _AreaProfessorViewState extends State<AreaProfessorView> {
                   tabs: [
                     Tab(icon: Icon(Icons.add_task_rounded), text: 'Atividades'),
                     Tab(icon: Icon(Icons.people_alt_rounded), text: 'Usuários'),
-                    Tab(icon: Icon(Icons.sync_rounded), text: 'Vincular Turma'),
+                    Tab(icon: Icon(Icons.school_rounded), text: 'Turmas'),
                     Tab(icon: Icon(Icons.settings_rounded), text: 'Configurações'),
                     Tab(icon: Icon(Icons.analytics_rounded), text: 'Relatórios'),
                   ],
@@ -210,7 +210,7 @@ class _AreaProfessorViewState extends State<AreaProfessorView> {
                         ? ActivityWizardWidget(viewModel: vm, state: state)
                         : ActivityListDashboardWidget(viewModel: vm, state: state),
                     ProfessorUsersTabWidget(state: state),
-                    ProfessorSyncTabWidget(viewModel: vm, state: state),
+                    ProfessorClassesTabWidget(viewModel: vm, state: state),
                     ProfessorConfigTabWidget(state: state),
                     ProfessorReportsTabWidget(state: state),
                   ],

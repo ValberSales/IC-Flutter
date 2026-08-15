@@ -2,8 +2,10 @@ package br.com.interalibras.config;
 
 import br.com.interalibras.entity.Atividade;
 import br.com.interalibras.entity.ItemAtividade;
+import br.com.interalibras.entity.Turma;
 import br.com.interalibras.entity.Usuario;
 import br.com.interalibras.repository.AtividadeRepository;
+import br.com.interalibras.repository.TurmaRepository;
 import br.com.interalibras.repository.UsuarioRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,11 +16,16 @@ public class DataLoader implements CommandLineRunner {
 
     private final AtividadeRepository atividadeRepository;
     private final UsuarioRepository usuarioRepository;
+    private final TurmaRepository turmaRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataLoader(AtividadeRepository atividadeRepository, UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public DataLoader(AtividadeRepository atividadeRepository,
+                      UsuarioRepository usuarioRepository,
+                      TurmaRepository turmaRepository,
+                      PasswordEncoder passwordEncoder) {
         this.atividadeRepository = atividadeRepository;
         this.usuarioRepository = usuarioRepository;
+        this.turmaRepository = turmaRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -77,6 +84,16 @@ public class DataLoader implements CommandLineRunner {
             temaFamilia.addItem(newItem("Irmã", "assets/familia/irma.jpg", "[\"Irmã\", \"Mãe\", \"Tia\"]"));
 
             atividadeRepository.save(temaFamilia);
+        }
+
+        // 3. Semear Turma Padrão se o repositório de turmas estiver vazio
+        if (turmaRepository.count() == 0) {
+            Turma turmaPadrao = new Turma();
+            turmaPadrao.setNome("Turma de Libras - Alfabetização A");
+            turmaPadrao.setDescricao("Turma de introdução e alfabetização básica em Libras");
+            turmaPadrao.setCodigo("LBR-1001");
+            usuarioRepository.findByUsername("admin").ifPresent(turmaPadrao::setUsuario);
+            turmaRepository.save(turmaPadrao);
         }
     }
 

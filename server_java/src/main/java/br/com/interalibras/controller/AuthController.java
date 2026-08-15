@@ -79,13 +79,19 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "Nome de usuário já cadastrado"));
         }
 
-        // Gera código identificador único para a criança se não houver
+        // Define role padrao caso nao informada
+        if (user.getRole() == null || user.getRole().trim().isEmpty()) {
+            user.setRole("USER");
+        }
+
+        // Gera código identificador único conforme a role se não houver
         if (user.getCodigoIdentificador() == null || user.getCodigoIdentificador().trim().isEmpty()) {
+            String prefix = "ADMIN".equalsIgnoreCase(user.getRole()) ? "ADM-" : "ALU-";
             String generatedCode;
             Random random = new Random();
             do {
                 int codeNum = 1000 + random.nextInt(9000);
-                generatedCode = "ALU-" + codeNum;
+                generatedCode = prefix + codeNum;
             } while (usuarioRepository.existsByCodigoIdentificador(generatedCode));
             user.setCodigoIdentificador(generatedCode);
         }

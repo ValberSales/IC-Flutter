@@ -6,14 +6,18 @@ import '../data/models/turma.dart';
 import '../data/models/palavra.dart';
 import '../data/models/usuario.dart';
 import '../data/models/atividade.dart';
+import '../data/repositories/turma_repository.dart';
 import '../data/storage/local_storage_service.dart';
 import '../data/sources/local_data_source.dart';
 import '../services/api_service.dart';
 
 class AppStateProvider extends ChangeNotifier {
+  final TurmaRepository _turmaRepository = TurmaRepository();
+
   Personagem? _activePersonagem;
   List<Personagem> _personagens = [];
   Turma? _activeTurma;
+  List<Turma> _turmas = [];
   List<Palavra> _customPalavras = [];
   List<Atividade> _atividades = [];
   Atividade? _rascunhoAtual;
@@ -32,6 +36,7 @@ class AppStateProvider extends ChangeNotifier {
   List<Personagem> get personagens => _personagens;
   String get currentDificuldade => _activePersonagem?.dificuldade ?? _currentDificuldade;
   Turma? get activeTurma => _activeTurma;
+  List<Turma> get turmas => _turmas;
   List<Palavra> get customPalavras => _customPalavras;
   List<Atividade> get atividades => _atividades;
   List<Usuario> get usuarios => _usuarios;
@@ -61,10 +66,12 @@ class AppStateProvider extends ChangeNotifier {
     _usuarios = LocalStorageService.getUsuariosList();
     _atividades = LocalStorageService.getAtividades();
     _rascunhoAtual = LocalStorageService.getRascunhoAtividade();
+    _turmas = LocalStorageService.getTurmas();
+    _activeTurma = LocalStorageService.getActiveTurma();
     
     // Tenta restabelecer turma se já estiver salva localmente
     final codigoTurma = LocalStorageService.getCodigoTurma();
-    if (codigoTurma != null) {
+    if (codigoTurma != null && _activeTurma == null) {
       _loadMockTurmaForCode(codigoTurma);
     }
 
@@ -79,16 +86,90 @@ class AppStateProvider extends ChangeNotifier {
 
     notifyListeners();
 
-    // Sincroniza atividades e usuários do servidor em segundo plano imediatamente
+    // Sincroniza atividades, usuários e turmas do servidor em segundo plano imediatamente
     fetchAtividadesOnline();
     fetchUsuariosOnline();
+    fetchTurmasOnline();
+    fetchAlunoTurmaOnline();
 
-    // Inicia polling de sincronização em segundo plano (a cada 10 segundos)
+    // Inicia polling de sincronização em segundo plano (a cada 5 segundos para atualizações instantâneas)
     _periodicSyncTimer?.cancel();
-    _periodicSyncTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    _periodicSyncTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       fetchAtividadesOnline();
       fetchUsuariosOnline();
+      fetchTurmasOnline();
+      if (_currentUser != null) {
+        fetchAlunoTurmaOnline();
+      }
     });
+  }
+
+  Future<void> fetchTurmasOnline() async {
+    try {
+      final list = await _turmaRepository.getTurmas();
+      if (list.isNotEmpty) {
+        _turmas = list;
+        await LocalStorageService.saveTurmas(list);
+      }
+
+      // Se for ADMIN/Professor e tem uma turma selecionada, atualiza os dados locais
+      if (_currentUser?.role == 'ADMIN') {
+        if (_activeTurma != null) {
+          final updated = _turmas.where((t) => t.id == _activeTurma!.id || t.codigo == _activeTurma!.codigo);
+          if (updated.isNotEmpty) {
+            _activeTurma = updated.first;
+            await LocalStorageService.setActiveTurma(_activeTurma);
+          }
+        }
+        notifyListeners();
+      } else if (_currentUser != null) {
+        // Se for aluno, consulta a alocação oficial em tempo real
+        await fetchAlunoTurmaOnline();
+      } else {
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Erro ao sincronizar turmas: $e');
+    }
+  }
+
+  Future<void> fetchAlunoTurmaOnline() async {
+    if (_currentUser == null || _currentUser!.id == null) return;
+    try {
+      final t = await _turmaRepository.getTurmaDoAluno(_currentUser!.id!);
+      if (t != null) {
+        _activeTurma = t;
+        await LocalStorageService.setActiveTurma(t);
+        await LocalStorageService.setCodigoTurma(t.codigo);
+      } else {
+        // Aluno não está em nenhuma turma (ou foi removido pelo professor)
+        if (_activeTurma != null) {
+          _activeTurma = null;
+          await LocalStorageService.setActiveTurma(null);
+          await LocalStorageService.setCodigoTurma(null);
+        }
+      }
+      notifyListeners();
+    } catch (e) {
+      print('Erro ao sincronizar turma do aluno logado: $e');
+    }
+  }
+
+  bool isTemaDaTurma(String temaTitulo, int? temaId) {
+    if (_activeTurma == null) return false;
+    if (temaId != null && _activeTurma!.atividadesIds.contains(temaId)) {
+      return true;
+    }
+    if (_activeTurma!.atividadesIds.isNotEmpty) {
+      for (final atv in _atividades) {
+        if (_activeTurma!.atividadesIds.contains(atv.id)) {
+          if (atv.titulo.trim().toLowerCase() == temaTitulo.trim().toLowerCase()) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   Future<void> fetchAtividadesOnline() async {
@@ -104,6 +185,9 @@ class AppStateProvider extends ChangeNotifier {
       print('Sincronização offline mantida: $e');
     }
   }
+
+  Future<void> loadTurmas() => fetchTurmasOnline();
+  Future<void> loadUsuarios({String? busca}) => fetchUsuariosOnline(busca: busca);
 
   Future<void> fetchUsuariosOnline({String? busca}) async {
     try {
@@ -377,6 +461,34 @@ class AppStateProvider extends ChangeNotifier {
     return false;
   }
 
+  Future<Usuario?> createUsuario({
+    required String username,
+    String? nome,
+    String? password,
+    String role = 'USER',
+    String? avatar,
+    bool mustChangePassword = false,
+  }) async {
+    final created = await ApiService.createUsuario(
+      username: username,
+      nome: nome,
+      password: password,
+      role: role,
+      avatar: avatar,
+      mustChangePassword: mustChangePassword,
+    );
+    if (created != null) {
+      final index = _usuarios.indexWhere((u) => u.id == created.id);
+      if (index == -1) {
+        _usuarios.add(created);
+      } else {
+        _usuarios[index] = created;
+      }
+      notifyListeners();
+    }
+    return created;
+  }
+
   Future<bool> deleteUser(int id) async {
     final success = await ApiService.deleteUsuario(id);
     if (success) {
@@ -504,78 +616,164 @@ class AppStateProvider extends ChangeNotifier {
     }
   }
 
-  // --- SINCRONIZAÇÃO DE SALA (CÓDIGO DA TURMA) ---
+  // --- GESTÃO DE TURMAS (CRUD, ALUNOS E TEMAS) ---
 
-  Future<String> sincronizaSala(String codigo) async {
+  Future<Turma?> createTurma({
+    required String nome,
+    String? descricao,
+    String? codigo,
+  }) async {
+    final t = await _turmaRepository.createTurma(
+      nome: nome,
+      descricao: descricao,
+      codigo: codigo,
+      usuarioId: _currentUser?.id,
+    );
+    if (t != null) {
+      _turmas.insert(0, t);
+      await LocalStorageService.saveTurmas(_turmas);
+      notifyListeners();
+      fetchTurmasOnline();
+    }
+    return t;
+  }
+
+  Future<Turma?> updateTurma(
+    int id, {
+    required String nome,
+    String? descricao,
+    String? codigo,
+  }) async {
+    final t = await _turmaRepository.updateTurma(
+      id,
+      nome: nome,
+      descricao: descricao,
+      codigo: codigo,
+    );
+    if (t != null) {
+      final idx = _turmas.indexWhere((item) => item.id == id);
+      if (idx != -1) {
+        _turmas[idx] = t;
+      }
+      if (_activeTurma?.id == id) {
+        _activeTurma = t;
+        await LocalStorageService.setActiveTurma(t);
+      }
+      await LocalStorageService.saveTurmas(_turmas);
+      notifyListeners();
+      fetchTurmasOnline();
+    }
+    return t;
+  }
+
+  Future<bool> deleteTurma(int id) async {
+    final success = await _turmaRepository.deleteTurma(id);
+    if (success) {
+      _turmas.removeWhere((t) => t.id == id);
+      if (_activeTurma?.id == id) {
+        _activeTurma = null;
+        await LocalStorageService.setActiveTurma(null);
+      }
+      await LocalStorageService.saveTurmas(_turmas);
+      notifyListeners();
+    }
+    return success;
+  }
+
+  Future<Turma?> setTurmaAlunos(int turmaId, List<int> alunoIds) async {
+    final t = await _turmaRepository.setTurmaAlunos(turmaId, alunoIds);
+    if (t != null) {
+      final idx = _turmas.indexWhere((item) => item.id == turmaId);
+      if (idx != -1) {
+        _turmas[idx] = t;
+      }
+      if (_activeTurma?.id == turmaId) {
+        _activeTurma = t;
+        await LocalStorageService.setActiveTurma(t);
+      }
+      await LocalStorageService.saveTurmas(_turmas);
+      notifyListeners();
+    }
+    return t;
+  }
+
+  Future<Turma?> removeAlunoFromTurma(int turmaId, int alunoId) async {
+    final t = await _turmaRepository.removeAlunoTurma(turmaId, alunoId);
+    if (t != null) {
+      final idx = _turmas.indexWhere((item) => item.id == turmaId);
+      if (idx != -1) {
+        _turmas[idx] = t;
+      }
+      if (_activeTurma?.id == turmaId && _currentUser?.id == alunoId) {
+        _activeTurma = null;
+        await LocalStorageService.setActiveTurma(null);
+      }
+      await LocalStorageService.saveTurmas(_turmas);
+      notifyListeners();
+    }
+    return t;
+  }
+
+  Future<Turma?> setTurmaAtividades(int turmaId, List<int> atividadeIds) async {
+    final t = await _turmaRepository.setTurmaAtividades(turmaId, atividadeIds);
+    if (t != null) {
+      final idx = _turmas.indexWhere((item) => item.id == turmaId);
+      if (idx != -1) {
+        _turmas[idx] = t;
+      }
+      if (_activeTurma?.id == turmaId) {
+        _activeTurma = t;
+        await LocalStorageService.setActiveTurma(t);
+      }
+      await LocalStorageService.saveTurmas(_turmas);
+      notifyListeners();
+    }
+    return t;
+  }
+
+  Future<String> entrarNaTurma(String codigo) async {
+    if (codigo.trim().isEmpty) return "Por favor, digite o código da turma.";
     _isSyncing = true;
     notifyListeners();
 
     try {
-      final result = await ApiService.buscaPeloCodigo(codigo);
+      final res = await _turmaRepository.entrarTurma(codigo, _currentUser?.id);
       _isSyncing = false;
 
-      if (result != null && result['turma'] != null) {
-        // Salva código localmente
-        await LocalStorageService.setCodigoTurma(codigo);
-        
-        // Limpar personagens da sala anterior (opcional, como no Angular)
-        // No Angular: await IndexDbService.limpaPersonagensSala();
-        
-        // Mapeia os dados do json
-        _activeTurma = Turma.fromJson(result['turma']);
-        
-        final List<dynamic> palavrasJson = result['palavras'] ?? [];
-        _customPalavras = palavrasJson.map((item) => Palavra.fromJson(item)).toList();
-
-        final List<dynamic> personagensJson = result['personagens'] ?? [];
-        final List<Personagem> personagensTurma = personagensJson.map((item) => Personagem.fromJson(item)).toList();
-
-        // Mescla personagens locais com os da turma
-        // Primeiro remove os que têm ID positivo (que pertenciam a turmas antigas)
-        _personagens.removeWhere((p) => p.id != null && p.id! > 0);
-        
-        // Adiciona os novos personagens da turma
-        for (final p in personagensTurma) {
-          await LocalStorageService.savePersonagem(p);
-        }
-        
-        _personagens = LocalStorageService.getPersonagens();
-        
-        // Se o personagem atual foi excluído da lista, limpa o ativo
-        if (_activePersonagem != null && !_personagens.any((p) => p.id == _activePersonagem!.id)) {
-          _activePersonagem = null;
-          await LocalStorageService.setActivePersonagem(null);
-        }
-
+      if (res != null && res['turma'] != null) {
+        final turma = Turma.fromJson(Map<String, dynamic>.from(res['turma'] as Map));
+        _activeTurma = turma;
+        await LocalStorageService.setActiveTurma(turma);
+        await LocalStorageService.setCodigoTurma(turma.codigo);
         notifyListeners();
-        return "Sucesso: Sala carregada com sucesso!";
+        return "Sucesso: Você agora faz parte da turma '${turma.nome}'!";
       } else {
         notifyListeners();
-        return result?['message'] ?? "Erro: Código da turma inválido.";
+        return res?['message'] ?? "Turma não encontrada para o código informado.";
       }
     } catch (e) {
       _isSyncing = false;
       notifyListeners();
-      return "Erro: Ocorreu uma falha ao conectar ao servidor.";
+      return "Erro ao conectar ao servidor.";
     }
   }
 
-  Future<void> desvincularTurma() async {
-    await LocalStorageService.setCodigoTurma(null);
+  Future<void> sairDaTurma() async {
+    await _turmaRepository.sairTurma(_currentUser?.id);
     _activeTurma = null;
-    _customPalavras = [];
-    
-    // Remove personagens com ID positivo (que vieram do backend)
-    _personagens.removeWhere((p) => p.id != null && p.id! > 0);
-    // Persiste a lista limpa
-    await LocalStorageService.savePersonagensList(_personagens);
-    
-    if (_activePersonagem != null && _activePersonagem!.id! > 0) {
-      _activePersonagem = null;
-      await LocalStorageService.setActivePersonagem(null);
-    }
-    
+    await LocalStorageService.setActiveTurma(null);
+    await LocalStorageService.setCodigoTurma(null);
     notifyListeners();
+  }
+
+  // --- SINCRONIZAÇÃO LEGADA DE SALA ---
+
+  Future<String> sincronizaSala(String codigo) async {
+    return await entrarNaTurma(codigo);
+  }
+
+  Future<void> desvincularTurma() async {
+    await sairDaTurma();
   }
 
   // --- GESTÃO DE ATIVIDADES E RASCUNHOS (PROFESSOR) ---
@@ -607,6 +805,17 @@ class AppStateProvider extends ChangeNotifier {
       notifyListeners();
     }
     await ApiService.toggleAtividadeStatus(id);
+    await fetchAtividadesOnline();
+  }
+
+  Future<void> toggleAtividadePublica(int id, bool publica) async {
+    final idx = _atividades.indexWhere((a) => a.id == id);
+    if (idx != -1) {
+      _atividades[idx].publica = publica;
+      _atividades.sort((a, b) => a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase()));
+      notifyListeners();
+    }
+    await ApiService.toggleAtividadePublica(id, publica: publica);
     await fetchAtividadesOnline();
   }
 

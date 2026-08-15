@@ -172,5 +172,36 @@ void main() {
       expect(appState.isLoggedIn, isFalse);
       expect(appState.currentUser, isNull);
     });
+
+    test('createUsuario gera ID com prefixo ADM- para admin e ALU- para aluno', () async {
+      final appState = AppStateProvider();
+      appState.loadInitialState();
+
+      // 1. Criar novo Aluno
+      final aluno = await appState.createUsuario(
+        username: 'aluno_teste',
+        nome: 'Aluno Teste',
+        role: 'USER',
+        password: '123',
+      );
+      expect(aluno, isNotNull);
+      expect(aluno!.role, equals('USER'));
+      expect(aluno.codigoIdentificador, isNotNull);
+      expect(aluno.codigoIdentificador!.startsWith('ALU-'), isTrue);
+      expect(aluno.isAdmin, isFalse);
+
+      // 2. Criar novo Professor / Admin
+      final admin = await appState.createUsuario(
+        username: 'professor_teste',
+        nome: 'Professor Teste',
+        role: 'ADMIN',
+        password: 'admin_pass_123',
+      );
+      expect(admin, isNotNull);
+      expect(admin!.role, equals('ADMIN'));
+      expect(admin.codigoIdentificador, isNotNull);
+      expect(admin.codigoIdentificador!.startsWith('ADM-'), isTrue);
+      expect(admin.isAdmin, isTrue);
+    });
   });
 }

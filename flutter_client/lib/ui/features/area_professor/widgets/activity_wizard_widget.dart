@@ -163,6 +163,65 @@ class _ActivityWizardWidgetState extends State<ActivityWizardWidget> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+
+                  // Seletor de Visibilidade (Pública vs Privada / Turmas)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: vm.selectedPublica ? AppColors.primary.withOpacity(0.06) : Colors.amber.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: vm.selectedPublica ? AppColors.primary.withOpacity(0.3) : Colors.amber.shade700.withOpacity(0.4),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: vm.selectedPublica ? AppColors.primary.withOpacity(0.15) : Colors.amber.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            vm.selectedPublica ? Icons.public_rounded : Icons.lock_rounded,
+                            size: 24,
+                            color: vm.selectedPublica ? AppColors.primary : Colors.amber.shade900,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                vm.selectedPublica ? 'Visibilidade: Pública (Geral)' : 'Visibilidade: Privada (Exclusiva para Turmas)',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: vm.selectedPublica ? AppColors.primary : Colors.amber.shade900,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                vm.selectedPublica
+                                    ? 'A atividade ficará visível para convidados e todos os alunos logados.'
+                                    : 'A atividade ficará restrita apenas aos alunos das turmas onde você direcionar este tema.',
+                                style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.75)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: vm.selectedPublica,
+                          activeColor: AppColors.primary,
+                          inactiveThumbColor: Colors.amber.shade800,
+                          inactiveTrackColor: Colors.amber.shade200,
+                          onChanged: vm.setPublica,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 28),
 
                   // Passo 2: Palavras & Imagens

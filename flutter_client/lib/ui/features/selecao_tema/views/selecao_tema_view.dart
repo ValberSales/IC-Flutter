@@ -36,6 +36,11 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
       tipoJogo: widget.tipoJogo,
       initialDifficulty: widget.initialDifficulty,
     );
+    // Atualização imediata ao abrir a tela
+    appState.fetchAtividadesOnline();
+    if (appState.currentUser != null) {
+      appState.fetchAlunoTurmaOnline();
+    }
   }
 
   Widget _buildDiffChip(
@@ -101,11 +106,33 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
         builder: (context, vm, _) {
           final diff = vm.currentDifficulty;
 
-          // Carrega apenas os temas reais cadastrados / persistidos no banco de dados, ordenados alfabeticamente
-          final atividadesDisponiveis = state.atividades
-              .where((a) => a.ativo && a.tipoJogo == widget.tipoJogo)
-              .toList()
-            ..sort((a, b) => a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase()));
+          // Filtra os temas disponíveis conforme o status global e a visibilidade (Pública vs Turma)
+          final atividadesDisponiveis = state.atividades.where((a) {
+            // Regra 1: Deve estar ativo globalmente
+            if (!a.ativo) return false;
+            // Regra 2: Tipo de jogo correspondente
+            if (a.tipoJogo != widget.tipoJogo) return false;
+
+            // Se for Professor/Admin, pode visualizar todos os temas ativos para teste
+            if (state.currentUser?.role == 'ADMIN') return true;
+
+            final isAlocadaNaTurma = state.isTemaDaTurma(a.titulo, a.id);
+
+            // Regra 3: Convidado / Não logado só visualiza atividades públicas
+            if (state.isGuestMode || !state.isLoggedIn) {
+              return a.publica;
+            }
+
+            // Regra 4: Aluno logado visualiza se for pública OU se for direcionada à sua turma ativa
+            return a.publica || isAlocadaNaTurma;
+          }).toList()
+            ..sort((a, b) {
+              final aTurma = state.isTemaDaTurma(a.titulo, a.id);
+              final bTurma = state.isTemaDaTurma(b.titulo, b.id);
+              if (aTurma && !bTurma) return -1;
+              if (!aTurma && bTurma) return 1;
+              return a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase());
+            });
           final avatarPath = state.currentUser?.avatar ?? state.activePersonagem?.avatar ?? 'assets/avatar/avatar_1.jpg';
 
           return Scaffold(
@@ -246,6 +273,33 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
                                 ],
                               ),
                             ),
+                            if (state.activeTurma != null) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accent.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.accent.withOpacity(0.4)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.school_rounded, color: AppColors.accent, size: 22),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        'Turma Ativa: ${state.activeTurma!.nome} (PIN: ${state.activeTurma!.codigo}) — Atividades direcionadas pelo seu professor estão destacadas com 🎯',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textDark,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 24),
 
                             if (atividadesDisponiveis.isEmpty)
@@ -304,6 +358,8 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
                                     dificuldade: diff,
                                   );
 
+                                  final bool isAssigned = state.isTemaDaTurma(atv.titulo, atv.id);
+
                                   return TemaCardWidget(
                                     titulo: atv.titulo,
                                     descricao: 'Tema com ${atv.itens.length} palavras cadastradas',
@@ -312,6 +368,7 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
                                         : (isAdivinhacao ? Icons.pets_rounded : Icons.diversity_3_rounded),
                                     cor: themeColor,
                                     isTeacherCreated: true,
+                                    isTurmaAssigned: isAssigned,
                                     pctConclusao: pctConclusao,
                                     pctAcertos: pctAcertos,
                                     onTap: () {

@@ -64,6 +64,21 @@ public class AtividadeController {
         return ResponseEntity.notFound().build();
     }
 
+    @PatchMapping("/{id}/publica")
+    public ResponseEntity<Atividade> togglePublica(@PathVariable Long id, @RequestParam(required = false) Boolean publica) {
+        Optional<Atividade> opt = atividadeRepository.findById(id);
+        if (opt.isPresent()) {
+            Atividade a = opt.get();
+            if (publica != null) {
+                a.setPublica(publica);
+            } else {
+                a.setPublica(!a.isPublica());
+            }
+            return ResponseEntity.ok(atividadeRepository.save(a));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAtividade(@PathVariable Long id) {
         if (atividadeRepository.existsById(id)) {

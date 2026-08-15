@@ -11,6 +11,8 @@ class AreaProfessorViewModel extends ChangeNotifier {
   String _selectedTipoJogo = 'JOGO_ADIVINHACAO';
   String _selectedDificuldade = 'FACIL';
   String _selectedIconKey = 'pets';
+  bool _selectedPublica = true;
+  bool _selectedAtivo = true;
   String _categoriaFiltro = 'TODOS';
   List<ItemAtividade> _editingItens = [];
 
@@ -29,6 +31,8 @@ class AreaProfessorViewModel extends ChangeNotifier {
   String get selectedTipoJogo => _selectedTipoJogo;
   String get selectedDificuldade => _selectedDificuldade;
   String get selectedIconKey => _selectedIconKey;
+  bool get selectedPublica => _selectedPublica;
+  bool get selectedAtivo => _selectedAtivo;
   String get categoriaFiltro => _categoriaFiltro;
   List<ItemAtividade> get editingItens => _editingItens;
 
@@ -71,18 +75,32 @@ class AreaProfessorViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setPublica(bool val) {
+    _selectedPublica = val;
+    notifyListeners();
+  }
+
+  void setAtivo(bool val) {
+    _selectedAtivo = val;
+    notifyListeners();
+  }
+
   void initCreationForm({Atividade? existingAtividade}) {
     if (existingAtividade != null) {
       _editingActivityId = existingAtividade.id;
       _selectedTipoJogo = existingAtividade.tipoJogo;
       _selectedDificuldade = existingAtividade.dificuldade;
       _selectedIconKey = existingAtividade.icone ?? 'pets';
+      _selectedPublica = existingAtividade.publica;
+      _selectedAtivo = existingAtividade.ativo;
       _editingItens = List.from(existingAtividade.itens);
     } else {
       _editingActivityId = null;
       _selectedTipoJogo = 'JOGO_ADIVINHACAO';
       _selectedDificuldade = 'FACIL';
       _selectedIconKey = 'pets';
+      _selectedPublica = true;
+      _selectedAtivo = true;
       _editingItens = [];
     }
     _isCreatingActivity = true;
@@ -157,7 +175,8 @@ class AreaProfessorViewModel extends ChangeNotifier {
       dificuldade: _selectedDificuldade,
       icone: _selectedIconKey,
       rascunho: true,
-      ativo: true,
+      ativo: _selectedAtivo,
+      publica: _selectedPublica,
       itens: _editingItens,
     );
     await appState.salvarRascunhoAtividade(atv);
@@ -173,7 +192,8 @@ class AreaProfessorViewModel extends ChangeNotifier {
       dificuldade: _selectedDificuldade,
       icone: _selectedIconKey,
       rascunho: false,
-      ativo: true,
+      ativo: _selectedAtivo,
+      publica: _selectedPublica,
       itens: _editingItens,
     );
     await appState.publicarAtividade(atv);

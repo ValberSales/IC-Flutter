@@ -238,42 +238,207 @@ class ActivityListDashboardWidget extends StatelessWidget {
                         size: 32,
                       ),
                     ),
-                    title: Row(
+                    title: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         Text(atv.titulo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 12),
+                        // Badge 1: Status Global
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: atv.ativo ? AppColors.accentLight : AppColors.errorLight,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(
-                            atv.ativo ? 'Ativo' : 'Inativo',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: atv.ativo ? AppColors.accent : AppColors.error),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                atv.ativo ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                                size: 13,
+                                color: atv.ativo ? AppColors.accent : AppColors.error,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                atv.ativo ? 'Ativo' : 'Inativo',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: atv.ativo ? AppColors.accent : AppColors.error,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Badge 2: Visibilidade Pública / Privada
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: atv.publica
+                                ? AppColors.primaryLight.withOpacity(0.2)
+                                : Colors.amber.shade100,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                atv.publica ? Icons.public_rounded : Icons.lock_rounded,
+                                size: 13,
+                                color: atv.publica ? AppColors.primaryDark : Colors.amber.shade900,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                atv.publica ? 'Pública' : 'Privada (Turmas)',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: atv.publica ? AppColors.primaryDark : Colors.amber.shade900,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                     subtitle: Padding(
                       padding: const EdgeInsets.only(top: 6.0),
-                      child: Text(
-                        'Tipo: ${isAdivinhacao ? 'Adivinhação (Libras)' : 'Jogo de Palavras (Associação)'}  •  ${atv.itens.length} palavra(s) cadastrada(s)',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tipo: ${isAdivinhacao ? 'Adivinhação (Libras)' : 'Jogo de Palavras (Associação)'}  •  ${atv.itens.length} palavra(s)',
+                            style: TextStyle(fontSize: 13, color: AppColors.textDark.withOpacity(0.8)),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            !atv.ativo
+                                ? '⚠️ Desativado globalmente (não aparece para ninguém).'
+                                : (atv.publica
+                                    ? '🌐 Visível para convidados e turmas.'
+                                    : '🔒 Visível somente para turmas com tema direcionado.'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: !atv.ativo
+                                  ? AppColors.error
+                                  : (atv.publica ? AppColors.primary : Colors.amber.shade900),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Switch(
-                          value: atv.ativo,
-                          activeColor: AppColors.accent,
-                          onChanged: (val) => state.toggleAtividadeStatus(atv.id!, val),
+                        // Toggle 1: Pública / Privada
+                        Tooltip(
+                          message: atv.publica
+                              ? 'Tornar Privada (exclusiva para turmas direcionadas)'
+                              : 'Tornar Pública (visível para convidados e todos)',
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: atv.publica
+                                  ? AppColors.primary.withOpacity(0.08)
+                                  : Colors.amber.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: atv.publica
+                                    ? AppColors.primary.withOpacity(0.3)
+                                    : Colors.amber.shade700.withOpacity(0.35),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  atv.publica ? Icons.public_rounded : Icons.lock_rounded,
+                                  size: 16,
+                                  color: atv.publica ? AppColors.primary : Colors.amber.shade900,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  atv.publica ? 'Pública' : 'Privada',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: atv.publica ? AppColors.primary : Colors.amber.shade900,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Switch(
+                                  value: atv.publica,
+                                  activeColor: AppColors.primary,
+                                  inactiveThumbColor: Colors.amber.shade800,
+                                  inactiveTrackColor: Colors.amber.shade200,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  onChanged: (val) => state.toggleAtividadePublica(atv.id!, val),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
+                        const SizedBox(width: 12),
+
+                        // Toggle 2: Ativo / Inativo Global
+                        Tooltip(
+                          message: atv.ativo
+                              ? 'Desativar tema globalmente'
+                              : 'Ativar tema no sistema',
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: atv.ativo
+                                  ? AppColors.accent.withOpacity(0.08)
+                                  : AppColors.error.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: atv.ativo
+                                    ? AppColors.accent.withOpacity(0.3)
+                                    : AppColors.error.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  atv.ativo ? Icons.power_settings_new_rounded : Icons.power_off_rounded,
+                                  size: 16,
+                                  color: atv.ativo ? AppColors.accent : AppColors.error,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  atv.ativo ? 'Ativa' : 'Inativa',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: atv.ativo ? AppColors.accent : AppColors.error,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Switch(
+                                  value: atv.ativo,
+                                  activeColor: AppColors.accent,
+                                  inactiveThumbColor: AppColors.error,
+                                  inactiveTrackColor: AppColors.errorLight,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  onChanged: (val) => state.toggleAtividadeStatus(atv.id!, val),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+
                         IconButton(
+                          tooltip: 'Editar Tema',
                           icon: const Icon(Icons.edit_rounded, color: AppColors.primary),
                           onPressed: () => viewModel.initCreationForm(existingAtividade: atv),
                         ),
                         IconButton(
+                          tooltip: 'Excluir Tema',
                           icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
                           onPressed: () {
                             showDialog(

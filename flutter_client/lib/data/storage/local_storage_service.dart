@@ -4,6 +4,7 @@ import '../models/personagem.dart';
 import '../models/pontuacao.dart';
 import '../models/usuario.dart';
 import '../models/atividade.dart';
+import '../models/turma.dart';
 
 class LocalStorageService {
   static late SharedPreferences _prefs;
@@ -12,6 +13,8 @@ class LocalStorageService {
   static const String _keyPontuacoes = 'JOGO_LIBRAS_PONTUACOES';
   static const String _keyActivePersonagemId = 'JOGO_LIBRAS_ACTIVE_PERSONAGEM_ID';
   static const String _keyCodigoTurma = 'CODIGO_TURMA';
+  static const String _keyActiveTurma = 'ACTIVE_TURMA';
+  static const String _keyTurmasList = 'JOGO_LIBRAS_TURMAS_LIST';
   static const String _keyLetrasAntigas = 'LETRAS_ANTIGAS';
   static const String _keyToken = 'auth_token';
   static const String _keyUser = 'logged_in_user';
@@ -90,6 +93,8 @@ class LocalStorageService {
   }
 
   // --- CACHE DE USUÁRIOS (OFFLINE-FIRST) ---
+
+  static List<Usuario> getUsuarios() => getUsuariosList();
 
   static List<Usuario> getUsuariosList() {
     final raw = _prefs.getString(_keyUsuariosList);
@@ -338,6 +343,56 @@ class LocalStorageService {
 
   static Future<void> clearRascunhoAtividade() async {
     await _prefs.remove(_keyRascunhoAtividade);
+  }
+
+  // --- TURMAS (OFFLINE STORAGE) ---
+
+  static List<Turma> getTurmas() {
+    final raw = _prefs.getString(_keyTurmasList);
+    if (raw == null) {
+      return [
+        Turma(
+          id: 1,
+          nome: "Turma de Libras - Alfabetização A",
+          descricao: "Turma de introdução e alfabetização básica em Libras",
+          codigo: "LBR-1001",
+          totalAlunos: 0,
+          totalAtividades: 0,
+          atividadesIds: const [],
+          createdAt: DateTime.now(),
+        ),
+      ];
+    }
+    try {
+      final list = jsonDecode(raw) as List;
+      return list.map((e) => Turma.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> saveTurmas(List<Turma> turmas) async {
+    await _prefs.setString(_keyTurmasList, jsonEncode(turmas.map((t) => t.toJson()).toList()));
+  }
+
+  static Turma? getActiveTurma() {
+    final raw = _prefs.getString(_keyActiveTurma);
+    if (raw == null) return null;
+    try {
+      return Turma.fromJson(jsonDecode(raw));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> setActiveTurma(Turma? turma) async {
+    if (turma == null) {
+      await _prefs.remove(_keyActiveTurma);
+      await _prefs.remove(_keyCodigoTurma);
+    } else {
+      await _prefs.setString(_keyActiveTurma, jsonEncode(turma.toJson()));
+      await _prefs.setString(_keyCodigoTurma, turma.codigo);
+    }
   }
 }
 

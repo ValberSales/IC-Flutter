@@ -32,6 +32,7 @@ class Atividade extends AbstractModel {
   String titulo; // Tema
   String tipoJogo; // 'JOGO_ADIVINHACAO' | 'JOGO_PALAVRAS'
   bool ativo;
+  bool publica; // true = pública (convidados + turmas), false = privada (apenas turmas direcionadas)
   bool rascunho; // Se true, o professor salvou progresso sem publicar
   String dificuldade; // 'FACIL' | 'MEDIO' | 'DIFICIL'
   String? criadoPor;
@@ -44,6 +45,7 @@ class Atividade extends AbstractModel {
     required this.titulo,
     required this.tipoJogo,
     this.ativo = true,
+    this.publica = true,
     this.rascunho = false,
     this.dificuldade = 'FACIL',
     this.criadoPor,
@@ -58,6 +60,7 @@ class Atividade extends AbstractModel {
       titulo: json['titulo'] as String? ?? '',
       tipoJogo: json['tipoJogo'] as String? ?? 'JOGO_ADIVINHACAO',
       ativo: json['ativo'] as bool? ?? true,
+      publica: json['publica'] as bool? ?? true,
       rascunho: json['rascunho'] as bool? ?? false,
       dificuldade: json['dificuldade'] as String? ?? 'FACIL',
       criadoPor: json['criadoPor'] as String?,
@@ -76,11 +79,40 @@ class Atividade extends AbstractModel {
       'titulo': titulo,
       'tipoJogo': tipoJogo,
       'ativo': ativo,
+      'publica': publica,
       'rascunho': rascunho,
       'dificuldade': dificuldade,
       'criadoPor': criadoPor,
       'icone': icone,
       'itens': itens.map((i) => i.toJson()).toList(),
     };
+  }
+
+  Atividade copyWith({
+    int? id,
+    DateTime? createdAt,
+    String? titulo,
+    String? tipoJogo,
+    bool? ativo,
+    bool? publica,
+    bool? rascunho,
+    String? dificuldade,
+    String? criadoPor,
+    String? icone,
+    List<ItemAtividade>? itens,
+  }) {
+    return Atividade(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      titulo: titulo ?? this.titulo,
+      tipoJogo: tipoJogo ?? this.tipoJogo,
+      ativo: ativo ?? this.ativo,
+      publica: publica ?? this.publica,
+      rascunho: rascunho ?? this.rascunho,
+      dificuldade: dificuldade ?? this.dificuldade,
+      criadoPor: criadoPor ?? this.criadoPor,
+      icone: icone ?? this.icone,
+      itens: itens ?? this.itens,
+    );
   }
 }

@@ -29,9 +29,12 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
   late TextEditingController _usernameController;
   late TextEditingController _passwordController;
   late TextEditingController _confirmPasswordController;
+  late TextEditingController _pinController;
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isJoiningTurma = false;
+  String? _turmaMessage;
 
   @override
   void initState() {
@@ -42,6 +45,10 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
     _usernameController = TextEditingController(text: user?.username ?? '');
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
+    _pinController = TextEditingController();
+    if (user != null) {
+      state.fetchAlunoTurmaOnline();
+    }
   }
 
   @override
@@ -50,6 +57,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _pinController.dispose();
     super.dispose();
   }
 
@@ -319,6 +327,11 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                 ),
                 const SizedBox(height: 18),
 
+                // Card Minha Turma / Vincular Turma
+                _buildTurmaCard(context, state),
+
+                const SizedBox(height: 18),
+
                 // Botão para abrir formulário de edição de nome, usuário e senha
                 if (!isGuest) ...[
                   OutlinedButton.icon(
@@ -503,6 +516,196 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildTurmaCard(BuildContext context, AppStateProvider state) {
+    final activeTurma = state.activeTurma;
+
+    if (activeTurma != null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.school_rounded, color: AppColors.primary, size: 22),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Minha Turma',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      Text(
+                        activeTurma.nome,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textDark,
+                          fontFamily: 'Fredoka',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    activeTurma.codigo,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  activeTurma.atividadesIds.isNotEmpty
+                      ? '🎯 ${activeTurma.atividadesIds.length} tema(s) da turma'
+                      : 'Nenhum tema atribuído ainda',
+                  style: TextStyle(fontSize: 12.5, color: AppColors.textDark.withOpacity(0.7)),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  onPressed: () async {
+                    await state.sairDaTurma();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Você saiu da turma com sucesso.'),
+                          backgroundColor: AppColors.info,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Sair da Turma', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.bgSoft,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.vpn_key_rounded, color: AppColors.primary, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Entrar em uma Turma',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDark),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Digite o código PIN fornecido pelo seu professor para acessar as atividades direcionadas:',
+            style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _pinController,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    hintText: 'Ex: LBR-1001',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: _isJoiningTurma
+                    ? null
+                    : () async {
+                        final pin = _pinController.text.trim();
+                        if (pin.isEmpty) return;
+                        setState(() => _isJoiningTurma = true);
+                        final msg = await state.entrarNaTurma(pin);
+                        setState(() {
+                          _isJoiningTurma = false;
+                          _turmaMessage = msg;
+                        });
+                        _pinController.clear();
+                      },
+                child: _isJoiningTurma
+                    ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text('Entrar', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          if (_turmaMessage != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _turmaMessage!,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: _turmaMessage!.startsWith('Sucesso') ? AppColors.accent : AppColors.error,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

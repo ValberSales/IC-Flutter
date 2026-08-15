@@ -193,11 +193,50 @@ class ApiService {
     try {
       final url = Uri.parse('$baseUrl/atividades/$id/status');
       final response = await http.patch(url, headers: _getHeaders());
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        final atividades = LocalStorageService.getAtividades();
+        final index = atividades.indexWhere((a) => a.id == id);
+        if (index != -1) {
+          atividades[index].ativo = !atividades[index].ativo;
+          await LocalStorageService.saveAtividade(atividades[index]);
+        }
+        return true;
+      }
     } catch (e) {
       print('Erro ao alternar status da atividade no backend Java: $e');
+    }
+    return false;
+  }
+
+  static Future<bool> toggleAtividadePublica(int id, {bool? publica}) async {
+    if (!useBackend) {
+      final atividades = LocalStorageService.getAtividades();
+      final index = atividades.indexWhere((a) => a.id == id);
+      if (index != -1) {
+        atividades[index].publica = publica ?? !atividades[index].publica;
+        await LocalStorageService.saveAtividade(atividades[index]);
+        return true;
+      }
       return false;
     }
+
+    try {
+      final query = publica != null ? '?publica=$publica' : '';
+      final url = Uri.parse('$baseUrl/atividades/$id/publica$query');
+      final response = await http.patch(url, headers: _getHeaders());
+      if (response.statusCode == 200) {
+        final atividades = LocalStorageService.getAtividades();
+        final index = atividades.indexWhere((a) => a.id == id);
+        if (index != -1) {
+          atividades[index].publica = publica ?? !atividades[index].publica;
+          await LocalStorageService.saveAtividade(atividades[index]);
+        }
+        return true;
+      }
+    } catch (e) {
+      print('Erro ao alternar visibilidade publica/privada da atividade: $e');
+    }
+    return false;
   }
 
   static Future<bool> deleteAtividade(int id) async {
@@ -234,34 +273,329 @@ class ApiService {
     return LocalStorageService.getRascunhoAtividade();
   }
 
-  // --- TURMA / SINCRONIZAÇÃO ---
+  // --- TURMA / GESTÃO DE TURMAS ---
+
+  static Future<List<Turma>> getTurmas() async {
+    if (!useBackend) {
+      return LocalStorageService.getTurmas();
+    }
+    try {
+      final url = Uri.parse('$baseUrl/turmas');
+      final response = await http.get(url, headers: _getHeaders(includeContentType: false));
+      if (response.statusCode == 200) {
+        final list = jsonDecode(response.body) as List;
+        return list.map((e) => Turma.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+      }
+    } catch (e) {
+      print('Erro ao buscar turmas no backend: $e');
+    }
+    return LocalStorageService.getTurmas();
+  }
+
+  static Future<Turma?> getTurma(int id) async {
+    if (!useBackend) {
+      final turmas = LocalStorageService.getTurmas();
+      return turmas.firstWhere((t) => t.id == id, orElse: () => Turma(id: id));
+    }
+    try {
+      final url = Uri.parse('$baseUrl/turmas/$id');
+      final response = await http.get(url, headers: _getHeaders(includeContentType: false));
+      if (response.statusCode == 200) {
+        return Turma.fromJson(jsonDecode(response.body));
+      }
+    } catch (e) {
+      print('Erro ao buscar detalhes da turma $id: $e');
+    }
+    return null;
+  }
 
   static Future<Map<String, dynamic>?> buscaPeloCodigo(String codigo) async {
     if (!useBackend) {
-      await Future.delayed(const Duration(seconds: 1));
-      if (codigo == "12345") {
+      await Future.delayed(const Duration(milliseconds: 300));
+      final turmas = LocalStorageService.getTurmas();
+      final clean = codigo.trim().toUpperCase();
+      final match = turmas.where((t) => t.codigo.toUpperCase() == clean);
+      if (match.isNotEmpty) {
         return {
-          "turma": Turma(
-            id: 1,
-            nome: "Turma de Libras - Alfabetização A",
-            codigo: "12345",
-            createdAt: DateTime.now(),
-          ).toJson(),
-          "message": "Sala carregada com sucesso!"
+          "turma": match.first.toJson(),
+          "message": "Turma encontrada com sucesso!"
         };
       }
       return null;
     }
 
     try {
-      final url = Uri.parse('$baseUrl/turmas/busca/$codigo');
+      final url = Uri.parse('$baseUrl/turmas/busca/${codigo.trim().toUpperCase()}');
       final response = await http.get(url, headers: _getHeaders(includeContentType: false));
-      
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
     } catch (e) {
       print('Erro ao buscar código da turma: $e');
+    }
+    return null;
+  }
+
+  static Future<Turma?> createTurma(Map<String, dynamic> payload) async {
+    if (!useBackend) {
+      final nova = Turma(
+        id: DateTime.now().millisecondsSinceEpoch,
+        nome: payload['nome'] as String? ?? 'Nova Turma',
+        descricao: payload['descricao'] as String? ?? '',
+        codigo: payload['codigo'] as String? ?? 'LBR-${DateTime.now().millisecondsSinceEpoch % 10000}',
+        createdAt: DateTime.now(),
+      );
+      final list = LocalStorageService.getTurmas();
+      list.add(nova);
+      await LocalStorageService.saveTurmas(list);
+      return nova;
+    }
+    try {
+      final url = Uri.parse('$baseUrl/turmas');
+      final response = await http.post(url, headers: _getHeaders(), body: jsonEncode(payload));
+      if (response.statusCode == 200) {
+        return Turma.fromJson(jsonDecode(response.body));
+      }
+    } catch (e) {
+      print('Erro ao criar turma: $e');
+    }
+    return null;
+  }
+
+  static Future<Turma?> updateTurma(int id, Map<String, dynamic> payload) async {
+    if (!useBackend) {
+      final list = LocalStorageService.getTurmas();
+      final idx = list.indexWhere((t) => t.id == id);
+      if (idx != -1) {
+        list[idx] = list[idx].copyWith(
+          nome: payload['nome'] as String?,
+          descricao: payload['descricao'] as String?,
+          codigo: payload['codigo'] as String?,
+        );
+        await LocalStorageService.saveTurmas(list);
+        return list[idx];
+      }
+      return null;
+    }
+    try {
+      final url = Uri.parse('$baseUrl/turmas/$id');
+      final response = await http.put(url, headers: _getHeaders(), body: jsonEncode(payload));
+      if (response.statusCode == 200) {
+        return Turma.fromJson(jsonDecode(response.body));
+      }
+    } catch (e) {
+      print('Erro ao atualizar turma $id: $e');
+    }
+    return null;
+  }
+
+  static Future<bool> deleteTurma(int id) async {
+    if (!useBackend) {
+      final list = LocalStorageService.getTurmas();
+      list.removeWhere((t) => t.id == id);
+      await LocalStorageService.saveTurmas(list);
+      return true;
+    }
+    try {
+      final url = Uri.parse('$baseUrl/turmas/$id');
+      final response = await http.delete(url, headers: _getHeaders(includeContentType: false));
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Erro ao deletar turma $id: $e');
+    }
+    return false;
+  }
+
+  static Future<Turma?> setTurmaAlunos(int id, List<int> alunoIds) async {
+    if (useBackend) {
+      try {
+        final url = Uri.parse('$baseUrl/turmas/$id/alunos');
+        final response = await http.post(
+          url,
+          headers: _getHeaders(),
+          body: jsonEncode({"alunoIds": alunoIds}),
+        );
+        if (response.statusCode == 200) {
+          final resTurma = Turma.fromJson(jsonDecode(response.body));
+          final list = LocalStorageService.getTurmas();
+          final idx = list.indexWhere((t) => t.id == id);
+          if (idx != -1) {
+            list[idx] = resTurma;
+          } else {
+            list.add(resTurma);
+          }
+          await LocalStorageService.saveTurmas(list);
+          return resTurma;
+        } else {
+          print('Erro backend setTurmaAlunos status ${response.statusCode}: ${response.body}');
+        }
+      } catch (e) {
+        print('Erro ao salvar alunos da turma $id via API: $e');
+      }
+    }
+
+    // Fallback Local
+    final list = LocalStorageService.getTurmas();
+    final idx = list.indexWhere((t) => t.id == id);
+    if (idx != -1) {
+      final allUsers = LocalStorageService.getUsuarios();
+      final allocated = allUsers.where((u) => u.id != null && alunoIds.contains(u.id)).toList();
+      list[idx] = list[idx].copyWith(
+        alunos: allocated,
+        totalAlunos: alunoIds.length,
+      );
+      await LocalStorageService.saveTurmas(list);
+      return list[idx];
+    }
+    return null;
+  }
+
+  static Future<Turma?> removeAlunoTurma(int turmaId, int alunoId) async {
+    if (useBackend) {
+      try {
+        final url = Uri.parse('$baseUrl/turmas/$turmaId/alunos/$alunoId');
+        final response = await http.delete(url, headers: _getHeaders(includeContentType: false));
+        if (response.statusCode == 200) {
+          return Turma.fromJson(jsonDecode(response.body));
+        }
+      } catch (e) {
+        print('Erro ao remover aluno $alunoId da turma $turmaId: $e');
+      }
+    }
+
+    final list = LocalStorageService.getTurmas();
+    final idx = list.indexWhere((t) => t.id == turmaId);
+    if (idx != -1) {
+      final alunos = list[idx].alunos.where((a) => a.id != alunoId).toList();
+      list[idx] = list[idx].copyWith(alunos: alunos, totalAlunos: alunos.length);
+      await LocalStorageService.saveTurmas(list);
+      return list[idx];
+    }
+    return null;
+  }
+
+  static Future<Turma?> setTurmaAtividades(int id, List<int> atividadeIds) async {
+    if (useBackend) {
+      try {
+        final url = Uri.parse('$baseUrl/turmas/$id/atividades');
+        final response = await http.post(
+          url,
+          headers: _getHeaders(),
+          body: jsonEncode({"atividadeIds": atividadeIds}),
+        );
+        if (response.statusCode == 200) {
+          final resTurma = Turma.fromJson(jsonDecode(response.body));
+          final list = LocalStorageService.getTurmas();
+          final idx = list.indexWhere((t) => t.id == id);
+          if (idx != -1) {
+            list[idx] = resTurma;
+          } else {
+            list.add(resTurma);
+          }
+          await LocalStorageService.saveTurmas(list);
+          return resTurma;
+        } else {
+          print('Erro backend setTurmaAtividades status ${response.statusCode}: ${response.body}');
+        }
+      } catch (e) {
+        print('Erro ao atribuir temas/atividades à turma $id via API: $e');
+      }
+    }
+
+    // Fallback Local
+    final list = LocalStorageService.getTurmas();
+    final idx = list.indexWhere((t) => t.id == id);
+    if (idx != -1) {
+      list[idx] = list[idx].copyWith(
+        atividadesIds: atividadeIds,
+        totalAtividades: atividadeIds.length,
+      );
+      await LocalStorageService.saveTurmas(list);
+      return list[idx];
+    }
+    return null;
+  }
+
+  static Future<Map<String, dynamic>?> entrarTurma(String codigo, int? alunoId) async {
+    if (!useBackend) {
+      final res = await buscaPeloCodigo(codigo);
+      if (res != null && res['turma'] != null) {
+        final turma = Turma.fromJson(res['turma']);
+        await LocalStorageService.setActiveTurma(turma);
+        await LocalStorageService.setCodigoTurma(turma.codigo);
+        return res;
+      }
+      return null;
+    }
+    try {
+      final url = Uri.parse('$baseUrl/turmas/entrar');
+      final response = await http.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode({
+          "codigo": codigo.trim().toUpperCase(),
+          "alunoId": alunoId,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      print('Erro ao entrar na turma: $e');
+    }
+    return null;
+  }
+
+  static Future<bool> sairTurma(int? alunoId) async {
+    await LocalStorageService.setActiveTurma(null);
+    await LocalStorageService.setCodigoTurma(null);
+    if (!useBackend) {
+      return true;
+    }
+    try {
+      final url = Uri.parse('$baseUrl/turmas/sair');
+      final response = await http.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode({"alunoId": alunoId}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Erro ao sair da turma: $e');
+    }
+    return true;
+  }
+
+  static Future<Turma?> getTurmaDoAluno(int alunoId) async {
+    if (!useBackend) {
+      final active = LocalStorageService.getActiveTurma();
+      if (active != null) {
+        final list = LocalStorageService.getTurmas();
+        final match = list.where((t) => t.id == active.id || t.codigo == active.codigo);
+        if (match.isNotEmpty) {
+          final t = match.first;
+          final isAlunoEnrolled = t.alunos.any((a) => a.id == alunoId) || (t.alunoIds.contains(alunoId));
+          if (isAlunoEnrolled) return t;
+        }
+      }
+      return null;
+    }
+    try {
+      final url = Uri.parse('$baseUrl/turmas/aluno/$alunoId');
+      final response = await http.get(url, headers: _getHeaders(includeContentType: false));
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final trimmed = response.body.trim();
+        if (trimmed == '{}' || trimmed == 'null' || trimmed.isEmpty) {
+          return null;
+        }
+        final map = jsonDecode(response.body);
+        if (map is Map<String, dynamic> && map.containsKey('id') && map['id'] != null) {
+          return Turma.fromJson(map);
+        }
+        return null;
+      }
+    } catch (e) {
+      print('Erro ao buscar turma do aluno $alunoId: $e');
     }
     return null;
   }
@@ -370,6 +704,62 @@ class ApiService {
     }
 
     return LocalStorageService.getUsuariosList();
+  }
+
+  static Future<Usuario?> createUsuario({
+    required String username,
+    String? nome,
+    String? password,
+    String role = 'USER',
+    String? avatar,
+    bool mustChangePassword = false,
+  }) async {
+    if (!useBackend) {
+      final list = LocalStorageService.getUsuariosList();
+      final prefix = role.toUpperCase() == 'ADMIN' ? 'ADM-' : 'ALU-';
+      final random = math.Random();
+      final code = '$prefix${1000 + random.nextInt(9000)}';
+      final newUser = Usuario(
+        id: DateTime.now().millisecondsSinceEpoch,
+        nome: nome != null && nome.isNotEmpty ? nome : username,
+        username: username,
+        password: password ?? '123456',
+        role: role.toUpperCase(),
+        codigoIdentificador: code,
+        avatar: avatar ?? 'assets/avatar/avatar_1.jpg',
+        mustChangePassword: mustChangePassword,
+      );
+      list.add(newUser);
+      await LocalStorageService.saveUsuariosList(list);
+      return newUser;
+    }
+
+    try {
+      final url = Uri.parse('$baseUrl/usuarios');
+      final response = await http.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode({
+          'username': username,
+          'nome': nome,
+          'password': password,
+          'role': role,
+          'avatar': avatar,
+          'mustChangePassword': mustChangePassword,
+        }),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final created = Usuario.fromJson(jsonDecode(response.body));
+        final list = LocalStorageService.getUsuariosList();
+        list.add(created);
+        await LocalStorageService.saveUsuariosList(list);
+        return created;
+      }
+    } catch (e) {
+      print('Erro ao criar usuário no servidor: $e');
+    }
+    return null;
   }
 
   static Future<Usuario?> updateUsuario(Usuario user) async {

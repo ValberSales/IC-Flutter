@@ -163,11 +163,12 @@ mvn test-compile
 
 ## 🤝 Créditos Oficiais & Autoria
 
-- **Desenvolvimento e Autoria (Flutter & Spring Boot)**: Valber Sales Junior
+- **Desenvolvimento (IC Flutter & Spring Boot)**: Valber Sales Junior
 - **Orientadora**: Profª. Drª. Rúbia Eliza de Oliveira Schultz Ascari
-- **Colaboradoras do Projeto**:
+- **Colaboradores do Projeto**:
   - Profª. Me. Mirelia Flausino Vogel
   - Profª. Me. Aline Brancalione
+  - Isacar Floriano de Freitas Junior
 - **Projeto Base de Referência (TCC em Angular/Node.js)**: Luan Filipe Finatto ([finattttto/TCC](https://github.com/finattttto/TCC))
 - **Instituição de Ensino e Pesquisa**: Universidade Tecnológica Federal do Paraná (UTFPR) - Câmpus Pato Branco
 

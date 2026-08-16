@@ -4,7 +4,6 @@ import '../../core/constants/app_colors.dart';
 import '../../state/app_state_provider.dart';
 import '../features/area_professor/views/area_professor_view.dart';
 import 'logout_helper.dart';
-import 'sobre_projeto_dialog.dart';
 import 'user_profile_dialog.dart';
 
 class AppHeaderWidget extends StatelessWidget implements PreferredSizeWidget {
@@ -133,16 +132,6 @@ class AppHeaderWidget extends StatelessWidget implements PreferredSizeWidget {
               label: Text(isCompact ? 'Painel' : 'Painel Admin'),
             ),
           ),
-
-        // 1.5. Botão Sobre o Projeto (Acessível a todos)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2.0),
-          child: IconButton(
-            tooltip: 'Sobre o Projeto',
-            icon: const Icon(Icons.info_outline_rounded, color: AppColors.textDark, size: 22),
-            onPressed: () => SobreProjetoDialog.show(context),
-          ),
-        ),
 
         // 2. Botão da Imagem de Perfil (Avatar clicável que abre o modal de perfil)
         if (showProfileButton && (state.isLoggedIn || isGuest))

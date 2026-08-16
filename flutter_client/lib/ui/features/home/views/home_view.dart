@@ -5,6 +5,7 @@ import '../../../../core/util/responsive_layout.dart';
 import '../../../../state/app_state_provider.dart';
 import '../../../core/app_header_widget.dart';
 import '../../../core/force_change_password_dialog.dart';
+import '../../../core/sobre_projeto_dialog.dart';
 import '../../jogo_hub/views/jogo_hub_view.dart';
 import '../view_models/home_view_model.dart';
 import '../widgets/home_cadastro_form_widget.dart';
@@ -143,6 +144,18 @@ class _HomeViewState extends State<HomeView> {
             label: const Text(
               '🎮 Jogar sem cadastro (Modo Convidado)',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textDark.withOpacity(0.7),
+            ),
+            onPressed: () => SobreProjetoDialog.show(context),
+            icon: const Icon(Icons.info_outline_rounded, size: 18),
+            label: const Text(
+              'Sobre o Projeto Alfabetiza Libras',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),
         ],

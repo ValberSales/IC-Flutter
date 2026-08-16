@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../state/app_state_provider.dart';
 import '../../../core/logout_helper.dart';
-import '../../../core/sobre_projeto_dialog.dart';
 import 'profile/professor_avatar_header_widget.dart';
 import 'profile/professor_security_section_widget.dart';
 
@@ -278,37 +277,20 @@ class _ProfessorProfileTabWidgetState extends State<ProfessorProfileTabWidget> {
                     const Divider(),
                     const SizedBox(height: 12),
 
-                    // Ações Secundárias
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primary,
-                              side: const BorderSide(color: AppColors.primary),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            ),
-                            onPressed: () => SobreProjetoDialog.show(context),
-                            icon: const Icon(Icons.info_outline_rounded, size: 18),
-                            label: const Text('Sobre o Projeto', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
+                    // Ação de Logout
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          side: const BorderSide(color: AppColors.error),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.error,
-                              side: const BorderSide(color: AppColors.error),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            ),
-                            onPressed: () => LogoutHelper.executeLogout(context, widget.state),
-                            icon: const Icon(Icons.logout_rounded, size: 18),
-                            label: const Text('Sair da Conta', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
+                        onPressed: () => LogoutHelper.executeLogout(context, widget.state),
+                        icon: const Icon(Icons.logout_rounded, size: 20),
+                        label: const Text('Sair da Conta', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      ),
                     ),
                   ],
                 ),

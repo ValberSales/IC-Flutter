@@ -19,7 +19,6 @@ class HomeWelcomeCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatar = user.avatar ?? 'assets/avatar/avatar_1.png';
     final nome = user.nome ?? user.username ?? 'Aluno';
-    final idCode = user.codigoIdentificador ?? '#${user.id ?? 1}';
 
     return Card(
       elevation: 4,
@@ -87,42 +86,21 @@ class HomeWelcomeCardWidget extends StatelessWidget {
             ),
             const SizedBox(height: 6),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgSoft,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Text(
-                    '@${user.username}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.bgSoft,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                '@${user.username ?? 'aluno'}',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    idCode,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 24),
 

@@ -65,12 +65,12 @@ class _HomeLoginFormWidgetState extends State<HomeLoginFormWidget> {
           const SizedBox(height: 16),
         ],
 
-        // Campo Identificador (ID ou Username)
+        // Campo Usuário
         TextField(
           onChanged: vm.setLoginIdentifier,
           decoration: InputDecoration(
-            labelText: 'Usuário ou ID Único (ex: @pedro ou ALU-1001)',
-            prefixIcon: const Icon(Icons.badge_rounded, color: AppColors.primary),
+            labelText: 'Nome de usuário (ex: @pedro)',
+            prefixIcon: const Icon(Icons.person_rounded, color: AppColors.primary),
             filled: true,
             fillColor: AppColors.bgSoft,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),

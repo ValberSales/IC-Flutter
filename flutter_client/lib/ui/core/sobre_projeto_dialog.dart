@@ -118,7 +118,7 @@ class SobreProjetoDialog extends StatelessWidget {
 
               _buildCreditTile(
                 icon: Icons.code_rounded,
-                role: 'Desenvolvimento e Autoria (IC Flutter & Spring Boot)',
+                role: 'Desenvolvimento (IC Flutter & Spring Boot)',
                 name: 'Valber Sales Junior',
                 isPrimary: true,
               ),
@@ -133,8 +133,8 @@ class SobreProjetoDialog extends StatelessWidget {
 
               _buildCreditTile(
                 icon: Icons.group_rounded,
-                role: 'Colaboradoras',
-                name: 'Profª. Me. Mirelia Flausino Vogel\nProfª. Me. Aline Brancalione',
+                role: 'Colaboradores',
+                name: 'Profª. Me. Mirelia Flausino Vogel\nProfª. Me. Aline Brancalione\nIsacar Floriano de Freitas Junior',
               ),
               const SizedBox(height: 8),
 

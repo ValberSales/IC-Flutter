@@ -3,7 +3,6 @@ import 'package:flutter_client/core/constants/app_colors.dart';
 import 'package:flutter_client/data/models/usuario.dart';
 import 'package:flutter_client/state/app_state_provider.dart';
 import 'package:flutter_client/ui/core/logout_helper.dart';
-import 'package:flutter_client/ui/core/sobre_projeto_dialog.dart';
 
 class UserProfileInfoSectionWidget extends StatefulWidget {
   final Usuario? user;
@@ -152,24 +151,6 @@ class _UserProfileInfoSectionWidgetState extends State<UserProfileInfoSectionWid
           ),
           const SizedBox(height: 10),
         ],
-
-        // Botão Sobre o Projeto
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary.withOpacity(0.12),
-            foregroundColor: AppColors.primary,
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ),
-          onPressed: () => SobreProjetoDialog.show(context),
-          icon: const Icon(Icons.info_outline_rounded),
-          label: const Text(
-            'Sobre o Projeto',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        const SizedBox(height: 10),
 
         // Botão Sair / Logout
         ElevatedButton.icon(

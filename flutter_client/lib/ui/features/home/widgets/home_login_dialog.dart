@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_client/core/constants/app_colors.dart';
+import 'package:flutter_client/ui/core/sobre_projeto_dialog.dart';
 import '../view_models/home_view_model.dart';
 
 class HomeLoginDialog extends StatefulWidget {
@@ -174,6 +175,18 @@ class _HomeLoginDialogState extends State<HomeLoginDialog> {
                         'Entrar',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
+              ),
+              const SizedBox(height: 12),
+
+              Center(
+                child: TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textDark.withOpacity(0.7),
+                  ),
+                  onPressed: () => SobreProjetoDialog.show(context),
+                  icon: const Icon(Icons.info_outline_rounded, size: 16),
+                  label: const Text('Sobre o Projeto', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                ),
               ),
             ],
           ),

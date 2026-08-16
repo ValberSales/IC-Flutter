@@ -9,7 +9,7 @@
         <version>3.3.5</version>
         <relativePath/>
     </parent>
-    <groupId>br.com.interalibras</groupId>
+    <groupId>br.com.alfabetizalibras</groupId>
     <artifactId>server_java</artifactId>
     <version>1.0.0</version>
     <name>server_java</name>

@@ -81,7 +81,7 @@ flutter_client/
 ### ☕ Backend Spring Boot (`server_java/`) — Arquitetura em Camadas
 ```
 server_java/
-└── src/main/java/br/com/interalibras/
+└── src/main/java/br/com/alfabetizalibras/
     ├── config/             # Configurações do MinIO, Spring Security e Seeder (DataLoader)
     ├── controller/         # REST Controllers concisos (HTTP request handling e DTO responses)
     ├── entity/             # Entidades JPA (Usuario, Turma, Atividade, ItemAtividade, Pontuacao)
@@ -112,7 +112,7 @@ Inicie o banco de dados relacional e o storage S3:
 docker compose up -d
 ```
 > Serviços iniciados:
-> - 🛢️ **PostgreSQL 15**: porta `5432` (`interalibras_db`)
+> - 🛢️ **PostgreSQL 15**: porta `5432` (`alfabetizalibras`)
 > - 📦 **MinIO Storage**: porta `9000` (Console Administrativo em `http://localhost:9001`)
 
 ---

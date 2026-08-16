@@ -85,7 +85,7 @@ class _ProfessorAuthCardWidgetState extends State<ProfessorAuthCardWidget> {
                         ? 'Faça login para acompanhar o progresso dos seus alunos e gerenciar turmas.'
                         : 'Cadastre-se para sincronizar salas de aula e criar atividades personalizadas.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15, color: AppColors.textDark.withOpacity(0.7)),
+                    style: TextStyle(fontSize: 15, color: AppColors.textDark.withValues(alpha: 0.7)),
                   ),
                   const SizedBox(height: 24),
                   if (!vm.isLoginMode) ...[

@@ -106,7 +106,7 @@ class _ProfessorUsersTabWidgetState extends State<ProfessorUsersTabWidget> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.purple.withOpacity(0.15),
+                          color: Colors.purple.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Icon(Icons.people_alt_rounded, color: Colors.purple, size: 30),
@@ -172,7 +172,7 @@ class _ProfessorUsersTabWidgetState extends State<ProfessorUsersTabWidget> {
                     padding: const EdgeInsets.all(40.0),
                     child: Column(
                       children: [
-                        Icon(Icons.person_search_rounded, size: 64, color: Colors.purple.withOpacity(0.4)),
+                        Icon(Icons.person_search_rounded, size: 64, color: Colors.purple.withValues(alpha: 0.4)),
                         const SizedBox(height: 16),
                         Text(
                           _filtro.isEmpty ? 'Nenhum usuário cadastrado.' : 'Nenhum usuário encontrado.',

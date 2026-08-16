@@ -1,11 +1,12 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:http/http.dart' as http;
 import '../models/atividade.dart';
 import '../models/pontuacao.dart';
 import '../models/turma.dart';
-import '../models/palavra.dart';
 import '../models/usuario.dart';
 import '../storage/local_storage_service.dart';
 
@@ -13,7 +14,14 @@ class ApiService {
   // Flag para controle de ambiente real vs estático (Java 25 Spring Boot backend)
   static bool useBackend = true;
   
-  static const String baseUrl = 'http://localhost:8081/api';
+  static String get hostUrl {
+    if (!kIsWeb && Platform.isAndroid) {
+      return 'http://10.0.2.2:8081';
+    }
+    return 'http://localhost:8081';
+  }
+
+  static String get baseUrl => '$hostUrl/api';
 
   // Helper para obter headers de requisição com autenticação
   static Map<String, String> _getHeaders({bool includeContentType = true}) {
@@ -72,7 +80,7 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
     } catch (e) {
-      print('Erro no login: $e');
+      debugPrint('Erro no login: $e');
     }
     return null;
   }
@@ -98,7 +106,7 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
     } catch (e) {
-      print('Erro no cadastro: $e');
+      debugPrint('Erro no cadastro: $e');
     }
     return null;
   }
@@ -120,7 +128,7 @@ class ApiService {
         return data['url'] as String?;
       }
     } catch (e) {
-      print('Erro no upload da imagem no MinIO: $e');
+      debugPrint('Erro no upload da imagem no MinIO: $e');
     }
     return null;
   }
@@ -149,7 +157,7 @@ class ApiService {
         return atividades;
       }
     } catch (e) {
-      print('Servidor indisponível ou erro ao buscar atividades, usando cache local: $e');
+      debugPrint('Servidor indisponível ou erro ao buscar atividades, usando cache local: $e');
     }
     return LocalStorageService.getAtividades();
   }
@@ -171,7 +179,7 @@ class ApiService {
         return Atividade.fromJson(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Erro ao salvar atividade no backend Java: $e');
+      debugPrint('Erro ao salvar atividade no backend Java: $e');
     }
     await LocalStorageService.saveAtividade(atividade);
     return atividade;
@@ -202,7 +210,7 @@ class ApiService {
         return true;
       }
     } catch (e) {
-      print('Erro ao alternar status da atividade no backend Java: $e');
+      debugPrint('Erro ao alternar status da atividade no backend Java: $e');
     }
     return false;
   }
@@ -233,7 +241,7 @@ class ApiService {
         return true;
       }
     } catch (e) {
-      print('Erro ao alternar visibilidade publica/privada da atividade: $e');
+      debugPrint('Erro ao alternar visibilidade publica/privada da atividade: $e');
     }
     return false;
   }
@@ -249,7 +257,7 @@ class ApiService {
       final response = await http.delete(url, headers: _getHeaders(includeContentType: false));
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
-      print('Erro ao excluir atividade no backend Java: $e');
+      debugPrint('Erro ao excluir atividade no backend Java: $e');
       return false;
     }
   }
@@ -267,7 +275,7 @@ class ApiService {
         return Atividade.fromJson(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Erro ao buscar rascunho de atividade no backend Java: $e');
+      debugPrint('Erro ao buscar rascunho de atividade no backend Java: $e');
     }
     return LocalStorageService.getRascunhoAtividade();
   }
@@ -286,7 +294,7 @@ class ApiService {
         return list.map((e) => Turma.fromJson(Map<String, dynamic>.from(e as Map))).toList();
       }
     } catch (e) {
-      print('Erro ao buscar turmas no backend: $e');
+      debugPrint('Erro ao buscar turmas no backend: $e');
     }
     return LocalStorageService.getTurmas();
   }
@@ -303,7 +311,7 @@ class ApiService {
         return Turma.fromJson(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Erro ao buscar detalhes da turma $id: $e');
+      debugPrint('Erro ao buscar detalhes da turma $id: $e');
     }
     return null;
   }
@@ -330,7 +338,7 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
     } catch (e) {
-      print('Erro ao buscar código da turma: $e');
+      debugPrint('Erro ao buscar código da turma: $e');
     }
     return null;
   }
@@ -356,7 +364,7 @@ class ApiService {
         return Turma.fromJson(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Erro ao criar turma: $e');
+      debugPrint('Erro ao criar turma: $e');
     }
     return null;
   }
@@ -383,7 +391,7 @@ class ApiService {
         return Turma.fromJson(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Erro ao atualizar turma $id: $e');
+      debugPrint('Erro ao atualizar turma $id: $e');
     }
     return null;
   }
@@ -400,7 +408,7 @@ class ApiService {
       final response = await http.delete(url, headers: _getHeaders(includeContentType: false));
       return response.statusCode == 200;
     } catch (e) {
-      print('Erro ao deletar turma $id: $e');
+      debugPrint('Erro ao deletar turma $id: $e');
     }
     return false;
   }
@@ -426,10 +434,10 @@ class ApiService {
           await LocalStorageService.saveTurmas(list);
           return resTurma;
         } else {
-          print('Erro backend setTurmaAlunos status ${response.statusCode}: ${response.body}');
+          debugPrint('Erro backend setTurmaAlunos status ${response.statusCode}: ${response.body}');
         }
       } catch (e) {
-        print('Erro ao salvar alunos da turma $id via API: $e');
+        debugPrint('Erro ao salvar alunos da turma $id via API: $e');
       }
     }
 
@@ -458,7 +466,7 @@ class ApiService {
           return Turma.fromJson(jsonDecode(response.body));
         }
       } catch (e) {
-        print('Erro ao remover aluno $alunoId da turma $turmaId: $e');
+        debugPrint('Erro ao remover aluno $alunoId da turma $turmaId: $e');
       }
     }
 
@@ -494,10 +502,10 @@ class ApiService {
           await LocalStorageService.saveTurmas(list);
           return resTurma;
         } else {
-          print('Erro backend setTurmaAtividades status ${response.statusCode}: ${response.body}');
+          debugPrint('Erro backend setTurmaAtividades status ${response.statusCode}: ${response.body}');
         }
       } catch (e) {
-        print('Erro ao atribuir temas/atividades à turma $id via API: $e');
+        debugPrint('Erro ao atribuir temas/atividades à turma $id via API: $e');
       }
     }
 
@@ -540,7 +548,7 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
     } catch (e) {
-      print('Erro ao entrar na turma: $e');
+      debugPrint('Erro ao entrar na turma: $e');
     }
     return null;
   }
@@ -560,7 +568,7 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      print('Erro ao sair da turma: $e');
+      debugPrint('Erro ao sair da turma: $e');
     }
     return true;
   }
@@ -594,7 +602,7 @@ class ApiService {
         return null;
       }
     } catch (e) {
-      print('Erro ao buscar turma do aluno $alunoId: $e');
+      debugPrint('Erro ao buscar turma do aluno $alunoId: $e');
     }
     return null;
   }
@@ -618,7 +626,7 @@ class ApiService {
         return Pontuacao.fromJson(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Erro ao salvar pontuação no servidor: $e');
+      debugPrint('Erro ao salvar pontuação no servidor: $e');
     }
     return null;
   }
@@ -637,7 +645,7 @@ class ApiService {
         return list.map((e) => Pontuacao.fromJson(e)).toList();
       }
     } catch (e) {
-      print('Erro ao buscar pontuações no servidor: $e');
+      debugPrint('Erro ao buscar pontuações no servidor: $e');
     }
     return [];
   }
@@ -675,7 +683,7 @@ class ApiService {
         return result;
       }
     } catch (e) {
-      print('Erro ao buscar usuários no servidor: $e');
+      debugPrint('Erro ao buscar usuários no servidor: $e');
     }
 
     return LocalStorageService.getUsuariosList();
@@ -733,7 +741,7 @@ class ApiService {
         return created;
       }
     } catch (e) {
-      print('Erro ao criar usuário no servidor: $e');
+      debugPrint('Erro ao criar usuário no servidor: $e');
     }
     return null;
   }
@@ -765,7 +773,7 @@ class ApiService {
         return Usuario.fromJson(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Erro ao atualizar usuário no servidor: $e');
+      debugPrint('Erro ao atualizar usuário no servidor: $e');
     }
     return null;
   }
@@ -783,7 +791,7 @@ class ApiService {
       final response = await http.delete(url, headers: _getHeaders(includeContentType: false));
       return response.statusCode == 204 || response.statusCode == 200;
     } catch (e) {
-      print('Erro ao excluir usuário no servidor: $e');
+      debugPrint('Erro ao excluir usuário no servidor: $e');
     }
     return false;
   }
@@ -816,7 +824,7 @@ class ApiService {
         return data['tempPassword'] as String?;
       }
     } catch (e) {
-      print('Erro ao resetar senha no servidor: $e');
+      debugPrint('Erro ao resetar senha no servidor: $e');
     }
     return null;
   }
@@ -847,7 +855,7 @@ class ApiService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Erro ao trocar senha no servidor: $e');
+      debugPrint('Erro ao trocar senha no servidor: $e');
     }
     return false;
   }
@@ -864,7 +872,7 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
     } catch (e) {
-      print('Erro ao obter relatório da turma $turmaId do servidor: $e');
+      debugPrint('Erro ao obter relatório da turma $turmaId do servidor: $e');
     }
     return null;
   }
@@ -879,7 +887,7 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
     } catch (e) {
-      print('Erro ao obter relatório do aluno $alunoId do servidor: $e');
+      debugPrint('Erro ao obter relatório do aluno $alunoId do servidor: $e');
     }
     return null;
   }

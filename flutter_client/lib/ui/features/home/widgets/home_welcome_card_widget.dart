@@ -22,7 +22,7 @@ class HomeWelcomeCardWidget extends StatelessWidget {
 
     return Card(
       elevation: 4,
-      shadowColor: Colors.black.withOpacity(0.08),
+      shadowColor: Colors.black.withValues(alpha: 0.08),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       color: Colors.white,
       child: Padding(
@@ -39,7 +39,7 @@ class HomeWelcomeCardWidget extends StatelessWidget {
                     border: Border.all(color: AppColors.secondary, width: 3),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.secondary.withOpacity(0.3),
+                        color: AppColors.secondary.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -113,7 +113,7 @@ class HomeWelcomeCardWidget extends StatelessWidget {
                   backgroundColor: AppColors.secondary,
                   foregroundColor: Colors.white,
                   elevation: 6,
-                  shadowColor: AppColors.secondary.withOpacity(0.4),
+                  shadowColor: AppColors.secondary.withValues(alpha: 0.4),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(22),
                   ),

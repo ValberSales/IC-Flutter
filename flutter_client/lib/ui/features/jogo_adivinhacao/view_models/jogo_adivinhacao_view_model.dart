@@ -122,11 +122,8 @@ class JogoAdivinhacaoViewModel extends ChangeNotifier {
     _activeSlotIndex = 0;
     _endGame = false;
     _feedback = 'VAZIO';
-    _errouPalavraAtual = false;
     notifyListeners();
   }
-
-  bool _errouPalavraAtual = false;
 
   void setActiveSlot(int index) {
     if (_endGame) {

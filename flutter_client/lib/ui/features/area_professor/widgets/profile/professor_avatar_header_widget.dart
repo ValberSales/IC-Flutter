@@ -27,7 +27,7 @@ class ProfessorAvatarHeaderWidget extends StatelessWidget {
                 border: Border.all(color: Colors.purple, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.purple.withOpacity(0.2),
+                    color: Colors.purple.withValues(alpha: 0.2),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -75,9 +75,9 @@ class ProfessorAvatarHeaderWidget extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.purple.withOpacity(0.12),
+            color: Colors.purple.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.purple.withOpacity(0.3)),
+            border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

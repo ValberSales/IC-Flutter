@@ -29,16 +29,16 @@ class TemaCardWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isHighlight ? AppColors.accent : AppColors.primaryLight.withOpacity(0.4),
+        color: isHighlight ? AppColors.accent : AppColors.primaryLight.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isHighlight ? AppColors.accent : AppColors.primary.withOpacity(0.3),
+          color: isHighlight ? AppColors.accent : AppColors.primary.withValues(alpha: 0.3),
           width: isHighlight ? 1.5 : 1,
         ),
         boxShadow: isHighlight
             ? [
                 BoxShadow(
-                  color: AppColors.accent.withOpacity(0.3),
+                  color: AppColors.accent.withValues(alpha: 0.3),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -71,11 +71,11 @@ class TemaCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveBorderColor = isTurmaAssigned
         ? AppColors.accent
-        : cor.withOpacity(0.25);
+        : cor.withValues(alpha: 0.25);
 
     return Card(
       elevation: isTurmaAssigned ? 8 : 4,
-      shadowColor: isTurmaAssigned ? AppColors.accent.withOpacity(0.25) : cor.withOpacity(0.15),
+      shadowColor: isTurmaAssigned ? AppColors.accent.withValues(alpha: 0.25) : cor.withValues(alpha: 0.15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(
@@ -103,7 +103,7 @@ class TemaCardWidget extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: (isTurmaAssigned ? AppColors.accent : cor).withOpacity(0.15),
+                          color: (isTurmaAssigned ? AppColors.accent : cor).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(icone, size: 28, color: isTurmaAssigned ? AppColors.accent : cor),
@@ -135,7 +135,7 @@ class TemaCardWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       height: 1.25,
-                      color: AppColors.textDark.withOpacity(0.75),
+                      color: AppColors.textDark.withValues(alpha: 0.75),
                     ),
                   ),
                 ],

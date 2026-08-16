@@ -100,7 +100,7 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.accent.withOpacity(0.15),
+                    color: AppColors.accent.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -131,7 +131,7 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textDark.withOpacity(0.7),
+                  color: AppColors.textDark.withValues(alpha: 0.7),
                   height: 1.4,
                 ),
               ),
@@ -141,9 +141,9 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [

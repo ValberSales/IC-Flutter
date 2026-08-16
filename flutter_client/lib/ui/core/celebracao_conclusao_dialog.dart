@@ -57,7 +57,7 @@ class CelebracaoConclusaoDialog extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.accentLight.withOpacity(0.4),
+                  color: AppColors.accentLight.withValues(alpha: 0.4),
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.accent, width: 3),
                 ),
@@ -88,7 +88,7 @@ class CelebracaoConclusaoDialog extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 height: 1.4,
-                color: AppColors.textDark.withOpacity(0.85),
+                color: AppColors.textDark.withValues(alpha: 0.85),
               ),
             ),
             const SizedBox(height: 20),

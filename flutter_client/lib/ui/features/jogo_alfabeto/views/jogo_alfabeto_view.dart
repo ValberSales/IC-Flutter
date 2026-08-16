@@ -7,7 +7,6 @@ import '../../../core/celebracao_conclusao_dialog.dart';
 import '../../../core/jogo_breadcrumb_widget.dart';
 import '../../../core/mascote_feedback_widget.dart';
 import '../../../core/pontuacao_header_widget.dart';
-import '../../../core/tutorial_widget.dart';
 import '../view_models/jogo_alfabeto_view_model.dart';
 import '../widgets/alfabeto_sign_button.dart';
 
@@ -76,7 +75,7 @@ class _JogoAlfabetoViewState extends State<JogoAlfabetoView> {
               backgroundColor: AppColors.secondary,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
               elevation: 8,
-              shadowColor: AppColors.secondary.withOpacity(0.5),
+              shadowColor: AppColors.secondary.withValues(alpha: 0.5),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             ),
             onPressed: _viewModel.iniciarNovoJogo,
@@ -153,7 +152,7 @@ class _JogoAlfabetoViewState extends State<JogoAlfabetoView> {
                               border: Border.all(color: AppColors.primary, width: 3),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.15),
+                                  color: AppColors.primary.withValues(alpha: 0.15),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),

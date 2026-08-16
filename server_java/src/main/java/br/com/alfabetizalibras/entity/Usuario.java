@@ -26,13 +26,13 @@ public class Usuario {
     @Column(nullable = false)
     private String password;
 
-    private String avatar = "assets/avatar/avatar_1.jpg";
+    private String avatar;
 
-    private String role = "USER";
+    private String role;
 
-    private Boolean mustChangePassword = false;
+    private Boolean mustChangePassword;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     public Usuario() {}
 

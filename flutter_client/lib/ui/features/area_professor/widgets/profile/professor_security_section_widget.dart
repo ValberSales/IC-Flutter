@@ -48,7 +48,7 @@ class _ProfessorSecuritySectionWidgetState extends State<ProfessorSecuritySectio
           const SizedBox(height: 4),
           Text(
             'Deixe os campos abaixo em branco se desejar manter a senha atual.',
-            style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.65)),
+            style: TextStyle(fontSize: 12, color: AppColors.textDark.withValues(alpha: 0.65)),
           ),
           const SizedBox(height: 14),
 

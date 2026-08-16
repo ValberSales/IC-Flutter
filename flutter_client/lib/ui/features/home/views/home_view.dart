@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/util/responsive_layout.dart';
 import '../../../../state/app_state_provider.dart';
 import '../../../core/app_header_widget.dart';
 import '../../../core/force_change_password_dialog.dart';
@@ -117,7 +116,7 @@ class _HomeViewState extends State<HomeView> {
           const SizedBox(height: 12),
           Card(
             elevation: 4,
-            shadowColor: Colors.black.withOpacity(0.08),
+            shadowColor: Colors.black.withValues(alpha: 0.08),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
             color: Colors.white,
             child: Padding(
@@ -130,9 +129,9 @@ class _HomeViewState extends State<HomeView> {
           const SizedBox(height: 20),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textDark.withOpacity(0.8),
-              side: BorderSide(color: AppColors.textDark.withOpacity(0.25)),
-              backgroundColor: Colors.white.withOpacity(0.6),
+              foregroundColor: AppColors.textDark.withValues(alpha: 0.8),
+              side: BorderSide(color: AppColors.textDark.withValues(alpha: 0.25)),
+              backgroundColor: Colors.white.withValues(alpha: 0.6),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             ),
@@ -142,14 +141,14 @@ class _HomeViewState extends State<HomeView> {
             },
             icon: const Icon(Icons.sports_esports_rounded, size: 20, color: AppColors.primary),
             label: const Text(
-              '🎮 Jogar sem cadastro (Modo Convidado)',
+              'Jogar sem cadastro (Modo Convidado)',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 16),
           TextButton.icon(
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.textDark.withOpacity(0.7),
+              foregroundColor: AppColors.textDark.withValues(alpha: 0.7),
             ),
             onPressed: () => SobreProjetoDialog.show(context),
             icon: const Icon(Icons.info_outline_rounded, size: 18),

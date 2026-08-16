@@ -15,7 +15,7 @@ class ResetPasswordDialog {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(0.15),
+                color: AppColors.accent.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.lock_reset_rounded, color: AppColors.accent, size: 24),
@@ -76,7 +76,7 @@ class ResetPasswordDialog {
             Text(
               'A senha de "${user.nome ?? user.username}" foi redefinida com sucesso. Repasse a senha temporária abaixo para o usuário:',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColors.textDark.withOpacity(0.8)),
+              style: TextStyle(fontSize: 14, color: AppColors.textDark.withValues(alpha: 0.8)),
             ),
             const SizedBox(height: 20),
             Container(
@@ -121,7 +121,7 @@ class ResetPasswordDialog {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.15),
+                color: Colors.amber.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Row(

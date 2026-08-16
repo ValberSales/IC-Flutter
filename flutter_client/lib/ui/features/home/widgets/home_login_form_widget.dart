@@ -35,9 +35,9 @@ class _HomeLoginFormWidgetState extends State<HomeLoginFormWidget> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Informe seu ID Único ou Usuário e Senha para carregar seu progresso:',
+          'Informe seu Usuário e Senha para carregar seu progresso:',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, color: AppColors.textDark.withOpacity(0.7)),
+          style: TextStyle(fontSize: 13, color: AppColors.textDark.withValues(alpha: 0.7)),
         ),
         const SizedBox(height: 20),
 
@@ -45,9 +45,9 @@ class _HomeLoginFormWidgetState extends State<HomeLoginFormWidget> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.error.withOpacity(0.1),
+              color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.error.withOpacity(0.3)),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [

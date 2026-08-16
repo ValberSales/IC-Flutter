@@ -31,9 +31,9 @@ class GameCategoryCardWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: badgeColor.withOpacity(0.15),
+        color: badgeColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: badgeColor.withOpacity(0.3), width: 1),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Text(
         text,
@@ -64,7 +64,7 @@ class GameCategoryCardWidget extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
           decoration: BoxDecoration(
-            color: isSelected ? activeColor : activeColor.withOpacity(0.08),
+            color: isSelected ? activeColor : activeColor.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: activeColor,
@@ -93,10 +93,10 @@ class GameCategoryCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 6,
-      shadowColor: color.withOpacity(0.2),
+      shadowColor: color.withValues(alpha: 0.2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(28),
-        side: BorderSide(color: color.withOpacity(0.3), width: 2),
+        side: BorderSide(color: color.withValues(alpha: 0.3), width: 2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(18.0),
@@ -115,7 +115,7 @@ class GameCategoryCardWidget extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.15),
+                        color: color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(icon, color: color, size: 28),
@@ -144,7 +144,7 @@ class GameCategoryCardWidget extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.25,
-                    color: AppColors.textDark.withOpacity(0.75),
+                    color: AppColors.textDark.withValues(alpha: 0.75),
                   ),
                 ),
               ],

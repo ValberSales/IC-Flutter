@@ -86,7 +86,7 @@ class _ActivityWizardWidgetState extends State<ActivityWizardWidget> {
                   const SizedBox(height: 16),
 
                   DropdownButtonFormField<String>(
-                    value: vm.selectedTipoJogo,
+                    initialValue: vm.selectedTipoJogo,
                     decoration: const InputDecoration(
                       labelText: 'Tipo de Jogo',
                       prefixIcon: Icon(Icons.gamepad_rounded),
@@ -115,7 +115,7 @@ class _ActivityWizardWidgetState extends State<ActivityWizardWidget> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.15),
+                            color: AppColors.primary.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -136,7 +136,7 @@ class _ActivityWizardWidgetState extends State<ActivityWizardWidget> {
                               const SizedBox(height: 2),
                               Text(
                                 'Ícone atual: ${vm.selectedIconKey}',
-                                style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
+                                style: TextStyle(fontSize: 12, color: AppColors.textDark.withValues(alpha: 0.7)),
                               ),
                             ],
                           ),
@@ -169,10 +169,10 @@ class _ActivityWizardWidgetState extends State<ActivityWizardWidget> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: vm.selectedPublica ? AppColors.primary.withOpacity(0.06) : Colors.amber.withOpacity(0.08),
+                      color: vm.selectedPublica ? AppColors.primary.withValues(alpha: 0.06) : Colors.amber.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: vm.selectedPublica ? AppColors.primary.withOpacity(0.3) : Colors.amber.shade700.withOpacity(0.4),
+                        color: vm.selectedPublica ? AppColors.primary.withValues(alpha: 0.3) : Colors.amber.shade700.withValues(alpha: 0.4),
                       ),
                     ),
                     child: Row(
@@ -180,7 +180,7 @@ class _ActivityWizardWidgetState extends State<ActivityWizardWidget> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: vm.selectedPublica ? AppColors.primary.withOpacity(0.15) : Colors.amber.withOpacity(0.2),
+                            color: vm.selectedPublica ? AppColors.primary.withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -207,14 +207,14 @@ class _ActivityWizardWidgetState extends State<ActivityWizardWidget> {
                                 vm.selectedPublica
                                     ? 'A atividade ficará visível para convidados e todos os alunos logados.'
                                     : 'A atividade ficará restrita apenas aos alunos das turmas onde você direcionar este tema.',
-                                style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.75)),
+                                style: TextStyle(fontSize: 12, color: AppColors.textDark.withValues(alpha: 0.75)),
                               ),
                             ],
                           ),
                         ),
                         Switch(
                           value: vm.selectedPublica,
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                           inactiveThumbColor: Colors.amber.shade800,
                           inactiveTrackColor: Colors.amber.shade200,
                           onChanged: vm.setPublica,

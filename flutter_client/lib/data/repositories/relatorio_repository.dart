@@ -2,7 +2,6 @@ import '../models/relatorio_turma.dart';
 import '../models/turma.dart';
 import '../models/usuario.dart';
 import '../models/pontuacao.dart';
-import '../models/atividade.dart';
 import '../services/api_service.dart';
 import '../storage/local_storage_service.dart';
 
@@ -109,7 +108,9 @@ class RelatorioRepository {
     if (s.usuarioId != null && aluno.id != null && s.usuarioId == aluno.id) return true;
     if (s.usuario?.id != null && aluno.id != null && s.usuario!.id == aluno.id) return true;
     if (s.usuario?.username != null && aluno.username != null &&
-        s.usuario!.username!.trim().toLowerCase() == aluno.username!.trim().toLowerCase()) return true;
+        s.usuario!.username!.trim().toLowerCase() == aluno.username!.trim().toLowerCase()) {
+      return true;
+    }
     return false;
   }
 

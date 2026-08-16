@@ -28,7 +28,7 @@ class UserCardWidget extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
         side: BorderSide(
-          color: isAdmin ? Colors.purple.withOpacity(0.3) : AppColors.border,
+          color: isAdmin ? Colors.purple.withValues(alpha: 0.3) : AppColors.border,
         ),
       ),
       child: Padding(
@@ -61,7 +61,7 @@ class UserCardWidget extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.15),
+                            color: AppColors.primary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text('Você', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary)),
@@ -72,7 +72,7 @@ class UserCardWidget extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '@${user.username ?? ''}',
-                    style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
+                    style: TextStyle(fontSize: 12, color: AppColors.textDark.withValues(alpha: 0.7)),
                   ),
                 ],
               ),
@@ -82,7 +82,7 @@ class UserCardWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: isAdmin ? Colors.purple.withOpacity(0.12) : AppColors.secondary.withOpacity(0.12),
+                color: isAdmin ? Colors.purple.withValues(alpha: 0.12) : AppColors.secondary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(

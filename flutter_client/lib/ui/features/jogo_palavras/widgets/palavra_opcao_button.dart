@@ -30,7 +30,7 @@ class PalavraOpcaoButton extends StatelessWidget {
       textColor = Colors.white;
       borderColor = AppColors.accent;
     } else if (isErrouEsta) {
-      bgColor = AppColors.errorLight.withOpacity(0.5);
+      bgColor = AppColors.errorLight.withValues(alpha: 0.5);
       textColor = AppColors.error;
       borderColor = AppColors.error;
     }

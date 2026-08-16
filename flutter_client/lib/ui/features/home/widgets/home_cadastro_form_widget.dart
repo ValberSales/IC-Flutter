@@ -38,7 +38,7 @@ class _HomeCadastroFormWidgetState extends State<HomeCadastroFormWidget> {
         Text(
           'Não precisa de e-mail! Escolha seu avatar e crie sua conta:',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, color: AppColors.textDark.withOpacity(0.7)),
+          style: TextStyle(fontSize: 13, color: AppColors.textDark.withValues(alpha: 0.7)),
         ),
         const SizedBox(height: 16),
 
@@ -53,7 +53,7 @@ class _HomeCadastroFormWidgetState extends State<HomeCadastroFormWidget> {
                   border: Border.all(color: AppColors.secondary, width: 3),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.secondary.withOpacity(0.25),
+                      color: AppColors.secondary.withValues(alpha: 0.25),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -106,9 +106,9 @@ class _HomeCadastroFormWidgetState extends State<HomeCadastroFormWidget> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.error.withOpacity(0.1),
+              color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.error.withOpacity(0.3)),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [

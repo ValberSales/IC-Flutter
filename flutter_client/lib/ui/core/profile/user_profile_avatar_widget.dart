@@ -26,7 +26,7 @@ class UserProfileAvatarWidget extends StatelessWidget {
               border: Border.all(color: AppColors.primary, width: 3),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: AppColors.primary.withValues(alpha: 0.2),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

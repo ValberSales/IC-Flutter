@@ -28,10 +28,10 @@ class AlfabetoSignButton extends StatelessWidget {
 
     if (isAcerto && isCorrect) {
       borderColor = AppColors.accent;
-      bgColor = AppColors.accentLight.withOpacity(0.3);
+      bgColor = AppColors.accentLight.withValues(alpha: 0.3);
     } else if (isErrouEsta) {
       borderColor = AppColors.error;
-      bgColor = AppColors.errorLight.withOpacity(0.3);
+      bgColor = AppColors.errorLight.withValues(alpha: 0.3);
     }
 
     return InkWell(
@@ -45,7 +45,7 @@ class AlfabetoSignButton extends StatelessWidget {
           border: Border.all(color: borderColor, width: 2.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

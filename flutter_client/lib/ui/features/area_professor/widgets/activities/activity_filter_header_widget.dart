@@ -31,7 +31,7 @@ class ActivityFilterHeaderWidget extends StatelessWidget {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -41,7 +41,7 @@ class ActivityFilterHeaderWidget extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: isSelected ? Colors.white : AppColors.textDark.withOpacity(0.7)),
+              Icon(icon, size: 18, color: isSelected ? Colors.white : AppColors.textDark.withValues(alpha: 0.7)),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -50,7 +50,7 @@ class ActivityFilterHeaderWidget extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textDark.withOpacity(0.8),
+                    color: isSelected ? Colors.white : AppColors.textDark.withValues(alpha: 0.8),
                   ),
                 ),
               ),
@@ -75,7 +75,7 @@ class ActivityFilterHeaderWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.15),
+                    color: Colors.blue.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.sports_esports_rounded, color: Colors.blue, size: 30),

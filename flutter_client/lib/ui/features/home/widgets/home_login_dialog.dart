@@ -112,9 +112,9 @@ class _HomeLoginDialogState extends State<HomeLoginDialog> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     _errorMessage!,
@@ -181,7 +181,7 @@ class _HomeLoginDialogState extends State<HomeLoginDialog> {
               Center(
                 child: TextButton.icon(
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.textDark.withOpacity(0.7),
+                    foregroundColor: AppColors.textDark.withValues(alpha: 0.7),
                   ),
                   onPressed: () => SobreProjetoDialog.show(context),
                   icon: const Icon(Icons.info_outline_rounded, size: 16),

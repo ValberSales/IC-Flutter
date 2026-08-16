@@ -124,7 +124,7 @@ class _TurmaFormDialogState extends State<TurmaFormDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.12),
+                    color: AppColors.error.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(_errorMsg!, style: const TextStyle(color: AppColors.error, fontSize: 13)),

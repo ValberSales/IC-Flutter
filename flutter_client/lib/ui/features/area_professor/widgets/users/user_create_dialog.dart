@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
-import '../../../../../data/models/usuario.dart';
 import '../../../../../state/app_state_provider.dart';
 
 class UserCreateDialog extends StatefulWidget {
@@ -115,7 +114,7 @@ class _UserCreateDialogState extends State<UserCreateDialog> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.purple.withOpacity(0.15),
+                            color: Colors.purple.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.person_add_rounded, color: Colors.purple, size: 24),
@@ -177,7 +176,7 @@ class _UserCreateDialogState extends State<UserCreateDialog> {
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                           decoration: BoxDecoration(
-                            color: !isAdmin ? AppColors.primary.withOpacity(0.12) : AppColors.bgSoft,
+                            color: !isAdmin ? AppColors.primary.withValues(alpha: 0.12) : AppColors.bgSoft,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: !isAdmin ? AppColors.primary : AppColors.border,
@@ -186,7 +185,7 @@ class _UserCreateDialogState extends State<UserCreateDialog> {
                           ),
                           child: Column(
                             children: [
-                              Icon(Icons.school_rounded, color: !isAdmin ? AppColors.primary : AppColors.textDark.withOpacity(0.6), size: 22),
+                              Icon(Icons.school_rounded, color: !isAdmin ? AppColors.primary : AppColors.textDark.withValues(alpha: 0.6), size: 22),
                               const SizedBox(height: 4),
                               Text(
                                 'Aluno (USER)',
@@ -210,7 +209,7 @@ class _UserCreateDialogState extends State<UserCreateDialog> {
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                           decoration: BoxDecoration(
-                            color: isAdmin ? Colors.purple.withOpacity(0.12) : AppColors.bgSoft,
+                            color: isAdmin ? Colors.purple.withValues(alpha: 0.12) : AppColors.bgSoft,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: isAdmin ? Colors.purple : AppColors.border,
@@ -219,7 +218,7 @@ class _UserCreateDialogState extends State<UserCreateDialog> {
                           ),
                           child: Column(
                             children: [
-                              Icon(Icons.admin_panel_settings_rounded, color: isAdmin ? Colors.purple : AppColors.textDark.withOpacity(0.6), size: 22),
+                              Icon(Icons.admin_panel_settings_rounded, color: isAdmin ? Colors.purple : AppColors.textDark.withValues(alpha: 0.6), size: 22),
                               const SizedBox(height: 4),
                               Text(
                                 'Professor (ADMIN)',

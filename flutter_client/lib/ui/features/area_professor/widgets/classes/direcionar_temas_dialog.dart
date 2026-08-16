@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../data/models/turma.dart';
-import '../../../../../data/models/atividade.dart';
 import '../../../../../state/app_state_provider.dart';
 
 class DirecionarTemasDialog extends StatefulWidget {
@@ -96,7 +95,7 @@ class _DirecionarTemasDialogState extends State<DirecionarTemasDialog> {
           const SizedBox(height: 4),
           Text(
             'Marque os temas de jogos que ficarão em destaque para os alunos desta turma:',
-            style: TextStyle(fontSize: 13, color: AppColors.textDark.withOpacity(0.7)),
+            style: TextStyle(fontSize: 13, color: AppColors.textDark.withValues(alpha: 0.7)),
           ),
         ],
       ),
@@ -150,12 +149,12 @@ class _DirecionarTemasDialogState extends State<DirecionarTemasDialog> {
                         _searchQuery.isEmpty
                             ? 'Nenhum tema cadastrado ainda no sistema.'
                             : 'Nenhum tema encontrado com o termo buscado.',
-                        style: TextStyle(color: AppColors.textDark.withOpacity(0.6)),
+                        style: TextStyle(color: AppColors.textDark.withValues(alpha: 0.6)),
                       ),
                     )
                   : ListView.separated(
                       itemCount: todasAtividades.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, idx) {
                         final atv = todasAtividades[idx];
                         final isSelected = atv.id != null && _selectedAtvIds.contains(atv.id);
@@ -169,8 +168,8 @@ class _DirecionarTemasDialogState extends State<DirecionarTemasDialog> {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: isAdivinhacao
-                                  ? AppColors.primary.withOpacity(0.12)
-                                  : AppColors.secondary.withOpacity(0.12),
+                                  ? AppColors.primary.withValues(alpha: 0.12)
+                                  : AppColors.secondary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -185,7 +184,7 @@ class _DirecionarTemasDialogState extends State<DirecionarTemasDialog> {
                           ),
                           subtitle: Text(
                             '${isAdivinhacao ? "Adivinhação" : "Palavras"} • ${atv.itens.length} palavras cadastradas',
-                            style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
+                            style: TextStyle(fontSize: 12, color: AppColors.textDark.withValues(alpha: 0.7)),
                           ),
                           onChanged: (checked) {
                             if (atv.id == null) return;

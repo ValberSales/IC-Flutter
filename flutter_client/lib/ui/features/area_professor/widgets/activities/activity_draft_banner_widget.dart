@@ -19,7 +19,7 @@ class ActivityDraftBannerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: AppColors.secondaryLight.withOpacity(0.3),
+      color: AppColors.secondaryLight.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: const BorderSide(color: AppColors.secondary, width: 2),
@@ -31,7 +31,7 @@ class ActivityDraftBannerWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.2),
+                color: AppColors.secondary.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.edit_note_rounded, color: AppColors.secondary, size: 28),
@@ -54,7 +54,7 @@ class ActivityDraftBannerWidget extends StatelessWidget {
                     'Tema: "${rascunho.titulo.isNotEmpty ? rascunho.titulo : 'Sem título'}" (${rascunho.itens.length} palavras cadastradas)',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textDark.withOpacity(0.8),
+                      color: AppColors.textDark.withValues(alpha: 0.8),
                     ),
                   ),
                 ],

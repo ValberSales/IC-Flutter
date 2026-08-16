@@ -149,7 +149,7 @@ class TutorialWidget extends StatelessWidget {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         elevation: 3,
-        shadowColor: AppColors.info.withOpacity(0.3),
+        shadowColor: AppColors.info.withValues(alpha: 0.3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),

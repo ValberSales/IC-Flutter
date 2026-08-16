@@ -116,7 +116,7 @@ class _AlocarAlunosDialogState extends State<AlocarAlunosDialog> {
           const SizedBox(height: 4),
           Text(
             'Selecione os alunos que farão parte desta turma:',
-            style: TextStyle(fontSize: 13, color: AppColors.textDark.withOpacity(0.7)),
+            style: TextStyle(fontSize: 13, color: AppColors.textDark.withValues(alpha: 0.7)),
           ),
         ],
       ),
@@ -189,7 +189,7 @@ class _AlocarAlunosDialogState extends State<AlocarAlunosDialog> {
                       ? Center(
                           child: Text(
                             'Nenhum aluno encontrado.',
-                            style: TextStyle(color: AppColors.textDark.withOpacity(0.6)),
+                            style: TextStyle(color: AppColors.textDark.withValues(alpha: 0.6)),
                           ),
                         )
                       : ListView.builder(
@@ -212,7 +212,7 @@ class _AlocarAlunosDialogState extends State<AlocarAlunosDialog> {
                               ),
                               subtitle: Text(
                                 '@${aluno.username ?? "-"}',
-                                style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
+                                style: TextStyle(fontSize: 12, color: AppColors.textDark.withValues(alpha: 0.7)),
                               ),
                               onChanged: (checked) {
                                 if (aluno.id == null) return;

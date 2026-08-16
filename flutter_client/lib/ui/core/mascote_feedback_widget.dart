@@ -74,7 +74,7 @@ class _MascoteFeedbackWidgetState extends State<MascoteFeedbackWidget> {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: (isCorrect ? AppColors.accent : AppColors.error).withOpacity(0.25),
+            color: (isCorrect ? AppColors.accent : AppColors.error).withValues(alpha: 0.25),
             blurRadius: 15,
             spreadRadius: 2,
             offset: const Offset(0, 4),
@@ -113,8 +113,8 @@ class _MascoteFeedbackWidgetState extends State<MascoteFeedbackWidget> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isCorrect
-                    ? AppColors.accentLight.withOpacity(0.4)
-                    : AppColors.errorLight.withOpacity(0.4),
+                    ? AppColors.accentLight.withValues(alpha: 0.4)
+                    : AppColors.errorLight.withValues(alpha: 0.4),
                 shape: BoxShape.circle,
               ),
               child: Icon(

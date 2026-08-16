@@ -76,7 +76,7 @@ class _UserProfileInfoSectionWidgetState extends State<UserProfileInfoSectionWid
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -93,8 +93,8 @@ class _UserProfileInfoSectionWidgetState extends State<UserProfileInfoSectionWid
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
                       color: role == 'ADMIN'
-                          ? Colors.purple.withOpacity(0.15)
-                          : AppColors.secondary.withOpacity(0.15),
+                          ? Colors.purple.withValues(alpha: 0.15)
+                          : AppColors.secondary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -155,7 +155,7 @@ class _UserProfileInfoSectionWidgetState extends State<UserProfileInfoSectionWid
         // Botão Sair / Logout
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.error.withOpacity(0.12),
+            backgroundColor: AppColors.error.withValues(alpha: 0.12),
             foregroundColor: AppColors.error,
             elevation: 0,
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -182,9 +182,9 @@ class _UserProfileInfoSectionWidgetState extends State<UserProfileInfoSectionWid
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.08),
+          color: AppColors.primary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -194,7 +194,7 @@ class _UserProfileInfoSectionWidgetState extends State<UserProfileInfoSectionWid
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.15),
+                    color: AppColors.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.school_rounded, color: AppColors.primary, size: 22),
@@ -250,7 +250,7 @@ class _UserProfileInfoSectionWidgetState extends State<UserProfileInfoSectionWid
                   activeTurma.atividadesIds.isNotEmpty
                       ? '🎯 ${activeTurma.atividadesIds.length} tema(s) da turma'
                       : 'Nenhum tema atribuído ainda',
-                  style: TextStyle(fontSize: 12.5, color: AppColors.textDark.withOpacity(0.7)),
+                  style: TextStyle(fontSize: 12.5, color: AppColors.textDark.withValues(alpha: 0.7)),
                 ),
                 TextButton(
                   style: TextButton.styleFrom(
@@ -300,7 +300,7 @@ class _UserProfileInfoSectionWidgetState extends State<UserProfileInfoSectionWid
           const SizedBox(height: 6),
           Text(
             'Digite o código PIN fornecido pelo seu professor para acessar as atividades direcionadas:',
-            style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
+            style: TextStyle(fontSize: 12, color: AppColors.textDark.withValues(alpha: 0.7)),
           ),
           const SizedBox(height: 12),
           Row(

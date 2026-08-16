@@ -11,16 +11,15 @@ class TurmaOverviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 700;
-        final count = isWide ? 4 : 2;
-
-        return GridView.count(
-          crossAxisCount: count,
+        return GridView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: isWide ? 1.8 : 1.5,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 280,
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            mainAxisExtent: 118,
+          ),
           children: [
             _buildKpiCard(
               title: 'Aproveitamento Geral',
@@ -67,16 +66,16 @@ class TurmaOverviewCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: color.withOpacity(0.2)),
+        side: BorderSide(color: color.withValues(alpha: 0.2)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(icon, color: color, size: 26),
@@ -92,7 +91,7 @@ class TurmaOverviewCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textDark.withOpacity(0.7),
+                      color: AppColors.textDark.withValues(alpha: 0.7),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -112,7 +111,7 @@ class TurmaOverviewCard extends StatelessWidget {
                     subtitle,
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.textDark.withOpacity(0.6),
+                      color: AppColors.textDark.withValues(alpha: 0.6),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

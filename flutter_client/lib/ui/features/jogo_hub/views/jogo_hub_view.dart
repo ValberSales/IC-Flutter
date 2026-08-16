@@ -47,7 +47,6 @@ class _JogoHubViewState extends State<JogoHubView> {
           final double? acertosAlfabeto = state.getOverallGameAccuracy('JOGO_ALFABETO');
 
           final double progressoMemoria = state.getOverallGameProgress('JOGO_MEMORIA');
-          final double? acertosMemoria = state.getOverallGameAccuracy('JOGO_MEMORIA');
 
           final double progressoAdivinhacao = state.getOverallGameProgress('JOGO_ADIVINHACAO');
           final double? acertosAdivinhacao = state.getOverallGameAccuracy('JOGO_ADIVINHACAO');
@@ -123,7 +122,7 @@ class _JogoHubViewState extends State<JogoHubView> {
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: Colors.black.withValues(alpha: 0.05),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -155,7 +154,7 @@ class _JogoHubViewState extends State<JogoHubView> {
                                             'Escolha o nível de cada jogo no card correspondente abaixo:',
                                             style: TextStyle(
                                               fontSize: 13,
-                                              color: AppColors.textDark.withOpacity(0.7),
+                                              color: AppColors.textDark.withValues(alpha: 0.7),
                                             ),
                                           ),
                                           ],

@@ -62,12 +62,32 @@ class MediaStorageService {
 
   /// Retorna a URL completa para download HTTP caso o caminho seja relativo
   static String resolveFullUrl(String path) {
-    final clean = path.trim();
+    String clean = path.trim();
+    if (clean.isEmpty) return '';
+
+    // Se a URL contiver referências a localhost ou 127.0.0.1 (salvas no banco ou criadas no Web client)
+    if (clean.contains('localhost:8081') || clean.contains('127.0.0.1:8081')) {
+      clean = clean
+          .replaceAll('http://localhost:8081', ApiService.hostUrl)
+          .replaceAll('http://127.0.0.1:8081', ApiService.hostUrl)
+          .replaceAll('https://localhost:8081', ApiService.hostUrl)
+          .replaceAll('https://127.0.0.1:8081', ApiService.hostUrl);
+      return clean;
+    }
+
+    if (clean.contains('localhost:9000') || clean.contains('127.0.0.1:9000')) {
+      final minioHost = (!kIsWeb && Platform.isAndroid) ? 'http://10.0.2.2:9000' : 'http://localhost:9000';
+      clean = clean
+          .replaceAll('http://localhost:9000', minioHost)
+          .replaceAll('http://127.0.0.1:9000', minioHost);
+      return clean;
+    }
+
     if (clean.startsWith('http://') || clean.startsWith('https://')) {
       return clean;
     }
     if (clean.startsWith('/')) {
-      return '${ApiService.baseUrl.replaceAll('/api', '')}$clean';
+      return '${ApiService.hostUrl}$clean';
     }
     return '${ApiService.baseUrl}/files/$clean';
   }
@@ -91,7 +111,10 @@ class MediaStorageService {
     final file = File('${dir.path}/$filename');
 
     if (await file.exists()) {
-      return file;
+      final length = await file.length();
+      if (length > 0) {
+        return file;
+      }
     }
     return null;
   }
@@ -111,17 +134,21 @@ class MediaStorageService {
       final filename = generateMediaFilename(url, type: type);
       final targetFile = File('${dir.path}/$filename');
 
-      // Se já existe, retorna diretamente
-      if (await targetFile.exists()) {
+      // Se já existe e tem conteúdo válido, retorna diretamente
+      if (await targetFile.exists() && await targetFile.length() > 0) {
         return targetFile;
       }
 
       final fullUrl = resolveFullUrl(url);
+      debugPrint('MediaStorageService: Baixando mídia para cache: $fullUrl');
       final response = await http.get(Uri.parse(fullUrl), headers: headers);
 
       if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
         await targetFile.writeAsBytes(response.bodyBytes, flush: true);
+        debugPrint('MediaStorageService: Mídia salva em cache com sucesso: ${targetFile.path} (${response.bodyBytes.length} bytes)');
         return targetFile;
+      } else {
+        debugPrint('MediaStorageService: Resposta HTTP ${response.statusCode} ao baixar $fullUrl');
       }
     } catch (e) {
       debugPrint('MediaStorageService: Falha ao baixar mídia $url: $e');

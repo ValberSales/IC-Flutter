@@ -36,12 +36,12 @@ class JogoBreadcrumbWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
         ],
-        border: Border.all(color: AppColors.primary.withOpacity(0.15), width: 1.5),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.15), width: 1.5),
       ),
       child: Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,
@@ -84,7 +84,7 @@ class JogoBreadcrumbWidget extends StatelessWidget {
                     fontFamily: 'Fredoka',
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
-                    color: AppColors.textDark.withOpacity(0.8),
+                    color: AppColors.textDark.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -101,7 +101,7 @@ class JogoBreadcrumbWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
-              color: AppColors.accent.withOpacity(0.15),
+              color: AppColors.accent.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(

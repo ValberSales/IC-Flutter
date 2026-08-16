@@ -30,7 +30,7 @@ class TurmaCardWidget extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
         side: BorderSide(
-          color: AppColors.primary.withOpacity(0.2),
+          color: AppColors.primary.withValues(alpha: 0.2),
         ),
       ),
       child: Padding(
@@ -43,7 +43,7 @@ class TurmaCardWidget extends StatelessWidget {
               height: 48,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.12),
+                color: AppColors.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(Icons.school_rounded, color: AppColors.primary, size: 26),
@@ -86,9 +86,9 @@ class TurmaCardWidget extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.primary.withOpacity(0.25)),
+                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -118,7 +118,7 @@ class TurmaCardWidget extends StatelessWidget {
                       turma.descricao,
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textDark.withOpacity(0.7),
+                        color: AppColors.textDark.withValues(alpha: 0.7),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -189,7 +189,7 @@ class TurmaCardWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

@@ -1,11 +1,16 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_client/core/constants/app_colors.dart';
 import 'package:flutter_client/data/models/relatorio_turma.dart';
-import 'dart:html' as html;
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:universal_html/html.dart' as html;
 
 class ExportReportService {
-  static void exportTurmaCsv(BuildContext context, RelatorioTurma relatorio) {
+  static Future<void> exportTurmaCsv(BuildContext context, RelatorioTurma relatorio) async {
     final buffer = StringBuffer();
     // UTF-8 BOM para garantir acentuação correta no Excel
     buffer.write('\uFEFF');
@@ -41,302 +46,359 @@ class ExportReportService {
       }
     }
 
-    _downloadFile(
-      buffer.toString(),
-      'relatorio_turma_${relatorio.turmaCodigo}_${DateTime.now().millisecondsSinceEpoch}.csv',
-      'text/csv;charset=utf-8',
-    );
+    final fileName = 'relatorio_turma_${relatorio.turmaCodigo}_${DateTime.now().millisecondsSinceEpoch}.csv';
+    final content = buffer.toString();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('📊 Relatório CSV exportado com sucesso!'),
-        backgroundColor: AppColors.accent,
+    if (kIsWeb) {
+      final bytes = Uri.encodeComponent(content);
+      html.AnchorElement(href: 'data:text/csv;charset=utf-8,$bytes')
+        ..setAttribute('download', fileName)
+        ..click();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('📊 Relatório CSV baixado com sucesso!'),
+            backgroundColor: AppColors.accent,
+          ),
+        );
+      }
+    } else {
+      try {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsString(content);
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('📊 CSV salvo em: ${file.path}'),
+              backgroundColor: AppColors.accent,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao salvar CSV: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  static Future<void> printTurmaReport(BuildContext context, RelatorioTurma relatorio) async {
+    final dateStr = '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}';
+
+    final doc = pw.Document();
+
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return [
+            // Cabeçalho
+            pw.Container(
+              decoration: const pw.BoxDecoration(
+                border: pw.Border(
+                  bottom: pw.BorderSide(color: PdfColors.deepPurple, width: 2),
+                ),
+              ),
+              padding: const pw.EdgeInsets.only(bottom: 12),
+              margin: const pw.EdgeInsets.only(bottom: 18),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'Alfabetiza Libras - Relatório Pedagógico',
+                        style: pw.TextStyle(
+                          fontSize: 18,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.deepPurple,
+                        ),
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        'Turma: ${relatorio.turmaNome} (Código: ${relatorio.turmaCodigo})',
+                        style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
+                      ),
+                    ],
+                  ),
+                  pw.Text(
+                    'Emissão: $dateStr',
+                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                  ),
+                ],
+              ),
+            ),
+
+            // Mini KPIs
+            pw.Row(
+              children: [
+                pw.Expanded(
+                  child: _buildPdfKpi(
+                    'Aproveitamento Geral',
+                    '${relatorio.taxaAproveitamentoGeral}%',
+                    PdfColors.teal,
+                  ),
+                ),
+                pw.SizedBox(width: 8),
+                pw.Expanded(
+                  child: _buildPdfKpi(
+                    'Total de Alunos',
+                    '${relatorio.totalAlunos}',
+                    PdfColors.deepPurple,
+                  ),
+                ),
+                pw.SizedBox(width: 8),
+                pw.Expanded(
+                  child: _buildPdfKpi(
+                    'Partidas Jogadas',
+                    '${relatorio.totalPartidas}',
+                    PdfColors.orange800,
+                  ),
+                ),
+                pw.SizedBox(width: 8),
+                pw.Expanded(
+                  child: _buildPdfKpi(
+                    'Temas Alocados',
+                    '${relatorio.temas.length}',
+                    PdfColors.purple,
+                  ),
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 20),
+
+            // Título da Seção
+            pw.Text(
+              'Desempenho Consolidado por Aluno',
+              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.grey900),
+            ),
+            pw.SizedBox(height: 8),
+
+            // Tabela
+            pw.TableHelper.fromTextArray(
+              headers: ['Usuário', 'Nome do Aluno', 'Partidas', 'Acertos', 'Erros', 'Aproveitamento', 'Nível'],
+              headerStyle: pw.TextStyle(
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.white,
+                fontSize: 10,
+              ),
+              headerDecoration: const pw.BoxDecoration(color: PdfColors.deepPurple),
+              cellStyle: const pw.TextStyle(fontSize: 9),
+              cellHeight: 24,
+              cellAlignment: pw.Alignment.centerLeft,
+              data: relatorio.alunos.map((a) {
+                return [
+                  '@${a.username}',
+                  a.nome,
+                  '${a.totalPartidas}',
+                  '${a.acertos}',
+                  '${a.erros}',
+                  '${a.taxaAproveitamento}%',
+                  a.dificuldadeCalculada,
+                ];
+              }).toList(),
+            ),
+
+            pw.SizedBox(height: 24),
+            pw.Divider(color: PdfColors.grey300),
+            pw.Text(
+              'Documento gerado automaticamente pelo Sistema Alfabetiza Libras - UTFPR Pato Branco',
+              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+              textAlign: pw.TextAlign.center,
+            ),
+          ];
+        },
       ),
     );
+
+    await Printing.layoutPdf(
+      name: 'relatorio_turma_${relatorio.turmaCodigo}.pdf',
+      onLayout: (PdfPageFormat format) async => doc.save(),
+    );
   }
 
-  static void printTurmaReport(BuildContext context, RelatorioTurma relatorio) {
-    if (!kIsWeb) return;
-
+  static Future<void> printAlunoReport(BuildContext context, AlunoDesempenho aluno, String turmaNome) async {
     final dateStr = '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}';
 
-    final htmlContent = '''
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Relatório Pedagógico - ${relatorio.turmaNome}</title>
-  <style>
-    @media print {
-      @page { margin: 15mm; }
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    }
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      color: #2D3748;
-      margin: 0;
-      padding: 24px;
-      line-height: 1.5;
-    }
-    .header {
-      border-bottom: 3px solid #6C5CE7;
-      padding-bottom: 12px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-    .title { font-size: 24px; font-weight: bold; color: #4834D4; margin: 0; }
-    .subtitle { font-size: 14px; color: #718096; margin-top: 4px; }
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .kpi-card {
-      background: #F7FAFC;
-      border: 1px solid #E2E8F0;
-      border-radius: 8px;
-      padding: 12px;
-      text-align: center;
-    }
-    .kpi-label { font-size: 12px; color: #718096; text-transform: uppercase; font-weight: 600; }
-    .kpi-value { font-size: 20px; font-weight: bold; color: #2D3748; margin-top: 4px; }
-    .kpi-accent { color: #00B894; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 24px;
-      font-size: 13px;
-    }
-    th {
-      background-color: #6C5CE7;
-      color: white;
-      text-align: left;
-      padding: 8px 10px;
-    }
-    td {
-      padding: 8px 10px;
-      border-bottom: 1px solid #E2E8F0;
-    }
-    tr:nth-child(even) { background-color: #F8FAFC; }
-    .badge-apto {
-      background: #D4EDDA;
-      color: #155724;
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-weight: bold;
-      font-size: 11px;
-    }
-    .section-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #2D3748;
-      margin-bottom: 10px;
-      border-left: 4px solid #6C5CE7;
-      padding-left: 8px;
-    }
-    .footer {
-      font-size: 11px;
-      color: #A0AEC0;
-      text-align: center;
-      margin-top: 30px;
-      border-top: 1px solid #E2E8F0;
-      padding-top: 10px;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <h1 class="title">Alfabetiza Libras • Relatório Pedagógico</h1>
-      <div class="subtitle">Turma: <strong>${relatorio.turmaNome}</strong> (PIN: ${relatorio.turmaCodigo})</div>
-    </div>
-    <div style="text-align: right; font-size: 12px; color: #718096;">
-      Emissão: $dateStr
-    </div>
-  </div>
+    final doc = pw.Document();
 
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">Aproveitamento Geral</div>
-      <div class="kpi-value kpi-accent">${relatorio.taxaAproveitamentoGeral}%</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Total de Alunos</div>
-      <div class="kpi-value">${relatorio.totalAlunos}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Partidas Jogadas</div>
-      <div class="kpi-value">${relatorio.totalPartidas}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Temas Vinculados</div>
-      <div class="kpi-value">${relatorio.temas.length}</div>
-    </div>
-  </div>
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return [
+            // Cabeçalho
+            pw.Container(
+              decoration: const pw.BoxDecoration(
+                border: pw.Border(
+                  bottom: pw.BorderSide(color: PdfColors.deepPurple, width: 2),
+                ),
+              ),
+              padding: const pw.EdgeInsets.only(bottom: 12),
+              margin: const pw.EdgeInsets.only(bottom: 18),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'Alfabetiza Libras - Ficha Individual do Aluno',
+                        style: pw.TextStyle(
+                          fontSize: 18,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.deepPurple,
+                        ),
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        'Aluno(a): ${aluno.nome} (@${aluno.username}) - Turma: $turmaNome',
+                        style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
+                      ),
+                    ],
+                  ),
+                  pw.Text(
+                    'Emissão: $dateStr',
+                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                  ),
+                ],
+              ),
+            ),
 
-  <div class="section-title">Desempenho Consolidado por Aluno</div>
-  <table>
-    <thead>
-      <tr>
-        <th>Usuário</th>
-        <th>Nome do Aluno</th>
-        <th>Partidas</th>
-        <th>Acertos</th>
-        <th>Erros</th>
-        <th>Aproveitamento</th>
-        <th>Nível</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${relatorio.alunos.map((a) => '''
-      <tr>
-        <td><strong>@${a.username}</strong></td>
-        <td>${a.nome}</td>
-        <td>${a.totalPartidas}</td>
-        <td style="color: #00B894; font-weight: bold;">${a.acertos}</td>
-        <td style="color: #D63031; font-weight: bold;">${a.erros}</td>
-        <td><strong>${a.taxaAproveitamento}%</strong></td>
-        <td>${a.dificuldadeCalculada}</td>
-      </tr>
-      ''').join('')}
-    </tbody>
-  </table>
+            // Mini KPIs
+            pw.Row(
+              children: [
+                pw.Expanded(
+                  child: _buildPdfKpi(
+                    'Aproveitamento',
+                    '${aluno.taxaAproveitamento}%',
+                    PdfColors.teal,
+                  ),
+                ),
+                pw.SizedBox(width: 8),
+                pw.Expanded(
+                  child: _buildPdfKpi(
+                    'Total de Partidas',
+                    '${aluno.totalPartidas}',
+                    PdfColors.deepPurple,
+                  ),
+                ),
+                pw.SizedBox(width: 8),
+                pw.Expanded(
+                  child: _buildPdfKpi(
+                    'Acertos / Erros',
+                    '${aluno.acertos} / ${aluno.erros}',
+                    PdfColors.orange800,
+                  ),
+                ),
+                pw.SizedBox(width: 8),
+                pw.Expanded(
+                  child: _buildPdfKpi(
+                    'Nível Atual',
+                    aluno.dificuldadeAtual,
+                    PdfColors.purple,
+                  ),
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 20),
 
-  <div class="footer">
-    Documento gerado automaticamente pelo Sistema Alfabetiza Libras • Plataforma Pedagógica de Alfabetização em Libras
-  </div>
+            // Histórico
+            pw.Text(
+              'Histórico de Partidas e Atividades',
+              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.grey900),
+            ),
+            pw.SizedBox(height: 8),
 
-  <script>
-    window.onload = function() {
-      window.print();
-    };
-  </script>
-</body>
-</html>
-''';
+            if (aluno.historico.isEmpty)
+              pw.Text(
+                'Nenhuma partida registrada até o momento.',
+                style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+              )
+            else
+              pw.TableHelper.fromTextArray(
+                headers: ['Jogo', 'Tema / Atividade', 'Nível', 'Acertos', 'Erros', 'Aproveitamento', 'Data/Hora'],
+                headerStyle: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white,
+                  fontSize: 10,
+                ),
+                headerDecoration: const pw.BoxDecoration(color: PdfColors.deepPurple),
+                cellStyle: const pw.TextStyle(fontSize: 9),
+                cellHeight: 24,
+                cellAlignment: pw.Alignment.centerLeft,
+                data: aluno.historico.map((p) {
+                  final pDate = p.createdAt != null
+                      ? '${p.createdAt!.day}/${p.createdAt!.month}/${p.createdAt!.year} ${p.createdAt!.hour}:${p.createdAt!.minute.toString().padLeft(2, '0')}'
+                      : '-';
+                  return [
+                    p.atividade,
+                    p.tema,
+                    p.dificuldade,
+                    '${p.acertos}',
+                    '${p.erros}',
+                    '${p.taxaAproveitamento}%',
+                    pDate,
+                  ];
+                }).toList(),
+              ),
 
-    final blob = html.Blob([htmlContent], 'text/html');
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    html.window.open(url, '_blank');
+            pw.SizedBox(height: 24),
+            pw.Divider(color: PdfColors.grey300),
+            pw.Text(
+              'Documento gerado automaticamente pelo Sistema Alfabetiza Libras - UTFPR Pato Branco',
+              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+              textAlign: pw.TextAlign.center,
+            ),
+          ];
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      name: 'ficha_aluno_${aluno.username}.pdf',
+      onLayout: (PdfPageFormat format) async => doc.save(),
+    );
   }
 
-  static void printAlunoReport(BuildContext context, AlunoDesempenho aluno, String turmaNome) {
-    if (!kIsWeb) return;
-
-    final dateStr = '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}';
-
-    final htmlContent = '''
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Ficha do Aluno - ${aluno.nome}</title>
-  <style>
-    @media print {
-      @page { margin: 15mm; }
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    }
-    body { font-family: 'Segoe UI', Arial, sans-serif; color: #2D3748; padding: 24px; }
-    .header { border-bottom: 3px solid #6C5CE7; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; }
-    .title { font-size: 22px; font-weight: bold; color: #4834D4; margin: 0; }
-    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-    .kpi-card { background: #F7FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; text-align: center; }
-    .kpi-label { font-size: 11px; color: #718096; text-transform: uppercase; font-weight: 600; }
-    .kpi-value { font-size: 18px; font-weight: bold; color: #2D3748; margin-top: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
-    th { background-color: #6C5CE7; color: white; padding: 8px 10px; text-align: left; }
-    td { padding: 8px 10px; border-bottom: 1px solid #E2E8F0; }
-    tr:nth-child(even) { background-color: #F8FAFC; }
-    .section-title { font-size: 15px; font-weight: bold; color: #2D3748; margin-top: 20px; border-left: 4px solid #6C5CE7; padding-left: 8px; }
-    .footer { font-size: 11px; color: #A0AEC0; text-align: center; margin-top: 30px; border-top: 1px solid #E2E8F0; padding-top: 10px; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <h1 class="title">Alfabetiza Libras • Ficha Individual de Desempenho</h1>
-      <div style="margin-top: 4px;">Aluno(a): <strong>${aluno.nome}</strong> (@${aluno.username} • Turma: $turmaNome)</div>
-    </div>
-    <div style="font-size: 12px; color: #718096; text-align: right;">
-      Emissão: $dateStr
-    </div>
-  </div>
-
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">Aproveitamento Geral</div>
-      <div class="kpi-value" style="color: #00B894;">${aluno.taxaAproveitamento}%</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Total de Partidas</div>
-      <div class="kpi-value">${aluno.totalPartidas}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Acertos / Erros</div>
-      <div class="kpi-value">${aluno.acertos} / ${aluno.erros}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Nível Atual</div>
-      <div class="kpi-value">${aluno.dificuldadeAtual}</div>
-    </div>
-  </div>
-
-  <div class="section-title">Histórico de Partidas e Atividades</div>
-  ${aluno.historico.isEmpty ? '<p style="color: #718096; margin-top: 10px;">Nenhuma partida registrada até o momento.</p>' : '''
-  <table>
-    <thead>
-      <tr>
-        <th>Jogo</th>
-        <th>Tema / Atividade</th>
-        <th>Nível</th>
-        <th>Acertos</th>
-        <th>Erros</th>
-        <th>Aproveitamento</th>
-        <th>Data / Hora</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${aluno.historico.map((p) => '''
-      <tr>
-        <td>${p.atividade}</td>
-        <td><strong>${p.tema}</strong></td>
-        <td>${p.dificuldade}</td>
-        <td style="color: #00B894; font-weight: bold;">${p.acertos}</td>
-        <td style="color: #D63031; font-weight: bold;">${p.erros}</td>
-        <td><strong>${p.taxaAproveitamento}%</strong></td>
-        <td>${p.createdAt != null ? '${p.createdAt!.day}/${p.createdAt!.month}/${p.createdAt!.year} ${p.createdAt!.hour}:${p.createdAt!.minute.toString().padLeft(2, '0')}' : '-'}</td>
-      </tr>
-      ''').join('')}
-    </tbody>
-  </table>
-  '''}
-
-  <div class="footer">
-    Documento gerado automaticamente pelo Sistema Alfabetiza Libras • Plataforma Pedagógica de Alfabetização em Libras
-  </div>
-
-  <script>
-    window.onload = function() {
-      window.print();
-    };
-  </script>
-</body>
-</html>
-''';
-
-    final blob = html.Blob([htmlContent], 'text/html');
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    html.window.open(url, '_blank');
-  }
-
-  static void _downloadFile(String content, String fileName, String mimeType) {
-    if (!kIsWeb) return;
-    final bytes = Uri.encodeComponent(content);
-    final anchor = html.AnchorElement(href: 'data:$mimeType,$bytes')
-      ..setAttribute('download', fileName)
-      ..click();
+  static pw.Widget _buildPdfKpi(String title, String value, PdfColor color) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(10),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.grey100,
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+        border: pw.Border.all(color: PdfColors.grey300),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          pw.Text(
+            title,
+            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+            textAlign: pw.TextAlign.center,
+          ),
+          pw.SizedBox(height: 4),
+          pw.Text(
+            value,
+            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: color),
+            textAlign: pw.TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 }

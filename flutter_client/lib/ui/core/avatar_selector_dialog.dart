@@ -54,7 +54,7 @@ class _AvatarSelectorDialogState extends State<AvatarSelectorDialog> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.12),
+                    color: AppColors.primary.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.face_rounded, color: AppColors.primary, size: 28),
@@ -111,16 +111,16 @@ class _AvatarSelectorDialogState extends State<AvatarSelectorDialog> {
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.secondary.withOpacity(0.15) : Colors.white,
+                        color: isSelected ? AppColors.secondary.withValues(alpha: 0.15) : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSelected ? AppColors.secondary : Colors.grey.withOpacity(0.25),
+                          color: isSelected ? AppColors.secondary : Colors.grey.withValues(alpha: 0.25),
                           width: isSelected ? 3.5 : 1.5,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: AppColors.secondary.withOpacity(0.3),
+                                  color: AppColors.secondary.withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 )
@@ -137,7 +137,7 @@ class _AvatarSelectorDialogState extends State<AvatarSelectorDialog> {
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: double.infinity,
-                              errorBuilder: (_, __, ___) => const Icon(
+                              errorBuilder: (_, _, _) => const Icon(
                                 Icons.person,
                                 size: 40,
                                 color: AppColors.primary,

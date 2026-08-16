@@ -105,6 +105,9 @@ public class UsuarioService {
             }
             usuario.setUsername(newUsername);
         }
+        if (dadosAtualizados.getEmail() != null && !dadosAtualizados.getEmail().trim().isEmpty()) {
+            usuario.setEmail(dadosAtualizados.getEmail().trim());
+        }
         if (dadosAtualizados.getAvatar() != null && !dadosAtualizados.getAvatar().trim().isEmpty()) {
             usuario.setAvatar(dadosAtualizados.getAvatar().trim());
         }

@@ -32,7 +32,7 @@ class SobreProjetoDialog extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.12),
+                          color: AppColors.primary.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.info_rounded, color: AppColors.primary, size: 26),
@@ -153,7 +153,7 @@ class SobreProjetoDialog extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textDark.withOpacity(0.6),
+                    color: AppColors.textDark.withValues(alpha: 0.6),
                     height: 1.3,
                   ),
                 ),
@@ -188,10 +188,10 @@ class SobreProjetoDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: isPrimary ? AppColors.primary.withOpacity(0.06) : AppColors.bgSoft,
+        color: isPrimary ? AppColors.primary.withValues(alpha: 0.06) : AppColors.bgSoft,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isPrimary ? AppColors.primary.withOpacity(0.3) : AppColors.border,
+          color: isPrimary ? AppColors.primary.withValues(alpha: 0.3) : AppColors.border,
         ),
       ),
       child: Row(
@@ -200,13 +200,13 @@ class SobreProjetoDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: isPrimary ? AppColors.primary.withOpacity(0.15) : Colors.grey.withOpacity(0.12),
+              color: isPrimary ? AppColors.primary.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 18,
-              color: isPrimary ? AppColors.primary : AppColors.textDark.withOpacity(0.7),
+              color: isPrimary ? AppColors.primary : AppColors.textDark.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(width: 12),
@@ -219,7 +219,7 @@ class SobreProjetoDialog extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: isPrimary ? AppColors.primary : AppColors.textDark.withOpacity(0.65),
+                    color: isPrimary ? AppColors.primary : AppColors.textDark.withValues(alpha: 0.65),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -237,7 +237,7 @@ class SobreProjetoDialog extends StatelessWidget {
                     subInfo,
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.textDark.withOpacity(0.6),
+                      color: AppColors.textDark.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

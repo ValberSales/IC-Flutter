@@ -106,10 +106,10 @@ class _UserEditDialogState extends State<UserEditDialog> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: _isAdmin ? Colors.purple.withOpacity(0.08) : AppColors.bgSoft,
+                  color: _isAdmin ? Colors.purple.withValues(alpha: 0.08) : AppColors.bgSoft,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: _isAdmin ? Colors.purple.withOpacity(0.4) : AppColors.border,
+                    color: _isAdmin ? Colors.purple.withValues(alpha: 0.4) : AppColors.border,
                   ),
                 ),
                 child: Row(
@@ -133,7 +133,7 @@ class _UserEditDialogState extends State<UserEditDialog> {
                                 : 'Perfil padrão de aluno (USER).',
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textDark.withOpacity(0.7),
+                              color: AppColors.textDark.withValues(alpha: 0.7),
                             ),
                           ),
                         ],
@@ -141,7 +141,7 @@ class _UserEditDialogState extends State<UserEditDialog> {
                     ),
                     Switch(
                       value: _isAdmin,
-                      activeColor: Colors.purple,
+                      activeThumbColor: Colors.purple,
                       onChanged: (val) => setState(() => _isAdmin = val),
                     ),
                   ],

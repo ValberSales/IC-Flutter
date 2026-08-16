@@ -27,8 +27,8 @@ class JogoMemoriaViewModel extends ChangeNotifier {
   bool _bloqueado = false;
   bool _endGame = false;
   String _feedback = 'VAZIO';
-  int _acertosCount = 0;
-  int _errosCount = 0;
+  final int _acertosCount = 0;
+  final int _errosCount = 0;
   Timer? _initialRevealTimer;
   String _diff = 'FACIL';
 

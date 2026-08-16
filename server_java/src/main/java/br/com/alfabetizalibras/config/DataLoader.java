@@ -35,14 +35,14 @@ public class DataLoader implements CommandLineRunner {
         if (!usuarioRepository.existsByUsername("admin")) {
             Usuario admin = new Usuario(null, "Professor Admin", "admin@alfabetizalibras.com.br", "admin", passwordEncoder.encode("123456"));
             admin.setRole("ADMIN");
-            admin.setCodigoIdentificador("ADM-0001");
+            admin.setCodigoIdentificador(java.util.UUID.randomUUID().toString());
             admin.setAvatar("assets/avatar/avatar_1.png");
             usuarioRepository.save(admin);
         } else {
             usuarioRepository.findByUsername("admin").ifPresent(admin -> {
                 admin.setRole("ADMIN");
-                if (admin.getCodigoIdentificador() == null) {
-                    admin.setCodigoIdentificador("ADM-0001");
+                if (admin.getCodigoIdentificador() == null || admin.getCodigoIdentificador().startsWith("ADM-")) {
+                    admin.setCodigoIdentificador(java.util.UUID.randomUUID().toString());
                 }
                 if (admin.getAvatar() == null) {
                     admin.setAvatar("assets/avatar/avatar_1.png");

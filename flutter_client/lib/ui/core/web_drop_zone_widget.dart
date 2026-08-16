@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:html' as html;
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:universal_html/html.dart' as html;
 import '../../core/constants/app_colors.dart';
 import '../../data/services/api_service.dart';
 
@@ -23,6 +23,7 @@ class WebDropZoneWidget extends StatefulWidget {
 class _WebDropZoneWidgetState extends State<WebDropZoneWidget> {
   bool _isDraggingOver = false;
   bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
   StreamSubscription<html.MouseEvent>? _dragOverSub;
   StreamSubscription<html.MouseEvent>? _dragLeaveSub;
   StreamSubscription<html.MouseEvent>? _dropSub;
@@ -67,16 +68,16 @@ class _WebDropZoneWidgetState extends State<WebDropZoneWidget> {
 
       final files = event.dataTransfer.files;
       if (files != null && files.isNotEmpty) {
-        _processFile(files[0]);
+        _processWebFile(files[0]);
       }
     });
   }
 
-  void _processFile(html.File file) {
+  void _processWebFile(html.File file) {
     if (!file.type.startsWith('image/')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Por favor, solte apenas arquivos de imagem (PNG, JPG, WEBP).'),
+          content: Text('Por favor, selecione apenas arquivos de imagem (PNG, JPG, WEBP).'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -91,7 +92,8 @@ class _WebDropZoneWidgetState extends State<WebDropZoneWidget> {
     reader.readAsArrayBuffer(file);
     reader.onLoadEnd.listen((e) async {
       final bytes = reader.result as Uint8List;
-      final url = await ApiService.uploadImagem(bytes, file.name);
+      final filename = file.name.isNotEmpty ? file.name : 'upload_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final url = await ApiService.uploadImagem(bytes, filename);
 
       if (mounted) {
         setState(() {
@@ -102,14 +104,14 @@ class _WebDropZoneWidgetState extends State<WebDropZoneWidget> {
           widget.onImageUploaded(url);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('📷 Imagem "$url" carregada via Drag & Drop com sucesso!'),
+              content: Text('📷 Imagem "$url" carregada com sucesso!'),
               backgroundColor: AppColors.accent,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Erro ao enviar imagem enviada por arrasto.'),
+              content: Text('Erro ao enviar imagem para o servidor.'),
               backgroundColor: AppColors.error,
             ),
           );
@@ -118,17 +120,61 @@ class _WebDropZoneWidgetState extends State<WebDropZoneWidget> {
     });
   }
 
-  void _handleClickUpload() {
-    if (kIsWeb) {
-      final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
-      uploadInput.click();
+  Future<void> _handleClickUpload() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 90,
+      );
 
-      uploadInput.onChange.listen((e) {
-        final files = uploadInput.files;
-        if (files != null && files.isNotEmpty) {
-          _processFile(files[0]);
-        }
+      if (pickedFile == null) return;
+
+      setState(() {
+        _isUploading = true;
       });
+
+      final bytes = await pickedFile.readAsBytes();
+      final filename = pickedFile.name.isNotEmpty
+          ? pickedFile.name
+          : 'upload_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      final url = await ApiService.uploadImagem(bytes, filename);
+
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+
+        if (url != null) {
+          widget.onImageUploaded(url);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('📷 Imagem "$url" carregada com sucesso!'),
+              backgroundColor: AppColors.accent,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erro ao enviar imagem para o servidor.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Erro ao selecionar imagem: $e');
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao abrir o seletor de arquivos: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -142,7 +188,7 @@ class _WebDropZoneWidgetState extends State<WebDropZoneWidget> {
 
   Widget _buildImagePreviewWidget(String path) {
     final fullUrl = path.startsWith('/api/files/')
-        ? 'http://localhost:8081$path'
+        ? '${ApiService.hostUrl}$path'
         : (path.startsWith('http') ? path : path);
 
     return ClipRRect(
@@ -155,12 +201,12 @@ class _WebDropZoneWidgetState extends State<WebDropZoneWidget> {
                 ? Image.network(
                     fullUrl,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_rounded, size: 40, color: AppColors.error),
+                    errorBuilder: (_, _, _) => const Icon(Icons.broken_image_rounded, size: 40, color: AppColors.error),
                   )
                 : Image.asset(
                     path,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported_rounded, size: 40, color: AppColors.error),
+                    errorBuilder: (_, _, _) => const Icon(Icons.image_not_supported_rounded, size: 40, color: AppColors.error),
                   ),
           ),
           Positioned(
@@ -169,17 +215,17 @@ class _WebDropZoneWidgetState extends State<WebDropZoneWidget> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.65),
+                color: Colors.black.withValues(alpha: 0.65),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.swap_horiz_rounded, size: 16, color: Colors.white),
-                  SizedBox(width: 6),
+                  const Icon(Icons.swap_horiz_rounded, size: 16, color: Colors.white),
+                  const SizedBox(width: 6),
                   Text(
-                    'Arraste ou clique para trocar',
-                    style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                    kIsWeb ? 'Arraste ou clique para trocar' : 'Toque para alterar a imagem',
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -204,7 +250,7 @@ class _WebDropZoneWidgetState extends State<WebDropZoneWidget> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: _isDraggingOver
-              ? AppColors.primary.withOpacity(0.15)
+              ? AppColors.primary.withValues(alpha: 0.15)
               : AppColors.bgSoft,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
@@ -240,9 +286,11 @@ class _WebDropZoneWidgetState extends State<WebDropZoneWidget> {
             ] else ...[
               const Icon(Icons.cloud_upload_outlined, size: 44, color: AppColors.primaryLight),
               const SizedBox(height: 8),
-              const Text(
-                'Arraste e solte uma imagem aqui',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDark),
+              Text(
+                kIsWeb
+                    ? 'Arraste e solte uma imagem aqui'
+                    : 'Toque para selecionar uma imagem',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDark),
               ),
               const SizedBox(height: 8),
               ElevatedButton.icon(

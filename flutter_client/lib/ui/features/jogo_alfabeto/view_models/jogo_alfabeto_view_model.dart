@@ -106,11 +106,8 @@ class JogoAlfabetoViewModel extends ChangeNotifier {
     _opcoes = listOpcoes.map((e) => LetraJogo(letraData: e)).toList();
     _acerto = false;
     _feedback = 'VAZIO';
-    _errouLetraAtual = false;
     notifyListeners();
   }
-
-  bool _errouLetraAtual = false;
 
   void verificarResposta(LetraJogo opcaoSelected) {
     if (_acerto || !opcaoSelected.pendente) return;

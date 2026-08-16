@@ -43,7 +43,7 @@ class DifficultyEvolutionCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.purple.withOpacity(0.1),
+                        color: Colors.purple.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -88,8 +88,10 @@ class DifficultyEvolutionCard extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Legenda e Contagens
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.spaceAround,
                   children: [
                     _buildLegendItem('Fácil (Iniciante)', '${evolucao.facil} aluno(s) (${pctFacil.toStringAsFixed(0)}%)', Colors.green.shade600),
                     _buildLegendItem('Médio (Intermediário)', '${evolucao.medio} aluno(s) (${pctMedio.toStringAsFixed(0)}%)', Colors.amber.shade700),
@@ -123,7 +125,7 @@ class DifficultyEvolutionCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   'O nível é diagnosticado quando o aluno alcança 70% ou mais de aproveitamento nos temas vinculados a esta turma.',
-                  style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
+                  style: TextStyle(fontSize: 12, color: AppColors.textDark.withValues(alpha: 0.7)),
                 ),
                 const SizedBox(height: 16),
 
@@ -133,7 +135,7 @@ class DifficultyEvolutionCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 24.0),
                       child: Text(
                         'Nenhum estudante matriculado nesta turma.',
-                        style: TextStyle(fontSize: 14, color: AppColors.textDark.withOpacity(0.6)),
+                        style: TextStyle(fontSize: 14, color: AppColors.textDark.withValues(alpha: 0.6)),
                       ),
                     ),
                   )
@@ -142,7 +144,7 @@ class DifficultyEvolutionCard extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: relatorio.alunos.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final aluno = relatorio.alunos[index];
                       return _buildStudentLevelTile(context, aluno);
@@ -184,14 +186,14 @@ class DifficultyEvolutionCard extends StatelessWidget {
       ),
       subtitle: Text(
         '@${aluno.username} • ${aluno.totalPartidas} partida(s)',
-        style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
+        style: TextStyle(fontSize: 12, color: AppColors.textDark.withValues(alpha: 0.7)),
       ),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: badgeBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: badgeColor.withOpacity(0.4)),
+          border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
         ),
         child: Text(
           badgeLabel,
@@ -214,7 +216,7 @@ class DifficultyEvolutionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-            Text(subtitle, style: TextStyle(fontSize: 10, color: AppColors.textDark.withOpacity(0.7))),
+            Text(subtitle, style: TextStyle(fontSize: 10, color: AppColors.textDark.withValues(alpha: 0.7))),
           ],
         ),
       ],

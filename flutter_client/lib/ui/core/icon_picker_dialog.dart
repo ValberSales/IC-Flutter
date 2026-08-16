@@ -168,7 +168,7 @@ class _IconPickerDialogWidgetState extends State<IconPickerDialogWidget> {
                               duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: isSelected ? AppColors.primary.withOpacity(0.12) : AppColors.bgSoft,
+                                color: isSelected ? AppColors.primary.withValues(alpha: 0.12) : AppColors.bgSoft,
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
                                   color: isSelected ? AppColors.primary : Colors.transparent,
@@ -181,7 +181,7 @@ class _IconPickerDialogWidgetState extends State<IconPickerDialogWidget> {
                                   Icon(
                                     item.icon,
                                     size: 32,
-                                    color: isSelected ? AppColors.primary : AppColors.textDark.withOpacity(0.8),
+                                    color: isSelected ? AppColors.primary : AppColors.textDark.withValues(alpha: 0.8),
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
@@ -192,7 +192,7 @@ class _IconPickerDialogWidgetState extends State<IconPickerDialogWidget> {
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      color: isSelected ? AppColors.primary : AppColors.textDark.withOpacity(0.7),
+                                      color: isSelected ? AppColors.primary : AppColors.textDark.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],

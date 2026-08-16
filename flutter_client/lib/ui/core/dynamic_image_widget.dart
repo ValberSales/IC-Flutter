@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../../data/services/api_service.dart';
 import '../../data/storage/media_storage_service.dart';
 
 class DynamicImageWidget extends StatefulWidget {
@@ -31,7 +29,6 @@ class DynamicImageWidget extends StatefulWidget {
 
 class _DynamicImageWidgetState extends State<DynamicImageWidget> {
   File? _localCachedFile;
-  bool _checkedLocal = false;
 
   @override
   void initState() {
@@ -43,7 +40,6 @@ class _DynamicImageWidgetState extends State<DynamicImageWidget> {
   void didUpdateWidget(covariant DynamicImageWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.imagePath != widget.imagePath) {
-      _checkedLocal = false;
       _localCachedFile = null;
       _checkLocalCache();
     }
@@ -52,25 +48,23 @@ class _DynamicImageWidgetState extends State<DynamicImageWidget> {
   Future<void> _checkLocalCache() async {
     final path = widget.imagePath.trim();
     if (kIsWeb || !MediaStorageService.isCacheableUrl(path)) {
-      if (mounted) {
-        setState(() {
-          _checkedLocal = true;
-        });
-      }
       return;
     }
 
     final local = await MediaStorageService.getLocalMediaFile(path);
-    if (mounted) {
+    if (mounted && local != null) {
       setState(() {
         _localCachedFile = local;
-        _checkedLocal = true;
       });
+      return;
     }
 
-    // Se ainda não estiver em cache, dispara download em background para próximas execuções offline
-    if (local == null) {
-      MediaStorageService.downloadAndCacheMedia(path);
+    // Se ainda não estiver em cache, efetua o download e atualiza imediatamente para o arquivo local
+    final downloaded = await MediaStorageService.downloadAndCacheMedia(path);
+    if (mounted && downloaded != null) {
+      setState(() {
+        _localCachedFile = downloaded;
+      });
     }
   }
 

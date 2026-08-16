@@ -159,11 +159,8 @@ class JogoPalavrasViewModel extends ChangeNotifier {
     _opcoes = listaFinal.map((p) => OpcaoPalavra(palavra: p, pendente: true)).toList();
     _acerto = false;
     _feedback = 'VAZIO';
-    _errouPalavraAtual = false;
     notifyListeners();
   }
-
-  bool _errouPalavraAtual = false;
 
   void clearFeedback() {
     _feedback = 'VAZIO';

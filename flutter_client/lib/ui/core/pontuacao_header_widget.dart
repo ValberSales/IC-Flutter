@@ -32,9 +32,9 @@ class PontuacaoHeaderWidget extends StatelessWidget {
         vertical: 8.0,
       ),
       decoration: BoxDecoration(
-        color: AppColors.primaryLight.withOpacity(0.15),
+        color: AppColors.primaryLight.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.primaryLight.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: AppColors.primaryLight.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -140,10 +140,10 @@ class PontuacaoHeaderWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withOpacity(0.5), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.08),
+            color: color.withValues(alpha: 0.08),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -160,7 +160,7 @@ class PontuacaoHeaderWidget extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
-                color: AppColors.textDark.withOpacity(0.7),
+                color: AppColors.textDark.withValues(alpha: 0.7),
               ),
             ),
           AnimatedSwitcher(

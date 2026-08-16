@@ -56,7 +56,7 @@ class _AreaProfessorViewState extends State<AreaProfessorView> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.purple.withOpacity(0.12),
+                        color: Colors.purple.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -81,7 +81,7 @@ class _AreaProfessorViewState extends State<AreaProfessorView> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textDark.withOpacity(0.75),
+                        color: AppColors.textDark.withValues(alpha: 0.75),
                         height: 1.4,
                       ),
                     ),

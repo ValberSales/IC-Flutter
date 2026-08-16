@@ -36,20 +36,20 @@ class AdivinhacaoSlotsWidget extends StatelessWidget {
         final val = index < slotValidation.length ? slotValidation[index] : null;
 
         Color borderColor = AppColors.border;
-        Color bgColor = AppColors.border.withOpacity(0.3);
+        Color bgColor = AppColors.border.withValues(alpha: 0.3);
         double borderWidth = 1.5;
 
         if (val == true) {
           borderColor = Colors.green;
-          bgColor = Colors.green.withOpacity(0.15);
+          bgColor = Colors.green.withValues(alpha: 0.15);
           borderWidth = 3.0;
         } else if (val == false) {
           borderColor = Colors.red;
-          bgColor = Colors.red.withOpacity(0.15);
+          bgColor = Colors.red.withValues(alpha: 0.15);
           borderWidth = 3.0;
         } else if (isActive) {
           borderColor = AppColors.secondary;
-          bgColor = AppColors.secondaryLight.withOpacity(0.3);
+          bgColor = AppColors.secondaryLight.withValues(alpha: 0.3);
           borderWidth = 2.5;
         } else if (preenchida != null) {
           borderColor = AppColors.primary;
@@ -72,7 +72,7 @@ class AdivinhacaoSlotsWidget extends StatelessWidget {
                 boxShadow: isActive
                     ? [
                         BoxShadow(
-                          color: AppColors.secondary.withOpacity(0.25),
+                          color: AppColors.secondary.withValues(alpha: 0.25),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -101,7 +101,7 @@ class AdivinhacaoSlotsWidget extends StatelessWidget {
                       style: TextStyle(
                         fontSize: computedFontSize + 4,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textDark.withOpacity(0.4),
+                        color: AppColors.textDark.withValues(alpha: 0.4),
                       ),
                     ),
             ),

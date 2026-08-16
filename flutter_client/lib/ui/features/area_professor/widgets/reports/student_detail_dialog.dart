@@ -61,7 +61,7 @@ class StudentDetailDialog extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           '@${aluno.username} • Turma: $turmaNome',
-                          style: TextStyle(fontSize: 12, color: AppColors.textDark.withOpacity(0.7)),
+                          style: TextStyle(fontSize: 12, color: AppColors.textDark.withValues(alpha: 0.7)),
                         ),
                       ],
                     ),
@@ -130,7 +130,7 @@ class StudentDetailDialog extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.history_toggle_off_rounded, size: 48, color: AppColors.primary.withOpacity(0.4)),
+                            Icon(Icons.history_toggle_off_rounded, size: 48, color: AppColors.primary.withValues(alpha: 0.4)),
                             const SizedBox(height: 8),
                             const Text(
                               'Nenhuma partida registrada para este aluno ainda.',
@@ -149,7 +149,7 @@ class StudentDetailDialog extends StatelessWidget {
                           child: SingleChildScrollView(
                             child: Table(
                               border: TableBorder(
-                                horizontalInside: BorderSide(color: AppColors.border.withOpacity(0.5)),
+                                horizontalInside: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
                               ),
                               columnWidths: const {
                                 0: FlexColumnWidth(1.8),
@@ -192,7 +192,7 @@ class StudentDetailDialog extends StatelessWidget {
                                       Padding(padding: const EdgeInsets.all(10), child: Text('${p.acertos}', style: const TextStyle(fontSize: 12, color: AppColors.accent, fontWeight: FontWeight.bold))),
                                       Padding(padding: const EdgeInsets.all(10), child: Text('${p.erros}', style: const TextStyle(fontSize: 12, color: AppColors.error, fontWeight: FontWeight.bold))),
                                       Padding(padding: const EdgeInsets.all(10), child: Text('${p.taxaAproveitamento}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                                      Padding(padding: const EdgeInsets.all(10), child: Text(dateStr, style: TextStyle(fontSize: 11, color: AppColors.textDark.withOpacity(0.7)))),
+                                      Padding(padding: const EdgeInsets.all(10), child: Text(dateStr, style: TextStyle(fontSize: 11, color: AppColors.textDark.withValues(alpha: 0.7)))),
                                     ],
                                   );
                                 }),
@@ -243,9 +243,9 @@ class StudentDetailDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,7 +257,7 @@ class StudentDetailDialog extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: TextStyle(fontSize: 10, color: AppColors.textDark.withOpacity(0.7), fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 10, color: AppColors.textDark.withValues(alpha: 0.7), fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

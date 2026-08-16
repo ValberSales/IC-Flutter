@@ -11,7 +11,7 @@ class AppTheme {
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         error: AppColors.error,
-        background: AppColors.bgSoft,
+        surface: AppColors.bgSoft,
       ),
       textTheme: GoogleFonts.fredokaTextTheme().copyWith(
         displayLarge: GoogleFonts.fredoka(
@@ -36,7 +36,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.cardBg,
         elevation: 4,
-        shadowColor: AppColors.primaryLight.withOpacity(0.3),
+        shadowColor: AppColors.primaryLight.withValues(alpha: 0.3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
           side: const BorderSide(color: AppColors.border, width: 1.5),
@@ -47,7 +47,7 @@ class AppTheme {
           backgroundColor: AppColors.secondary,
           foregroundColor: AppColors.textLight,
           elevation: 6,
-          shadowColor: AppColors.secondary.withOpacity(0.4),
+          shadowColor: AppColors.secondary.withValues(alpha: 0.4),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -74,11 +74,11 @@ class AppTheme {
           borderSide: const BorderSide(color: AppColors.primary, width: 2.5),
         ),
         labelStyle: GoogleFonts.fredoka(
-          color: AppColors.textDark.withOpacity(0.7),
+          color: AppColors.textDark.withValues(alpha: 0.7),
           fontSize: 16,
         ),
         hintStyle: GoogleFonts.fredoka(
-          color: AppColors.textDark.withOpacity(0.5),
+          color: AppColors.textDark.withValues(alpha: 0.5),
           fontSize: 16,
         ),
       ),

@@ -141,7 +141,7 @@ class _ProfessorProfileTabWidgetState extends State<ProfessorProfileTabWidget> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.purple.withOpacity(0.12),
+                            color: Colors.purple.withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.manage_accounts_rounded, color: Colors.purple, size: 28),
@@ -184,9 +184,9 @@ class _ProfessorProfileTabWidgetState extends State<ProfessorProfileTabWidget> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
+                          color: AppColors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [

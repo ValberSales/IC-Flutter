@@ -96,63 +96,116 @@ class _ProfessorReportsTabWidgetState extends State<ProfessorReportsTabWidget> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.teal.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(Icons.analytics_rounded, color: Colors.teal, size: 30),
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Column(
+                  child: LayoutBuilder(
+                    builder: (context, headerConstraints) {
+                      final isCompact = headerConstraints.maxWidth < 650;
+                      final exportButtons = _relatorio != null
+                          ? Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.teal.shade800,
+                                    side: BorderSide(color: Colors.teal.shade400),
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  ),
+                                  onPressed: () => ExportReportService.printTurmaReport(context, _relatorio!),
+                                  icon: const Icon(Icons.print_rounded, size: 18),
+                                  label: const Text('Imprimir / PDF', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                ),
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.teal,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    elevation: 2,
+                                  ),
+                                  onPressed: () => ExportReportService.exportTurmaCsv(context, _relatorio!),
+                                  icon: const Icon(Icons.download_rounded, size: 18),
+                                  label: const Text('Exportar CSV', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                ),
+                              ],
+                            )
+                          : null;
+
+                      if (isCompact) {
+                        return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Relatórios Pedagógicos & Analytics',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.teal.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Icon(Icons.analytics_rounded, color: Colors.teal, size: 28),
+                                ),
+                                const SizedBox(width: 14),
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Relatórios Pedagógicos & Analytics',
+                                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Acompanhe o desempenho e evolução das turmas.',
+                                        style: TextStyle(fontSize: 12, color: AppColors.textDark),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Acompanhe o desempenho, aproveitamento e evolução das turmas e alunos.',
-                              style: TextStyle(fontSize: 13, color: AppColors.textDark),
-                            ),
+                            if (exportButtons != null) ...[
+                              const SizedBox(height: 14),
+                              exportButtons,
+                            ],
                           ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
+                        );
+                      }
 
-                      // Botões de Exportação no Topo
-                      if (_relatorio != null) ...[
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.teal.shade800,
-                            side: BorderSide(color: Colors.teal.shade400),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      return Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.teal.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(Icons.analytics_rounded, color: Colors.teal, size: 30),
                           ),
-                          onPressed: () => ExportReportService.printTurmaReport(context, _relatorio!),
-                          icon: const Icon(Icons.print_rounded, size: 18),
-                          label: const Text('Imprimir / PDF', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            elevation: 2,
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Relatórios Pedagógicos & Analytics',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Acompanhe o desempenho, aproveitamento e evolução das turmas e alunos.',
+                                  style: TextStyle(fontSize: 13, color: AppColors.textDark),
+                                ),
+                              ],
+                            ),
                           ),
-                          onPressed: () => ExportReportService.exportTurmaCsv(context, _relatorio!),
-                          icon: const Icon(Icons.download_rounded, size: 18),
-                          label: const Text('Exportar CSV', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        ),
-                      ],
-                    ],
+                          if (exportButtons != null) ...[
+                            const SizedBox(width: 12),
+                            exportButtons,
+                          ],
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
@@ -343,7 +396,7 @@ class _ProfessorReportsTabWidgetState extends State<ProfessorReportsTabWidget> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.teal.withOpacity(0.15) : Colors.white,
+          color: isSelected ? Colors.teal.withValues(alpha: 0.15) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? Colors.teal : AppColors.border,
@@ -353,7 +406,7 @@ class _ProfessorReportsTabWidgetState extends State<ProfessorReportsTabWidget> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: isSelected ? Colors.teal : AppColors.textDark.withOpacity(0.7)),
+            Icon(icon, size: 18, color: isSelected ? Colors.teal : AppColors.textDark.withValues(alpha: 0.7)),
             const SizedBox(width: 8),
             Flexible(
               child: Text(

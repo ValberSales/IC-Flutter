@@ -54,12 +54,12 @@ class AdivinhacaoHeaderDelegate extends SliverPersistentHeaderDelegate {
             vertical: isMinimal ? 4 : 7,
           ),
           decoration: BoxDecoration(
-            color: isError ? AppColors.error.withOpacity(0.12) : AppColors.bgSoft,
+            color: isError ? AppColors.error.withValues(alpha: 0.12) : AppColors.bgSoft,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: btnColor.withOpacity(0.6), width: 1.5),
+            border: Border.all(color: btnColor.withValues(alpha: 0.6), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),

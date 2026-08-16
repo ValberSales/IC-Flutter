@@ -95,7 +95,7 @@ class _ProfessorClassesTabWidgetState extends State<ProfessorClassesTabWidget> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.15),
+                          color: AppColors.primary.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Icon(Icons.class_rounded, color: AppColors.primary, size: 30),
@@ -160,7 +160,7 @@ class _ProfessorClassesTabWidgetState extends State<ProfessorClassesTabWidget> {
                     padding: const EdgeInsets.all(40.0),
                     child: Column(
                       children: [
-                        Icon(Icons.school_outlined, size: 64, color: AppColors.primary.withOpacity(0.4)),
+                        Icon(Icons.school_outlined, size: 64, color: AppColors.primary.withValues(alpha: 0.4)),
                         const SizedBox(height: 16),
                         Text(
                           _searchQuery.isEmpty

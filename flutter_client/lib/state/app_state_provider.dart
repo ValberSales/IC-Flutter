@@ -115,7 +115,7 @@ class AppStateProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Erro ao sincronizar turmas: $e');
+      debugPrint('Erro ao sincronizar turmas: $e');
     }
   }
 
@@ -137,7 +137,7 @@ class AppStateProvider extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      print('Erro ao sincronizar turma do aluno logado: $e');
+      debugPrint('Erro ao sincronizar turma do aluno logado: $e');
     }
   }
 
@@ -170,7 +170,7 @@ class AppStateProvider extends ChangeNotifier {
       }
       await syncPontuacoesPendentes();
     } catch (e) {
-      print('Sincronização offline mantida: $e');
+      debugPrint('Sincronização offline mantida: $e');
     }
   }
 
@@ -185,7 +185,7 @@ class AppStateProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Erro ao sincronizar usuários: $e');
+      debugPrint('Erro ao sincronizar usuários: $e');
     }
   }
 
@@ -247,7 +247,7 @@ class AppStateProvider extends ChangeNotifier {
         return true;
       }
     } catch (e) {
-      print('Erro ao fazer login: $e');
+      debugPrint('Erro ao fazer login: $e');
     }
     return false;
   }
@@ -270,7 +270,7 @@ class AppStateProvider extends ChangeNotifier {
         return true;
       }
     } catch (e) {
-      print('Erro ao cadastrar: $e');
+      debugPrint('Erro ao cadastrar: $e');
     }
     return false;
   }
@@ -392,7 +392,7 @@ class AppStateProvider extends ChangeNotifier {
         return true;
       }
     } catch (e) {
-      print('Erro ao alterar senha obrigatória: $e');
+      debugPrint('Erro ao alterar senha obrigatória: $e');
     }
     return false;
   }
@@ -541,7 +541,7 @@ class AppStateProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Erro ao sincronizar pontuções pendentes: $e');
+      debugPrint('Erro ao sincronizar pontuções pendentes: $e');
     }
   }
 
@@ -578,7 +578,7 @@ class AppStateProvider extends ChangeNotifier {
 
       LocalStorageService.savePontuacoesList(bestMap.values.toList());
     } catch (e) {
-      print('Erro ao limpar pontuacoes duplicadas locais: $e');
+      debugPrint('Erro ao limpar pontuacoes duplicadas locais: $e');
     }
   }
 

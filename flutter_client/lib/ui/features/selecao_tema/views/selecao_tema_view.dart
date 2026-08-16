@@ -63,13 +63,13 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
             color: isSelected ? activeColor : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isSelected ? activeColor : activeColor.withOpacity(0.35),
+              color: isSelected ? activeColor : activeColor.withValues(alpha: 0.35),
               width: isSelected ? 2.5 : 1.5,
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: activeColor.withOpacity(0.3),
+                      color: activeColor.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -203,13 +203,13 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
                                 borderRadius: BorderRadius.circular(24),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
+                                    color: Colors.black.withValues(alpha: 0.05),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
                                 ],
                                 border: Border.all(
-                                  color: themeColor.withOpacity(0.3),
+                                  color: themeColor.withValues(alpha: 0.3),
                                   width: 2,
                                 ),
                               ),
@@ -221,7 +221,7 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
                                       Container(
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
-                                          color: themeColor.withOpacity(0.15),
+                                          color: themeColor.withValues(alpha: 0.15),
                                           borderRadius: BorderRadius.circular(16),
                                         ),
                                         child: Icon(
@@ -250,7 +250,7 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
                                               'Escolha o nível de dificuldade e selecione um tema abaixo para jogar:',
                                               style: TextStyle(
                                                 fontSize: 13,
-                                                color: AppColors.textDark.withOpacity(0.75),
+                                                color: AppColors.textDark.withValues(alpha: 0.75),
                                               ),
                                             ),
                                           ],
@@ -278,9 +278,9 @@ class _SelecaoTemaViewState extends State<SelecaoTemaView> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accent.withOpacity(0.12),
+                                  color: AppColors.accent.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.accent.withOpacity(0.4)),
+                                  border: Border.all(color: AppColors.accent.withValues(alpha: 0.4)),
                                 ),
                                 child: Row(
                                   children: [

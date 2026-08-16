@@ -85,7 +85,7 @@ class _JogoPalavrasViewState extends State<JogoPalavrasView> {
               backgroundColor: AppColors.secondary,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
               elevation: 8,
-              shadowColor: AppColors.secondary.withOpacity(0.5),
+              shadowColor: AppColors.secondary.withValues(alpha: 0.5),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             ),
             onPressed: _viewModel.iniciarRodada,

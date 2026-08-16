@@ -144,6 +144,25 @@ class HomeViewModel extends ChangeNotifier {
     return success;
   }
 
+  Future<bool> loginWithCredentials(String username, String password) async {
+    _loginIdentifier = username;
+    _loginPassword = password;
+    return executeLogin();
+  }
+
+  Future<bool> cadastrarAluno({
+    required String nome,
+    required String username,
+    required String password,
+    required String avatar,
+  }) async {
+    _cadastroNome = nome;
+    _cadastroUsername = username;
+    _cadastroPassword = password;
+    _selectedAvatar = avatar;
+    return executeRegister();
+  }
+
   Future<void> playAsGuest() async {
     await appState.enterGuestMode();
     notifyListeners();

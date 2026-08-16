@@ -150,7 +150,7 @@ class AppHeaderWidget extends StatelessWidget implements PreferredSizeWidget {
                     color: AppColors.bgSoft,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),

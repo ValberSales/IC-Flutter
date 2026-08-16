@@ -28,8 +28,8 @@ class ActivityCardItemWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: atv.ativo
-              ? (isAdivinhacao ? AppColors.accent.withOpacity(0.4) : AppColors.info.withOpacity(0.4))
-              : AppColors.error.withOpacity(0.3),
+              ? (isAdivinhacao ? AppColors.accent.withValues(alpha: 0.4) : AppColors.info.withValues(alpha: 0.4))
+              : AppColors.error.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -40,7 +40,7 @@ class ActivityCardItemWidget extends StatelessWidget {
           height: 48,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: (isAdivinhacao ? AppColors.accent : AppColors.info).withOpacity(0.15),
+            color: (isAdivinhacao ? AppColors.accent : AppColors.info).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(
@@ -89,7 +89,7 @@ class ActivityCardItemWidget extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: atv.publica
-                    ? AppColors.primaryLight.withOpacity(0.2)
+                    ? AppColors.primaryLight.withValues(alpha: 0.2)
                     : Colors.amber.shade100,
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -122,7 +122,7 @@ class ActivityCardItemWidget extends StatelessWidget {
             children: [
               Text(
                 'Tipo: ${isAdivinhacao ? 'Adivinhação (Libras)' : 'Jogo de Palavras (Associação)'}  •  ${atv.itens.length} palavra(s)',
-                style: TextStyle(fontSize: 13, color: AppColors.textDark.withOpacity(0.8)),
+                style: TextStyle(fontSize: 13, color: AppColors.textDark.withValues(alpha: 0.8)),
               ),
               const SizedBox(height: 2),
               Text(
@@ -154,13 +154,13 @@ class ActivityCardItemWidget extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: atv.publica
-                      ? AppColors.primary.withOpacity(0.08)
-                      : Colors.amber.withOpacity(0.12),
+                      ? AppColors.primary.withValues(alpha: 0.08)
+                      : Colors.amber.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: atv.publica
-                        ? AppColors.primary.withOpacity(0.3)
-                        : Colors.amber.shade700.withOpacity(0.35),
+                        ? AppColors.primary.withValues(alpha: 0.3)
+                        : Colors.amber.shade700.withValues(alpha: 0.35),
                   ),
                 ),
                 child: Row(
@@ -183,7 +183,7 @@ class ActivityCardItemWidget extends StatelessWidget {
                     const SizedBox(width: 4),
                     Switch(
                       value: atv.publica,
-                      activeColor: AppColors.primary,
+                      activeThumbColor: AppColors.primary,
                       inactiveThumbColor: Colors.amber.shade800,
                       inactiveTrackColor: Colors.amber.shade200,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -204,13 +204,13 @@ class ActivityCardItemWidget extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: atv.ativo
-                      ? AppColors.accent.withOpacity(0.08)
-                      : AppColors.error.withOpacity(0.08),
+                      ? AppColors.accent.withValues(alpha: 0.08)
+                      : AppColors.error.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: atv.ativo
-                        ? AppColors.accent.withOpacity(0.3)
-                        : AppColors.error.withOpacity(0.3),
+                        ? AppColors.accent.withValues(alpha: 0.3)
+                        : AppColors.error.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
@@ -233,7 +233,7 @@ class ActivityCardItemWidget extends StatelessWidget {
                     const SizedBox(width: 4),
                     Switch(
                       value: atv.ativo,
-                      activeColor: AppColors.accent,
+                      activeThumbColor: AppColors.accent,
                       inactiveThumbColor: AppColors.error,
                       inactiveTrackColor: AppColors.errorLight,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

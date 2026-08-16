@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/util/responsive_layout.dart';
 import '../../../../data/models/atividade.dart';
 import '../../../../state/app_state_provider.dart';
 import '../../../core/celebracao_conclusao_dialog.dart';
-import '../../../core/dynamic_image_widget.dart';
 import '../../../core/jogo_breadcrumb_widget.dart';
 import '../../../core/mascote_feedback_widget.dart';
 import '../../../core/pontuacao_header_widget.dart';
-import '../../../core/tutorial_widget.dart';
 import '../view_models/jogo_adivinhacao_view_model.dart';
 import '../widgets/adivinhacao_header_delegate.dart';
 import '../widgets/adivinhacao_sign_card.dart';
-import '../widgets/adivinhacao_slots_widget.dart';
 
 class JogoAdivinhacaoView extends StatefulWidget {
   final Atividade? atividadeTema;
@@ -88,7 +84,7 @@ class _JogoAdivinhacaoViewState extends State<JogoAdivinhacaoView> {
               backgroundColor: AppColors.secondary,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
               elevation: 8,
-              shadowColor: AppColors.secondary.withOpacity(0.5),
+              shadowColor: AppColors.secondary.withValues(alpha: 0.5),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             ),
             onPressed: _viewModel.iniciarRodada,

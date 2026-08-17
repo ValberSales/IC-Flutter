@@ -1,33 +1,38 @@
-version: '3.8'
-
 services:
+  # 1. Banco de Dados Relacional
   postgres:
     image: postgres:15-alpine
     container_name: alfabetizalibras_db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1
-      POSTGRES_DB: alfabetizalibras
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-1}
+      POSTGRES_DB: ${POSTGRES_DB:-alfabetizalibras}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
 
+  # 2. Storage de Arquivos S3 (MinIO)
   minio:
     image: minio/minio:latest
     container_name: alfabetizalibras_minio
-    restart: always
+    restart: unless-stopped
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio_data:/data
+    networks:
+      - app_network
 
+  # 3. Inicializador de Bucket MinIO
   createbuckets:
     image: minio/mc:latest
     container_name: alfabetizalibras_create_buckets
@@ -35,12 +40,73 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-      until (/usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin) do echo 'Waiting for MinIO...'; sleep 1; done;
-      /usr/bin/mc mb myminio/alfabetizalibras;
-      /usr/bin/mc anonymous set public myminio/alfabetizalibras;
+      until (/usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin}) do echo 'Waiting for MinIO...'; sleep 1; done;
+      /usr/bin/mc mb myminio/${MINIO_BUCKET_NAME:-alfabetizalibras} || true;
+      /usr/bin/mc anonymous set public myminio/${MINIO_BUCKET_NAME:-alfabetizalibras} || true;
       exit 0;
       "
+    networks:
+      - app_network
+
+  # 4. Backend REST API (Spring Boot Java 21)
+  backend:
+    build:
+      context: ./server_java
+      dockerfile: Dockerfile
+    container_name: alfabetizalibras_backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - minio
+      - createbuckets
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-alfabetizalibras}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-1}
+      JWT_SECRET: ${JWT_SECRET:-c3VwZXItc2VjcmV0LWp3dC1rZXktZm9yLWFsZmFiZXRpemFsaWJyYXMtYXBwbGljYXRpb24tc2VjdXJpdHk=}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      MINIO_URL: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-alfabetizalibras}
+    ports:
+      - "${SERVER_PORT:-8081}:8081"
+    networks:
+      - app_network
+
+  # 5. Frontend Web (Flutter Web + Nginx)
+  frontend:
+    build:
+      context: ./flutter_client
+      dockerfile: Dockerfile
+      args:
+        PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:8081}
+    container_name: alfabetizalibras_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    networks:
+      - app_network
+
+  # 6. Túnel Cloudflare (Zero Trust)
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: alfabetizalibras_tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - app_network
 
 volumes:
   postgres_data:
   minio_data:
+
+networks:
+  app_network:
+    driver: bridge

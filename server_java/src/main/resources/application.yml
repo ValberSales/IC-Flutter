@@ -1,13 +1,13 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 spring:
   application:
     name: alfabetizalibras-server
   datasource:
-    url: jdbc:postgresql://localhost:5432/alfabetizalibras
-    username: postgres
-    password: 1
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/alfabetizalibras}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:1}
     driver-class-name: org.postgresql.Driver
   jpa:
     open-in-view: false
@@ -26,11 +26,11 @@ spring:
       max-request-size: 10MB
 
 jwt:
-  secret: c3VwZXItc2VjcmV0LWp3dC1rZXktZm9yLWFsZmFiZXRpemFsaWJyYXMtYXBwbGljYXRpb24tc2VjdXJpdHk=
-  expiration: 86400000 # 24 horas
+  secret: ${JWT_SECRET:c3VwZXItc2VjcmV0LWp3dC1rZXktZm9yLWFsZmFiZXRpemFsaWJyYXMtYXBwbGljYXRpb24tc2VjdXJpdHk=}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 horas
 
 minio:
-  url: http://localhost:9000
-  accessKey: minioadmin
-  secretKey: minioadmin
-  bucketName: alfabetizalibras
+  url: ${MINIO_URL:http://localhost:9000}
+  accessKey: ${MINIO_ACCESS_KEY:minioadmin}
+  secretKey: ${MINIO_SECRET_KEY:minioadmin}
+  bucketName: ${MINIO_BUCKET_NAME:alfabetizalibras}

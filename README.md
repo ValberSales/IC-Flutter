@@ -2,10 +2,11 @@
 
 [![Flutter](https://img.shields.io/badge/Frontend-Flutter%203.x-02569B?logo=flutter)](https://flutter.dev)
 [![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20Repository-orange)](https://flutter.dev)
-[![Java](https://img.shields.io/badge/Backend-Spring%20Boot%203%20%7C%20Java%2025-007396?logo=openjdk)](https://spring.io)
+[![Java](https://img.shields.io/badge/Backend-Spring%20Boot%203%20%7C%20Java%2021-007396?logo=openjdk)](https://spring.io)
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%2015-4169E1?logo=postgresql)](https://www.postgresql.org)
 [![MinIO](https://img.shields.io/badge/Storage-MinIO%20S3-C72C48?logo=minio)](https://min.io)
-[![Docker](https://img.shields.io/badge/Infrastructure-Docker%20Compose-2496ED?logo=docker)](https://www.docker.com)
+[![Docker](https://img.shields.io/badge/Microservices-Docker%20Compose-2496ED?logo=docker)](https://www.docker.com)
+[![Cloudflare](https://img.shields.io/badge/Deploy-Cloudflare%20Tunnel-F38020?logo=cloudflare)](https://cloudflare.com)
 [![Tests](https://img.shields.io/badge/Tests-41%2F41%20Passing%20(100%25)-success)](https://flutter.dev)
 
 > 🎓 **Projeto de Iniciação Científica (IC) - UTFPR Câmpus Pato Branco**
@@ -29,7 +30,7 @@ A aplicação combina **metodologias lúdicas de gamificação**, **acessibilida
 ### 1. Hub de Jogos Pedagógicos
 - 🔤 **Alfabeto Manual & Dactilologia**: Exploração de todas as letras de A a Z e Ç, combinando ilustrações didáticas e fotos reais com as mãos.
 - 🧠 **Jogo da Memória**: Associação visual e memorização de pares entre letras e suas configurações de mão em Libras.
-- 🔍 **Jogo de Adivinhação**: Montagem interativa de palavras em Libras com card central responsivo, slots dinâmicos, suporte a teclado/mouse/toque e feedback do mascote.
+- 🔍 **Jogo de Adivinhação**: Montagem interativa de palavras em Libras com card central responsivo, slots dinâmicos, suporte a teclado/mouse/toque e feedback visual e animado do mascote guaxinim.
 - 📖 **Jogo de Palavras**: Associação de imagens reais às palavras corretas com alternativas dinâmicas e distribuição balanceada de distratores.
 
 ### 2. Níveis de Dificuldade & Gamificação
@@ -50,89 +51,74 @@ A aplicação combina **metodologias lúdicas de gamificação**, **acessibilida
   - **Analytics & Relatórios**: Painel com cálculo de taxa de aproveitamento, distribuição de níveis dominados e exportação em CSV ou impressão formatada.
   - **Perfil Docente**: Gerenciamento de credenciais, troca de senha e alteração de avatar.
 
-### 4. Arquitetura Híbrida & Suporte Offline
-- **Persistência Local (SharedPreferences / IndexedDB / Hive)**: Permite o funcionamento fluido offline no navegador e em dispositivos móveis.
-- **Cache de Mídias Local (`MediaStorageService`)**: Download e cache de imagens de atividades com nomenclatura determinística via hash SHA-256 no armazenamento persistente do dispositivo, economizando banda e pavimentando futuras expansões de vídeo.
+### 4. Responsividade, Orientação & Design de Ícones
+- 📱 **Bloqueio de Rotação em Smartphones**: Em celulares (`shortestSide < 600dp`), o aplicativo fixa a orientação em modo retrato (*portrait*) para conforto e ergonomia infantil.
+- 🖥️ **Rotação Livre em Tablets e Web**: Em tablets e navegadores desktop, a rotação e o layout responsivo são totalmente liberados.
+- 🦝 **Material 3 Adaptive Icons (Android 13+ / Monet Engine)**:
+  - **Camada Foreground**: Rosto do mascote guaxinim centralizado e perfeitamente ajustado na *safe zone* circular (72dp) do canvas de 108dp.
+  - **Camada Background**: Suporte dinâmico a tema claro (`#8C52FF` $\rightarrow$ `#512DA8`) e tema escuro (`#512DA8` $\rightarrow$ `#1E0A45`).
+  - **Themed Icons**: Camada monocromática que adapta o ícone às cores do papel de parede do usuário.
+- 🌐 **Favicon Web Transparente**: Favicon vetorial com o rosto do mascote isolado com fundo transparente.
 
 ---
 
 ## 🏗️ Arquitetura do Sistema
 
-O projeto adota boas práticas de engenharia de software com separação clara de responsabilidades:
+O projeto adota boas práticas de engenharia de software com arquitetura em microsserviços containerizados:
 
-### 📱 Frontend Flutter (`flutter_client/`) — Padrão MVVM
 ```
-flutter_client/
-├── lib/
-│   ├── core/               # Constantes (AppColors), helpers e diálogos reutilizáveis
-│   │   └── profile/        # Subcomponentes modulares de perfil
-│   ├── data/               # Models de Domínio, Repositories, Serviços de Mídia e API REST
-│   │   ├── models/         # Usuario, Turma, Atividade, Pontuacao, Palavra
-│   │   ├── repositories/   # AuthRepository, TurmaRepository, AtividadeRepository, RelatorioRepository
-│   │   ├── services/       # ApiService (HTTP Client com interceptors)
-│   │   └── storage/        # LocalStorageService e MediaStorageService (Cache local)
-│   ├── state/              # Gerenciamento de Estado Central (AppStateProvider)
-│   └── ui/                 # Telas (Views), ViewModels e Widgets específicos por Feature
-│       ├── core/           # Widgets compartilhados (Header, Modais de Atividade, Dropzones)
-│       └── features/       # area_professor, home, jogo_hub, jogo_adivinhacao, jogo_memoria, jogo_palavras...
-└── test/                   # Suíte de 41 Testes Unitários e de Integração
-```
-
-### ☕ Backend Spring Boot (`server_java/`) — Arquitetura em Camadas
-```
-server_java/
-└── src/main/java/br/com/alfabetizalibras/
-    ├── config/             # Configurações do MinIO, Spring Security e Seeder (DataLoader)
-    ├── controller/         # REST Controllers concisos (HTTP request handling e DTO responses)
-    ├── entity/             # Entidades JPA (Usuario, Turma, Atividade, ItemAtividade, Pontuacao)
-    ├── repository/         # Interfaces Spring Data JPA
-    ├── security/           # JWT Token Provider, Auth Filters e UserDetails
-    └── service/            # Camada de Serviços de Domínio (@Service com regras de negócio e analytics)
-        ├── TurmaService.java
-        ├── RelatorioService.java
-        ├── UsuarioService.java
-        ├── PontuacaoService.java
-        └── AtividadeService.java
+IC-Flutter/
+├── docker-compose.yml       # Orquestração completa de microsserviços (OrbStack / Docker)
+├── .env.example             # Modelo seguro de variáveis de ambiente
+├── server_java/             # Backend REST em Spring Boot (Java 21)
+│   ├── Dockerfile           # Build multi-stage Maven + JRE 21 Alpine
+│   └── src/main/java/br/com/alfabetizalibras/
+└── flutter_client/          # Frontend Multiplataforma Flutter (Web & Android)
+    ├── Dockerfile           # Build Flutter Web + Nginx Alpine SPA
+    ├── nginx.conf           # Servidor Web com suporte a roteamento SPA e gzip
+    ├── assets/raccoon/      # Vetores SVG e assets visuais do mascote
+    ├── android/             # Configurações nativas, drawables e ícones adaptativos
+    └── lib/                 # Código-fonte Dart (Padrão MVVM com ChangeNotifier/Provider)
 ```
 
 ---
 
-## 🚀 Como Executar o Projeto Localmente
+## 🚀 Execução em Microsserviços (Docker / OrbStack)
 
-### 1️⃣ Pré-requisitos
-- **Flutter SDK** (3.24+ / 3.44+)
-- **Java OpenJDK** (versão 21 ou 25) e **Apache Maven**
-- **Docker** e **Docker Compose**
+A stack inteira foi containerizada no padrão microsserviços para subir localmente ou em produção com um único comando.
 
----
-
-### 2️⃣ Iniciar os Serviços de Infraestrutura (Docker)
-Inicie o banco de dados relacional e o storage S3:
+### 1️⃣ Configurar o Ambiente
+Copie o template de variáveis de ambiente:
 ```bash
-docker compose up -d
+cp .env.example .env
 ```
-> Serviços iniciados:
-> - 🛢️ **PostgreSQL 15**: porta `5432` (`alfabetizalibras`)
-> - 📦 **MinIO Storage**: porta `9000` (Console Administrativo em `http://localhost:9001`)
+*(Preencha os valores de senhas e, se for utilizar o túnel da Cloudflare, insira o `CLOUDFLARE_TUNNEL_TOKEN`).*
 
----
-
-### 3️⃣ Iniciar o Servidor Backend (Spring Boot)
+### 2️⃣ Subir todos os Microsserviços
 ```bash
-cd server_java
-mvn clean spring-boot:run
+docker compose up -d --build
 ```
-> ℹ️ A API REST estará disponível em `http://localhost:8081`.
+> **Serviços Orquestrados**:
+> - 🛢️ **postgres** (`:5432`): Banco de dados relacional PostgreSQL 15.
+> - 📦 **minio** (`:9000` / `:9001`): Armazenamento de arquivos e imagens S3-compatible.
+> - 🔧 **createbuckets**: Job que provisiona e configura políticas públicas no MinIO.
+> - ☕ **backend** (`:8081`): API REST em Spring Boot (Java 21).
+> - 🌐 **frontend** (`:3000`): Servidor Nginx com Flutter Web SPA.
+> - ☁️ **tunnel**: Conector Cloudflare Tunnel para publicação online segura.
 
 ---
 
-### 4️⃣ Iniciar a Aplicação Client (Flutter Web ou Mobile)
+## 📱 Build do APK Android
+
+Para compilar o pacote de produção apontando dinamicamente para a API online:
+
 ```bash
 cd flutter_client
-flutter pub get
-flutter run -d chrome --web-port=3000
+flutter build apk --release --dart-define=API_URL=https://al-api.pepperdelivery.com.br
 ```
-> 🌐 A aplicação Web abrirá em `http://localhost:3000`.
+
+O arquivo gerado estará disponível em:
+`flutter_client/build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 

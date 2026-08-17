@@ -73,9 +73,17 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# Environment variables and secrets
 .env
-.env.test
+.env.*
+!.env.example
+*.token
+*.pem
+*.key
+*.cert
+*.crt
+cloudflared/
+.cloudflared/
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

@@ -15,6 +15,10 @@ class ApiService {
   static bool useBackend = true;
   
   static String get hostUrl {
+    const envUrl = String.fromEnvironment('API_URL');
+    if (envUrl.isNotEmpty) {
+      return envUrl;
+    }
     if (!kIsWeb && Platform.isAndroid) {
       return 'http://10.0.2.2:8081';
     }
